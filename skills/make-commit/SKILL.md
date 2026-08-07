@@ -10,7 +10,7 @@ when_to_use: >-
   „udělej commit", „zapiš změny", „commitni a pushni" — nebo jako závěrečný
   krok jiné úlohy, která něco změnila v pracovním stromu. Nepoužívej pro
   operace přepisující historii (amend, rebase, force push), ty skill záměrně
-  neumí; ani pro zakládání skillů, na to slouží write-skill.
+  neumí; ani pro zakládání větve, na to slouží create-branch.
 argument-hint: "[rozsah nebo popis změny]"
 model: sonnet
 effort: medium
@@ -74,7 +74,8 @@ Spusť `scripts/preflight.sh` a vyhodnoť výstup:
 - **`detached=true`** → zastav se a ohlas to. Commit na odpojené HEAD se tiše
   ztratí, jakmile se přepne větev.
 - **`on_default_branch=true`** → zeptej se uživatele, jestli má práce opravdu
-  jít přímo do výchozí větve, nebo se má založit nová. Běžíš-li neinteraktivně,
+  jít přímo do výchozí větve, nebo se má nejdřív založit nová — na to slouží
+  skill `create-branch`, sám větve nezakládej. Běžíš-li neinteraktivně,
   **necommituj** a jen ohlas, že změny leží na výchozí větvi a čekají na
   rozhodnutí; zápis do sdílené výchozí větve se špatně bere zpět, takže tady
   opatrnost vítězí nad plynulostí.
