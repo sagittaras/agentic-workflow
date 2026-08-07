@@ -13,13 +13,13 @@ when_to_use: >-
   zachytit jako skill, aniž by slovo skill zmínil. Nepoužívej pro zakládání
   agentů ani commandů, ty mají vlastní pravidla; pro samotné posouzení
   hotového skillu slouží review-skill; ani pro běžné použití existujícího skillu.
+argument-hint: "[název nebo téma skillu]"
 model: opus
 effort: high
-# Zařazení dle matice: otevřené zadání s interview a psaním dokumentu →
-# opus × high. Nikoli xhigh: skill nemá dlouhoběžnou autonomní exekuci,
-# těžiště je v návrhu a textu, a matice velí při váhání mezi dvěma stupni
-# volit nižší.
-argument-hint: "[název nebo téma skillu]"
+# Zařazení dle matice: orchestrace workflow s autonomní smyčkou — matice na ni
+# má řádek opus × xhigh. Snížení na high je odchylka o stupeň: nejtěžší část
+# (review) je delegovaná na review-skill běžící na opus × xhigh, takže vlastní
+# práce tohoto skillu je návrh, interview a text, ne hloubkové posuzování.
 user-invocable: true
 allowed-tools:
   - Read
@@ -31,9 +31,10 @@ allowed-tools:
   - Agent
 # Vynechaná zvažovaná pole: disable-model-invocation — skill je užitečný
 # i když si ho model vyvolá sám z popisu opakovaného postupu; context/agent/
-# background — interview potřebuje uživatele v hlavním kontextu, fork nebo
+# background — interview vyžaduje uživatele v hlavním kontextu, fork nebo
 # běh na pozadí by neměly komu klást otázky; paths — skill se spouští
-# z konverzace nad tématem, ne prací nad konkrétními soubory;
+# z konverzace nad tématem, ne prací nad konkrétními soubory; shell — postup
+# je psaní souborů a volání subagenta, ne spouštění příkazů;
 # disallowed-tools — allowed-tools je uzavřený výčet, není co zakazovat navíc.
 ---
 
@@ -44,6 +45,9 @@ situacích, běží na správném modelu a jeho instrukce dávají smysl i tomu,
 nezná kontext jeho vzniku. Závazným kontraktem jsou tři referenční soubory
 vedle tohoto — při rozporu s čímkoli, včetně tohoto skillu, mají přednost ony.
 
+Referenční soubory čti přes `${CLAUDE_PLUGIN_ROOT}`; plugin může běžet nad cizím
+projektem, kde relativní cesta `skills/…` míří někam jinam.
+
 ## Vstupní kontext
 
 - Zadání od uživatele (může být prázdné): $ARGUMENTS
@@ -52,15 +56,23 @@ vedle tohoto — při rozporu s čímkoli, včetně tohoto skillu, mají předno
 
 ### 1. Příprava
 
-1. Přečti [skill-conventions.md](skill-conventions.md) — pravidla pojmenování
-   a frontmatteru, na která se budeš celou dobu odvolávat.
-2. Přečti [skill-template.md](skill-template.md) — kostru, do které budeš psát.
-3. [model-effort-matrix.md](model-effort-matrix.md) otevři až ve chvíli, kdy
-   budeš zařazovat úlohu; dřív ji nepotřebuješ.
-4. Projdi existující skilly v `skills/` — stačí `description` a `when_to_use`
-   z jejich frontmatterů. Nový skill nesmí triggeringem kolidovat se sousedy;
-   hranici je potřeba vytyčit negativním vymezením **na obou stranách**, takže
-   pokud úprava souseda k zadání patří, udělej ji zároveň.
+1. Přečti `${CLAUDE_PLUGIN_ROOT}/skills/write-skill/skill-conventions.md` —
+   pravidla pojmenování a frontmatteru, na která se budeš celou dobu odvolávat.
+2. Přečti `${CLAUDE_PLUGIN_ROOT}/skills/write-skill/skill-template.md` — kostru,
+   do které budeš psát.
+3. `model-effort-matrix.md` v téže složce otevři až ve chvíli, kdy budeš
+   zařazovat úlohu; dřív ji nepotřebuješ.
+4. **Jde-li o úpravu existujícího skillu, přečti ho celý ještě před interview** —
+   včetně komentářů ve frontmatteru. Bez znalosti toho, co skill dnes dělá a proč
+   je nakonfigurovaný takhle, nejde poznat, co se změnou rozbije.
+5. Urči, kam skill patří: ve vývojovém repu pluginu do `skills/<název>/`,
+   nad cizím projektem do jeho `.claude/skills/<název>/`. Není-li to jednoznačné,
+   zeptej se v interview.
+6. Projdi existující skilly — stačí `description` a `when_to_use` z jejich
+   frontmatterů. Nový skill nesmí triggeringem kolidovat se sousedy; hranici je
+   potřeba vytyčit negativním vymezením **na obou stranách**, takže pokud úprava
+   souseda k zadání patří, udělej ji zároveň — a v kroku 5 ji pošli do review
+   spolu s novým skillem.
 
 ### 2. Interview
 
@@ -79,6 +91,10 @@ smysl. Zjisti:
 - **Zařazení do matice** — navrhni dvojici model × effort i s odůvodněním
   a nech si ji potvrdit.
 
+**U úpravy existujícího skillu interview zúž** na to, co se mění. Nepřejmenovávej
+skill, který jméno má, a neptej se znovu na rozhodnutí, která už nesou komentáře
+ve frontmatteru — jen ověř, jestli změna některé z nich neruší.
+
 Interview končí, až umíš vyplnit všechna povinná pole frontmatteru a rozhodnout
 o každém zvažovaném poli. Než začneš psát, shrň uživateli, co skill bude dělat
 a jak bude nakonfigurovaný, a nech si shrnutí potvrdit — oprava návrhu stojí
@@ -91,9 +107,14 @@ a skonči — nezakládej soubory.
 
 ### 3. Sepsání
 
-Okopíruj kostru ze [skill-template.md](skill-template.md) a vyplň ji. Šablona
-je kostra k vyplnění, ne text k opsání: placeholdery nahraď, závorky i značky
-`(volitelné)` odstraň, nepoužité volitelné sekce smaž celé.
+**Nový skill** napiš tak, že okopíruješ kostru ze `skill-template.md` a vyplníš
+ji. Šablona je kostra k vyplnění, ne text k opsání: placeholdery nahraď, závorky
+i značky `(volitelné)` odstraň, nepoužité volitelné sekce smaž celé.
+
+**Úpravu existujícího skillu** veď ze stávajícího souboru — měň jen to, co se
+mění. Šablona ti tu slouží jako kontrola struktury, ne jako předloha k přepsání;
+přepsat fungující skill ze šablony znamená zahodit rozhodnutí, která v něm někdo
+udělal a zdůvodnil.
 
 Ve frontmatteru:
 
@@ -107,13 +128,19 @@ Ve frontmatteru:
 V těle piš rozkazovacím způsobem a u instrukcí, které nejsou samozřejmé,
 **vysvětli proč** — instrukci s důvodem model dodrží spolehlivěji než holý
 příkaz. Nepopisuj, co model umí sám od sebe. Objemný materiál (referenční
-tabulky, šablony) odsuň do vedlejších souborů a u každého odkazu řekni, **kdy**
-se má otevřít.
+tabulky, šablony, skripty) odsuň do vedlejších souborů a u každého odkazu řekni,
+**kdy** se má otevřít.
+
+Cesty k vlastním skriptům a doprovodným souborům ukotvi **podle cílového
+umístění z kroku 1**: skill uvnitř pluginu k `${CLAUDE_PLUGIN_ROOT}`, skill
+v `.claude/skills/` projektu k jeho kořeni (`.claude/skills/<název>/…`). Mimo
+plugin se `${CLAUDE_PLUGIN_ROOT}` nenastaví a skill by spadl na prvním volání.
+Tvar volání srovnej se zúžením v `allowed-tools`.
 
 ### 4. Vlastní kontrola
 
-Projdi hotový skill proti kontrolnímu seznamu v závěru
-[skill-conventions.md](skill-conventions.md), bod po bodu. Zvlášť ověř, že:
+Projdi hotový skill proti kontrolnímu seznamu v závěru `skill-conventions.md`,
+bod po bodu. Zvlášť ověř, že:
 
 - v souboru nezůstal žádný placeholder ani značka `(volitelné)`;
 - `when_to_use` obsahuje negativní vymezení a sedí i z druhé strany — u souseda,
@@ -125,11 +152,11 @@ Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady, nemus�
 
 ### 5. Nezávislé review
 
-1. Nástrojem Agent spusť subagenta typu **Plan** na modelu `opus`, **synchronně**
-   (`run_in_background: false`) — bez verdiktu nemáš jak pokračovat. V zadání
-   předej: pokyn přečíst `skills/review-skill/SKILL.md` a provést jeho postup,
-   **cestu k posuzovanému skillu**, **číslo kola** a od druhého kola
-   **nevyřešené nálezy z minulého kola i s tím, jak jsi je řešil**.
+1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`) —
+   bez verdiktu nemáš jak pokračovat. Typ agenta, model a effort vezmi
+   z frontmatteru `review-skill` a předej je explicitně: jako subagent si je
+   sám neuplatní, takže co nepředáš, se nepoužije. Zadání sestav podle šablony
+   ve Formátu výstupu.
 
    Subagent startuje s čistým kontextem — právě proto je jeho pohled nezávislý,
    a právě proto si historii kol nepamatuje. Co mu nepředáš, pro něj neexistuje.
@@ -138,9 +165,8 @@ Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady, nemus�
    uvážlivě zvaž. Pak spusť další kolo s **novým** subagentem; tomu vypotřebovanému
    nedávej opravu k posouzení, ztratil by odstup.
 
-3. **Schváleno** → skill je hotový. Reportuj uživateli: název skillu, cestu
-   k souboru, zvolenou dvojici model × effort i s důvodem, počet kol review
-   a nálezy, které jsi odmítl, i s odůvodněním.
+3. **Schváleno** → skill je hotový. Reportuj uživateli podle šablony ve Formátu
+   výstupu.
 
 Nálezy neodmítej mlčky. Reviewer nezná interview, takže může napadnout něco,
 co uživatel vědomě chtěl — takový nález patří do reportu, ne do koše.
@@ -160,26 +186,57 @@ Mlhavá eskalace uživatele jen zdrží.
 
 ## Formát výstupu
 
+### Struktura složky
+
 ```
-skills/<název-skillu>/
+<cílová složka skillů>/<název-skillu>/
   SKILL.md              ← postup a rozhodování
   <reference>.md        ← volitelně: objemný materiál odsunutý z těla
+  scripts/              ← volitelně: skripty, na které skill spoléhá
 ```
 
 Název složky se musí shodovat s hodnotou `name` ve frontmatteru.
+
+### Zadání pro reviewera
+
+Reviewer ho parsuje a nekompletní zadání označí za nález, kterým kolo skončí —
+proto ho posílej v této struktuře:
+
+```
+Přečti si soubor `${CLAUDE_PLUGIN_ROOT}/skills/review-skill/SKILL.md`
+a proveď přesně jeho postup.
+
+Zadání pro tvůj běh:
+- Repozitář: <absolutní cesta>
+- Posuzované skilly: <cesta k novému skillu; cesty ke všem upraveným sousedům>
+- Číslo kola: <N>
+- Nevyřešené nálezy z minulého kola: <žádné, jde o první kolo | seznam nálezů
+  i s tím, jak jsi je řešil>
+
+Vrať verdikt přesně ve struktuře, kterou review-skill předepisuje v sekci
+„Formát výstupu".
+```
+
+### Závěrečný report uživateli
+
+```
+Skill: <název> (<cesta>)
+Konfigurace: <model> × <effort> — <důvod zařazení>
+Vynechaná zvažovaná pole: <výčet>
+Kol review: <N>
+Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">
+```
 
 ## Zásady
 
 - Referenční soubory mají přednost před tímto skillem. Když si odporují,
   platí konvence a šablona, ne tento postup.
-- Interview a eskalace jsou jediné fáze, které vyžadují uživatele. Mezi nimi
-  běží smyčka psaní a review autonomně — nepřerušuj ji kvůli průběžnému hlášení.
-- Bez interview skill nevzniká.
+- Interview a eskalace jsou jediné fáze, které vyžadují uživatele — bez interview
+  skill nevzniká. Mezi nimi běží smyčka psaní a review autonomně; nepřerušuj ji
+  kvůli průběžnému hlášení.
 - Review si neděláš sám. Vlastní kontrola v kroku 4 ho nenahrazuje: autor
   nevidí, co do skillu podvědomě doplnil z hlavy.
+- Do review jde **všechno, čeho ses dotkl** — nový skill i upravení sousedé.
+  Úprava, která projde mimo bránu, mění triggering cizího skillu bez kontroly.
 - Úprava existujícího skillu jde stejným postupem jako vznik nového, včetně
   review — drobnost není výmluva.
-- Skill má jednu odpovědnost. Když se postup při psaní rozpadá na dva
-  nesouvisející sledy kroků, vrať se k uživateli s návrhem rozdělit ho.
-- Nevejde-li se `description` s `when_to_use` do limitu, není to problém
-  formulace, ale záběru — skill dělá víc věcí najednou.

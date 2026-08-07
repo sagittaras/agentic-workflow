@@ -11,7 +11,7 @@ when_to_use: >-
   ručně když uživatel řekne „zreviduj skill", „zkontroluj ten skill" nebo
   „projdi skill proti konvencím". Nepoužívej pro psaní ani opravu skillu,
   na to slouží write-skill; ani pro review kódu či jiných dokumentů.
-argument-hint: "[cesta ke skillu, číslo kola, nevyřešené nálezy]"
+argument-hint: "[cesty ke skillům, číslo kola, nevyřešené nálezy]"
 context: fork
 agent: Plan
 model: opus
@@ -19,6 +19,9 @@ effort: xhigh
 # Zařazení dle matice: review a hledání chyb → opus × xhigh. Vyšší stupeň než
 # u write-skill je záměr: reviewer je poslední brána před ostrým provozem
 # a přehlédnutý nález se zaplatí při každém budoucím spuštění skillu.
+# Pozor: model, effort, agent i context se uplatní jen při přímém vyvolání.
+# Spouští-li tě write-skill jako subagenta, konfiguraci určuje volající —
+# proto ji jeho krok 5 předává explicitně.
 user-invocable: true
 allowed-tools:
   - Read
@@ -26,53 +29,80 @@ allowed-tools:
   - Grep
 disallowed-tools:
   - AskUserQuestion
+# disallowed-tools je při uzavřeném allowed-tools redundantní záměrně: běžíš-li
+# jako subagent, allowed-tools se nemusí uplatnit, a zákaz doptávání je jediná
+# věc, která musí platit vždy.
 # Vynechaná zvažovaná pole: background — volající na verdikt čeká, běh na
-# pozadí by smyčku rozpojil; Write/Edit v allowed-tools — reviewer zásadně
-# neopravuje (viz Zásady); paths — skill dostává cestu v zadání, ne prací nad
-# pracovním adresářem; shell — postup je čtení souborů, ne spouštění příkazů.
+# pozadí by smyčku rozpojil; disable-model-invocation — skill má být volatelný
+# modelem, protože ho v každém kole spouští write-skill; Write/Edit
+# v allowed-tools — reviewer zásadně neopravuje (viz Zásady); paths — skill
+# dostává cesty v zadání, ne prací nad pracovním adresářem; shell — postup je
+# čtení souborů, ne spouštění příkazů.
 ---
 
 # Review Skill
 
 Jsi nezávislý reviewer skillu — ne jeho autor a ne jeho opravář. Běžíš
-v odděleném kontextu bez přístupu k uživateli; nemáš se koho doptat, takže
-co ze skillu nepochopíš, je **nález, ne tvoje selhání**. Právě v tom je tvoje
-hodnota: čteš skill tak, jak ho uvidí model, který o jeho vzniku nic neví.
-
-Pamatuj, co posuzuješ. Skill se bude spouštět automaticky a opakovaně —
-nejednoznačná instrukce nebo špatný triggering se zaplatí při každém běhu.
+v odděleném kontextu bez přístupu k uživateli, takže co ze skillu nepochopíš,
+je **nález, ne tvoje selhání**. Závazným kontraktem jsou konvence ve
+`${CLAUDE_PLUGIN_ROOT}/skills/write-skill/`; při rozporu s tímto skillem mají
+přednost ony.
 
 ## Vstupní kontext
 
 - Zadání od volajícího: $ARGUMENTS
 
-Zadání obsahuje **cestu ke skillu**, **číslo kola** a od druhého kola
-**nevyřešené nálezy z minulého kola** i s tím, jak je autor řešil. Chybí-li
-číslo kola, jde o kolo 1. Chybí-li cesta, je nálezem už samo zadání — řekni
-to a skonči.
+Zadání dorazí jedním ze dvou způsobů. **V promptu, kterým tě volající spustil** —
+tak tě spouští `write-skill`: subagent tento soubor jen čte, takže se injektáž
+výše nerozvine a zůstane literálem. Nebo **v argumentech** při přímém vyvolání.
+Ber první zdroj, ve kterém zadání najdeš.
+
+Zadání obsahuje **cesty ke všem posuzovaným skillům** (nový skill i sousedy,
+které autor upravil kvůli vzájemnému vymezení), **číslo kola** a od druhého kola
+**nevyřešené nálezy z minulého kola** i s tím, jak je autor řešil. Chybí-li číslo
+kola, jde o kolo 1. Není-li cesta ani v promptu, ani v argumentech, je nálezem
+už samo zadání — řekni to a skonči.
 
 ## Postup
 
 ### 1. Načtení podkladů
 
-1. Přečti posuzovaný `SKILL.md` celý, včetně frontmatteru a komentářů v něm.
+1. Přečti každý posuzovaný `SKILL.md` celý, včetně frontmatteru a komentářů v něm.
 2. Přečti konvence, vůči kterým konformitu posuzuješ — `skill-conventions.md`,
-   `skill-template.md` a `model-effort-matrix.md` ve složce `skills/write-skill/`.
-   Při rozporu s tímto skillem mají přednost ony.
-3. Projdi `description` a `when_to_use` ostatních skillů v `skills/` — kvůli
-   kolizím pojmenování a překryvům triggeringu.
-4. Přečti doprovodné soubory posuzovaného skillu, na které se jeho tělo odkazuje.
+   `skill-template.md` a `model-effort-matrix.md` ve složce
+   `${CLAUDE_PLUGIN_ROOT}/skills/write-skill/`. Čti je přes plugin root, ne
+   relativně vůči posuzovanému skillu: ten může ležet v `.claude/skills/`
+   cizího projektu, kde konvence nejsou — a bez nich by z review vypadla celá
+   kontrola konformity.
+3. Projdi `description` a `when_to_use` sousedních skillů — jak těch
+   v `${CLAUDE_PLUGIN_ROOT}/skills/`, tak těch v `.claude/skills/` cílového
+   projektu, pokud tam nějaké jsou. V katalogu se potkají, takže kolidovat
+   můžou obojí.
+4. Přečti doprovodné soubory posuzovaných skillů, na které se jejich tělo odkazuje.
 5. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, zda ho nová verze
    skutečně řeší. Autorovo tvrzení, že nález vyřešil, není důkaz — ověř to
    v souboru.
 
+**Chybějící soubory** neřeš tichým přeskočením:
+
+- posuzovaný `SKILL.md` na zadané cestě neexistuje → je to nález a konec;
+- referenční konvence chybí → posuď, co jde, a v Shrnutí uveď, že konformitu
+  nebylo proti čemu ověřit;
+- soubor, na který se tělo odkazuje, neexistuje → rozbitý odkaz je nález.
+
 ### 2. Posouzení
+
+Nejdřív projdi **kontrolní seznam v závěru `skill-conventions.md`**, bod po bodu —
+autor si podle něj skill připravoval, takže rozejít se s ním znamená rozejít se
+se zadáním. Kritéria níže jsou nad jeho rámec.
 
 **Konformita s konvencemi** — formální kontrola, tady buď doslovný:
 
 - Název je `<činnost>-<předmět>` v kebab-case a shoduje se s názvem složky.
 - Povinná pětice je vyplněná: `name`, `description` (věcně *co*), `when_to_use`
-  (*kdy* + negativní vymezení vůči sousedům), `model`, `effort`.
+  (*kdy* + negativní vymezení vůči sousedům), `model`, `effort`. Výjimka:
+  u `model: haiku` se `effort` naopak **vynechává** — jeho nastavení hodí chybu,
+  takže jeho přítomnost je nález, ne jeho absence.
 - `description` + `when_to_use` nepřesahují dohromady 1 536 znaků.
 - Dvojice model × effort odpovídá povaze úlohy podle matice a je zdůvodněná
   komentářem ve frontmatteru.
@@ -94,7 +124,12 @@ to a skonči.
 - Konfigurace odpovídá povaze skillu: skill s interview nesmí mít `context: fork`
   (rozbil by dotazování), autonomní skill naopak nemá mít interaktivní nástroje.
 - `allowed-tools` sedí na to, co postup skutečně potřebuje — ani širší, ani
-  těsnější. Chybějící nástroj skill zasekne uprostřed práce.
+  těsnější. Chybějící nástroj skill zasekne uprostřed práce; nástroj, který
+  žádný krok nepoužívá, je zbytečně široké oprávnění.
+- **Skill je spustitelný i mimo repozitář pluginu.** Cesty ke skriptům a
+  doprovodným souborům musí být ukotvené k `${CLAUDE_PLUGIN_ROOT}`, tvar volání
+  musí odpovídat zúžení v `allowed-tools`, a každý popsaný nenulový návratový
+  kód musí mít v postupu reakci.
 - Tělo je přiměřeně stručné, objemný materiál je v doprovodných souborech
   a u každého odkazu je řečeno, **kdy** se má otevřít.
 - Formáty výstupů, na kterých závisí navazující proces, jsou dané doslovnou
@@ -122,7 +157,7 @@ jediný výstup, na kterém navazující smyčka staví — proto ho dodrž dosl
 ```markdown
 ## Skill Review — kolo <N>
 
-**Verdikt:** ✅ Schváleno | 🔁 Vráceno k dopracování
+**Verdikt:** [Schváleno | Vráceno k dopracování — ponech jen platnou variantu]
 
 ### Nálezy
 
@@ -134,7 +169,8 @@ jediný výstup, na kterém navazující smyčka staví — proto ho dodrž dosl
 
 ### Vyřešené nálezy z minulého kola
 
-(Pouze od 2. kola: číslo nálezu → vyřešeno / přetrvává, a proč.)
+(Od 2. kola: číslo nálezu → vyřešeno / přetrvává, a proč. V 1. kole celou
+sekci i s nadpisem vynech.)
 
 ### Shrnutí
 
@@ -145,14 +181,15 @@ jediný výstup, na kterém navazující smyčka staví — proto ho dodrž dosl
 (Schváleno → skill je hotový. Vráceno → vyjmenuj blokující nálezy k opravě.)
 ```
 
+Posuzuješ-li víc skillů naráz, uveď u každého nálezu ve sloupci Místo i to,
+kterého skillu se týká.
+
 ## Zásady
 
 - **Reviduješ, neopravuješ.** Needituj soubory posuzovaného skillu. Oprava
   provedená reviewerem ničí nezávislost procesu — autor by pak schvaloval
   vlastní zásah cizíma rukama.
 - **Nikdy se neptáš.** Běžíš bez uživatele; nejasnost zapiš jako nález.
-- **Konvence mají přednost** před tímto skillem. Když si odporují, platí
-  `skill-conventions.md`, `skill-template.md` a `model-effort-matrix.md`.
 - **Přísný na vymahatelnost a triggering, shovívavý ke stylu.** Cílem je skill,
   který se spouští správně a chová se předvídatelně — ne takový, který hezky zní.
 - **Nález musí být opravitelný.** Ke každému uveď místo a konkrétní doporučení.

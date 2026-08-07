@@ -45,10 +45,10 @@ se systém chová, není `docs`; a soubor s kódem, kde se přepsal jen komentá
 
 Oblast, které se změna týká — komponenta, modul, balíček nebo funkční celek.
 
-**Nejdřív se podívej, jaké scopy repozitář už používá** (`git log --oneline -30`),
-a drž se zavedeného slovníku. Nový scope zaváděj jen pro oblast, která zatím
-žádný nemá; nekonzistentní scopy jsou horší než žádné, protože se podle nich
-nedá filtrovat.
+**Nejdřív zjisti, jaké scopy repozitář už používá**, a drž se zavedeného
+slovníku — přehled ti dá skill, který tuto referenci používá. Nový scope zaváděj
+jen pro oblast, která zatím žádný nemá; nekonzistentní scopy jsou horší než
+žádné, protože se podle nich nedá filtrovat.
 
 U průřezové změny scope vynech — zástupný scope typu `misc` nebo `general`
 nenese informaci.
@@ -79,13 +79,13 @@ Vzniká-li commit prací agenta, přidej footer `Co-Authored-By:`. **Přesnou po
 řádku určuje prostředí** — nevymýšlej ji, převezmi ji z instrukcí prostředí.
 Jednotný footer drží historii čitelnou pro zpětnou analýzu.
 
-## Předávání zprávy gitu
+## Předávání víceřádkové zprávy
 
 Víceřádkovou zprávu předávej vždy stdinem přes heredoc **s ukončovačem
 v uvozovkách**:
 
 ```bash
-git commit -F - <<'MSG'
+<příkaz, kterým skill commituje> <<'MSG'
 fix(parser): handle empty input without crashing
 
 Prázdný vstup dřív spadl na indexaci prvního tokenu. Vrací se
@@ -97,7 +97,8 @@ MSG
 
 Uvozovky kolem `'MSG'` zabrání expanzi `$` a zpětných apostrofů v obsahu —
 bez nich by shell část zprávy vyhodnotil a do historie by dorazilo něco jiného,
-než jsi napsal. U jednořádkové zprávy stačí `git commit -m "…"`.
+než jsi napsal. Který příkaz zprávu přebírá, určuje skill, který tuto referenci
+používá — tato reference nepředepisuje volání gitu.
 
 ## Příklady
 

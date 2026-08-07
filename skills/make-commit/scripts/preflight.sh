@@ -57,6 +57,8 @@ else
 fi
 
 # --- rozsah změn ---------------------------------------------------------
+# Počty jdou po souborech; git status --porcelain níže sbaluje celé adresáře,
+# takže se čísla a výpis nemusí shodovat.
 staged_count="$(git diff --cached --name-only | wc -l | tr -d ' ')"
 unstaged_count="$(git diff --name-only | wc -l | tr -d ' ')"
 untracked_count="$(git ls-files --others --exclude-standard | wc -l | tr -d ' ')"
@@ -73,3 +75,14 @@ if [ "$staged_count" -gt 0 ]; then
   echo "[staged]"
   git --no-pager diff --cached --stat
 fi
+
+# --- zavedené scopy ------------------------------------------------------
+# Slovník scopů z posledních 200 commitů, aby nový commit nezaváděl vlastní
+# variantu pro oblast, která už scope má. Prázdný výpis znamená, že repozitář
+# scopy zatím nepoužívá.
+echo
+echo "[recent_scopes]"
+git --no-pager log --pretty=%s -200 2>/dev/null \
+  | grep -oE '^[a-z]+\([^)]+\)' \
+  | sed 's/^[a-z]*(//; s/)$//' \
+  | sort | uniq -c | sort -rn | head -15 || true

@@ -13,23 +13,27 @@ when_to_use: >-
   větev, což je prostý checkout, ne úloha pro skill.
 argument-hint: "[popis práce nebo rovnou název větve]"
 model: sonnet
-effort: low
-# Zařazení dle matice: krátká ohraničená operace, inteligence není úzké hrdlo
-# → sonnet × low. Haiku ne: jediné rozhodnutí skillu je odvodit z kontextu
-# výstižný type a popis, což je jazyková úloha, ne šablonovitá transformace.
+effort: medium
+# Zařazení dle matice: dobře ohraničené zadání se známým výsledkem → sonnet ×
+# medium (bod 2 rozhodovacího stromu). Nikoli low: postup má čtyři kroky a pět
+# rozlišovaných chybových stavů, což je přesně to, před čím matice u low varuje.
+# Nikoli haiku: odvodit z kontextu výstižný type a popis je jazyková úloha,
+# ne šablonovitá transformace.
 user-invocable: true
 allowed-tools:
   - Read
-  - Glob
-  - Grep
   - AskUserQuestion
   - "Bash(bash:*)"
 # Bash je zúžený na spouštění skriptů; git se nikdy nevolá přímo (viz Zásady).
-# Vynechaná zvažovaná pole: Write/Edit — skill nezapisuje soubory;
-# context/agent/background — název si nechává potvrdit uživatelem a přepíná
-# větev ve sdíleném pracovním stromu, fork by obojí rozbil; paths — spouští se
-# z konverzace, ne prací nad soubory; disallowed-tools — allowed-tools je
-# uzavřený výčet, není co zakazovat navíc.
+# Proto každé volání píš ve tvaru `bash <cesta>` — jinak nespadne do povolení.
+# Vynechaná zvažovaná pole: disable-model-invocation — založení lokální větve
+# je vratná operace a automatické vyvolání z jiného flow je žádoucí; Glob/Grep —
+# vstupem je zadání uživatele a výpis z preflightu, prohledávat soubory není
+# proč; Write/Edit — skill nezapisuje soubory; context/agent/background — název
+# si nechává potvrdit uživatelem a přepíná větev ve sdíleném pracovním stromu,
+# fork by obojí rozbil; paths — spouští se z konverzace, ne prací nad soubory;
+# shell — skripty se spouští explicitním `bash`; disallowed-tools —
+# allowed-tools je uzavřený výčet, není co zakazovat navíc.
 ---
 
 # Create Branch
@@ -39,16 +43,22 @@ ze kterého je na první pohled patrná povaha práce. Větvení z aktuální v�
 zdá rychlejší, ale zdědí rozpracované commity i zastaralý stav — a to se pozná
 až u merge, kdy je oprava drahá.
 
-Práce s gitem jde přes skripty v `scripts/`. Skripty ověří tvar názvu, kolize
-a dostupnost výchozí větve dřív, než cokoli změní; příkaz `git` proto nevolej
-přímo.
+Práce s gitem jde přes skripty. Ověří tvar názvu, kolize a dostupnost výchozí
+větve dřív, než cokoli změní; příkaz `git` proto nevolej přímo.
 
 ## Skripty
 
+Cesty jsou ukotvené k `${CLAUDE_PLUGIN_ROOT}`, protože plugin může běžet nad
+cizím projektem, kde relativní `scripts/…` míří někam jinam. Volej je vždy
+tvarem `bash <cesta>` — bez toho nespadnou do zúžení v `allowed-tools`.
+
 | Skript | Co dělá |
 | --- | --- |
-| `scripts/preflight.sh` | Stav repozitáře jako `key=value` + seznam větví a změn |
-| `scripts/create-branch.sh` | Ověří název, fetchne výchozí větev, založí a přepne |
+| `${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/preflight.sh` | Stav repozitáře jako `key=value` + seznam větví a změn |
+| `${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh` | Ověří název, fetchne výchozí větev, založí a přepne |
+
+Každý skript má v hlavičce popis použití a návratových kódů. Nenulový kód vždy
+vyhodnoť — `branch_exists_locally` znamená jiný postup než `default_branch_unavailable`.
 
 `create-branch.sh` umí `--check <název>` — ověří tvar i kolize a nic nezmění.
 Používej ho, než název předložíš uživateli k potvrzení; ušetří to kolo,
@@ -81,8 +91,10 @@ Příklady: `feat/create-branch-skill`, `fix/stale-default-branch-ref`,
 
 ### 1. Zjisti stav
 
-Spusť `scripts/preflight.sh` a vyhodnoť výstup:
+Spusť `bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/preflight.sh"`
+a vyhodnoť výstup:
 
+- **`error=not_a_git_repository`** (kód 2) → ohlas to a skonči.
 - **`detached=true`** → ohlas to a zastav se. Zakládat větev z odpojené HEAD
   jde, ale skoro vždy to znamená, že uživatel je uprostřed rebase a chtěl něco
   jiného.
@@ -94,27 +106,46 @@ Spusť `scripts/preflight.sh` a vyhodnoť výstup:
   když se přišlo na to, že se pracuje na špatné větvi — ale řekni to nahlas,
   ať to není překvapení.
 
+Seznam v sekci `[local_branches]` si nech po ruce pro krok 2 — zjevnou kolizi
+názvu odhalíš dřív, než na ni narazí `--check`.
+
 ### 2. Navrhni název
 
 Odvoď `<type>/<popis>` z toho, co uživatel popsal, nebo z rozpracovaných změn.
-Ověř ho přes `scripts/create-branch.sh --check <název>` a **nech si ho
-potvrdit**. Název větve se špatně mění poté, co se na ni pushne, takže jedna
-otázka teď je levnější než přejmenování později.
+Ověř ho:
 
-Dal-li uživatel název sám, jen ho ověř a použij; nevymýšlej lepší.
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" --check <název>
+```
+
+Reaguj podle návratového kódu:
+
+- **3 `invalid_branch_name`** → oprav tvar podle sekce Formát názvu větve.
+- **4 `branch_exists_locally` / `branch_exists_on_remote`** → navrhni jiný název
+  a ověř znovu. Nepřipojuj pořadové číslo; vymysli popis, který práci odlišuje.
+- **5 `default_branch_unavailable`** → jako v kroku 1, ohlas a skonči.
+
+Pak si název **nech potvrdit**. Název větve se špatně mění poté, co se na ni
+pushne, takže jedna otázka teď je levnější než přejmenování později. Dal-li
+uživatel název sám, jen ho ověř a použij; nevymýšlej lepší.
+
+**Není-li uživatel k dispozici** — volání AskUserQuestion selže nebo odpověď
+nedorazí — větev nezakládej a ohlas navržený název. Výjimka: zadal-li uživatel
+název sám, potvrzení není co doplňovat a můžeš pokračovat.
 
 ### 3. Založ větev
 
 ```bash
-bash scripts/create-branch.sh <název>
+bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" <název>
 ```
 
 Skript fetchne výchozí větev, založí novou z `origin/<default>` bez upstreamu
 a přepne na ni. Vrátí `created=true` a `head=<hash>`.
 
-Skončí-li s `error=checkout_failed`, kolidují rozpracované změny s rozdílem
-proti čerstvé výchozí větvi. Nic se nezměnilo — ohlas to uživateli a nabídni
-buď zapsání rozpracované práce (`make-commit`), nebo její odložení stranou.
+Skončí-li s `error=checkout_failed` (kód 7), kolidují rozpracované změny
+s rozdílem proti čerstvé výchozí větvi. Větev nevznikla a zůstáváš na původní —
+ohlas to a nabídni buď zapsání rozpracované práce (`make-commit`), nebo její
+odložení stranou.
 
 ### 4. Shrň výsledek
 

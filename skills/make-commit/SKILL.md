@@ -2,9 +2,9 @@
 name: make-commit
 description: >-
   Zapíše rozdělanou práci jako commit podle Conventional Commits — zjistí stav
-  repozitáře, rozdělí změny do logických celků, sestaví zprávu z diffu,
-  commitne a volitelně pushne. Všechny operace nad gitem provádí přes
-  připravené skripty, takže jsou deterministické a neumí přepsat historii.
+  repozitáře, rozdělí změny do logických celků, sestaví zprávu z diffu
+  a commitne; pushne, pokud si to uživatel nevymíní jinak. Všechny operace nad
+  gitem provádí přes připravené skripty, které neumí přepsat historii.
 when_to_use: >-
   Použij, když má uživatel rozdělanou práci k zapsání — „commitni to",
   „udělej commit", „zapiš změny", „commitni a pushni" — nebo jako závěrečný
@@ -15,8 +15,10 @@ argument-hint: "[rozsah nebo popis změny]"
 model: sonnet
 effort: medium
 # Zařazení dle matice: rutinní tvorba podle jasného zadání → sonnet × medium.
-# Vstupem je diff, výstupem zpráva v pevném formátu; úsudek je potřeba jen
-# na rozdělení do celků, což nezvedá úlohu o kategorii výš.
+# Matice u medium varuje před rozhodnutími, která se těžko vrací zpět — commit
+# takový je. Zůstáváme přesto na medium, protože nevratnost tu nesnižuje kvalita
+# úsudku, ale absence brzdy: proti ní stojí potvrzení rozdělení uživatelem,
+# zastavení na výchozí větvi a fakt, že push je samostatný krok.
 user-invocable: true
 allowed-tools:
   - Read
@@ -25,35 +27,42 @@ allowed-tools:
   - AskUserQuestion
   - "Bash(bash:*)"
 # Bash je zúžený na spouštění skriptů; git se nikdy nevolá přímo (viz Zásady).
-# Užší vzor než "bash:*" by musel spoléhat na tvar cesty ke skriptu, což je
-# křehčí než zákaz přímého gitu vyjádřený v těle skillu.
-# Vynechaná zvažovaná pole: Write/Edit — skill nezapisuje soubory, zpráva jde
-# do gitu stdinem; context/agent/background — rozdělení do celků konzultuje
-# s uživatelem a pracuje nad sdíleným pracovním stromem, fork by obojí rozbil;
-# paths — spouští se z konverzace, ne prací nad konkrétními soubory;
-# disallowed-tools — allowed-tools je uzavřený výčet, není co zakazovat navíc.
+# Proto každé volání píš ve tvaru `bash <cesta>` — jinak nespadne do povolení.
+# Užší vzor by musel spoléhat na tvar cesty ke skriptu, což je křehčí.
+# Vynechaná zvažovaná pole: disable-model-invocation — automatické dokončení
+# úlohy commitem je žádoucí a brzdou jsou kroky 1 a 2, ne zákaz vyvolání;
+# Write/Edit — skill nezapisuje soubory, zpráva jde do gitu stdinem;
+# context/agent/background — rozdělení do celků konzultuje s uživatelem
+# a pracuje nad sdíleným pracovním stromem, fork by obojí rozbil; paths —
+# spouští se z konverzace, ne prací nad konkrétními soubory; shell — skripty
+# se spouští explicitním `bash`; disallowed-tools — allowed-tools je uzavřený
+# výčet, není co zakazovat navíc.
 ---
 
 # Make Commit
 
-Cílem je jednotná, strojově čitelná historie — z takové jde generovat changelog
-a na první pohled rozeznat povahu změny. Závazný formát zprávy drží
-[conventional-commits.md](conventional-commits.md); přečti si ho, než začneš
-psát první zprávu.
+Cílem je jednotná, strojově čitelná historie. Závazný formát zprávy drží
+`${CLAUDE_PLUGIN_ROOT}/skills/make-commit/conventional-commits.md`; přečti si ho,
+než začneš psát první zprávu.
 
-Veškerá práce s gitem jde přes skripty v `scripts/`. Důvod není pohodlí, ale
-předvídatelnost: skripty mají ošetřené hraniční stavy (odpojená HEAD, zastaralý
-lokální ref na výchozí větev, chybějící upstream) a neumí operace, které přepisují
-historii. Příkaz `git` proto nevolej přímo, ani když se to zdá rychlejší.
+Veškerá práce s gitem jde přes skripty. Důvod není pohodlí, ale předvídatelnost:
+skripty mají ošetřené hraniční stavy (odpojená HEAD, zastaralý lokální ref na
+výchozí větev, chybějící upstream) a neumí operace, které přepisují historii.
+Příkaz `git` proto nevolej přímo, ani když se to zdá rychlejší.
 
 ## Skripty
 
+Cesty ke skriptům **i k doprovodné referenci** jsou ukotvené
+k `${CLAUDE_PLUGIN_ROOT}`, protože plugin může běžet nad cizím projektem, kde
+relativní `scripts/…` ani `conventional-commits.md` neexistují. Skripty volej
+vždy tvarem `bash <cesta>` — bez toho nespadnou do zúžení v `allowed-tools`.
+
 | Skript | Co dělá |
 | --- | --- |
-| `scripts/preflight.sh` | Vypíše stav repozitáře jako `key=value` + výpis změn |
-| `scripts/show-diff.sh` | Staged diff; s `--worktree` vše necommitnuté proti HEAD |
-| `scripts/commit.sh` | Stagne zadané cesty a commitne se zprávou ze stdinu |
-| `scripts/push.sh` | Pushne větev; `--publish` založí upstream nové větvi |
+| `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/preflight.sh` | Stav repozitáře jako `key=value`, výpis změn a zavedené scopy |
+| `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/show-diff.sh` | Staged diff; s `--worktree` vše necommitnuté proti HEAD |
+| `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/commit.sh` | Stagne zadané cesty a commitne se zprávou ze stdinu |
+| `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh` | Pushne větev; `--publish` založí upstream nové větvi |
 
 Každý skript má v hlavičce popis použití a návratových kódů. Nenulový kód vždy
 vyhodnoť — `nothing_staged` znamená jiný postup než `detached_head`.
@@ -65,24 +74,33 @@ vyhodnoť — `nothing_staged` znamená jiný postup než `detached_head`.
 Zadání ber jako vodítko pro `type`, `scope` a rozdělení do celků. O obsahu
 zprávy ale rozhoduje diff, ne zadání.
 
+**Interaktivní, nebo ne?** Nehádej to z toho, kdo tě spustil — automatické
+spuštění na konci jiné úlohy ještě neznamená, že uživatel není k dispozici.
+Za neinteraktivní běh považuj situaci, kdy **volání AskUserQuestion selže nebo
+odpověď nedorazí**; teprve pak platí neinteraktivní varianty níže.
+
 ## Postup
 
 ### 1. Zjisti stav
 
-Spusť `scripts/preflight.sh` a vyhodnoť výstup:
+Spusť `bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/preflight.sh"`
+a vyhodnoť výstup:
 
+- **`error=not_a_git_repository`** (kód 2) → ohlas to a skonči.
 - **`detached=true`** → zastav se a ohlas to. Commit na odpojené HEAD se tiše
   ztratí, jakmile se přepne větev.
-- **`on_default_branch=true`** → zeptej se uživatele, jestli má práce opravdu
-  jít přímo do výchozí větve, nebo se má nejdřív založit nová — na to slouží
-  skill `create-branch`, sám větve nezakládej. Běžíš-li neinteraktivně,
-  **necommituj** a jen ohlas, že změny leží na výchozí větvi a čekají na
-  rozhodnutí; zápis do sdílené výchozí větve se špatně bere zpět, takže tady
-  opatrnost vítězí nad plynulostí.
+- **`on_default_branch=true`** → zeptej se **nástrojem AskUserQuestion**, jestli
+  má práce opravdu jít přímo do výchozí větve, nebo se má nejdřív založit nová —
+  na to slouží skill `create-branch`, sám větve nezakládej. Neinteraktivně **necommituj**
+  a jen ohlas, že změny leží na výchozí větvi a čekají na rozhodnutí; zápis
+  do sdílené výchozí větve se špatně bere zpět, takže tady opatrnost vítězí
+  nad plynulostí.
 - **`on_default_branch=unknown`** (offline, `default_branch_source=unavailable`)
   → chovej se, jako bys na výchozí větvi byl.
 - **`staged_count=0` i `unstaged_count=0` i `untracked_count=0`** → není co
   commitovat, skonči.
+
+Ze sekce `[recent_scopes]` si vezmi slovník scopů, které repozitář už používá.
 
 ### 2. Urči rozsah
 
@@ -97,24 +115,35 @@ Při přímém vyvolání uživatelem („commitni to") je rozsahem celý pracov
 pokud uživatel sám nezúžil. Při automatickém spuštění na konci jiné úlohy vynech
 změny, které s ní zjevně nesouvisejí — a vynechání ohlas.
 
-**Víc celků → víc commitů.** Rozdělení navrhni uživateli prostým textem a nech
-ho rozhodnout. Neinteraktivně commitni vše jako jeden celek a rozdělení jen
-doporuč ve shrnutí — čekání na odpověď, která nepřijde, by zaseklo běh.
+**Víc celků → víc commitů.** Návrh rozdělení vypiš prostým textem, ale
+**rozhodnutí si vyžádej nástrojem AskUserQuestion** (rozdělit podle návrhu /
+commitnout jako jeden celek). Rozhodnutí musí projít tímhle nástrojem, protože
+jeho selhání je jediný signál, podle kterého se pozná neinteraktivní běh — ptát
+se jen textem znamená, že se na odpověď čeká navždy. Neinteraktivně commitni vše
+jako jeden celek a rozdělení jen doporuč ve shrnutí.
 
 ### 3. Napiš zprávu
 
-Pro každý celek si nech vypsat diff — `scripts/show-diff.sh --worktree <cesty>`
-u ještě nestagovaných změn, `scripts/show-diff.sh` u staged výběru. U většího
-rozsahu si ho vyžádej po souborech.
+Pro každý celek si nech vypsat diff:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/show-diff.sh" --worktree <cesty>
+```
+
+U staged výběru vynech `--worktree`, u většího rozsahu si diff vyžádej po
+souborech. **Soubory ze sekce `[untracked]` si přečti nástrojem Read** — u
+nesledovaných souborů diff obsah neukáže, a `type` i popis odvozený jen z názvu
+souboru bývá vedle.
 
 Zprávu piš **z diffu, ne z paměti konverzace**. Commituješ to, co je skutečně
 v repu — včetně změn, o kterých konverzace nemluvila. Formát a pravidla drží
-[conventional-commits.md](conventional-commits.md).
+`${CLAUDE_PLUGIN_ROOT}/skills/make-commit/conventional-commits.md`, slovník scopů
+`[recent_scopes]` z kroku 1.
 
 ### 4. Commitni
 
 ```bash
-bash scripts/commit.sh <cesty> <<'MSG'
+bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/commit.sh" <cesty> <<'MSG'
 <zpráva>
 MSG
 ```
@@ -123,14 +152,19 @@ Zprávu předávej vždy takhle — heredocem s ukončovačem v uvozovkách. Bez
 by shell expandoval `$` a zpětné apostrofy a do historie by dorazilo něco jiného,
 než jsi napsal. Je-li výběr už staged z kroku 2, cesty vynech.
 
-Skript vrátí `commit=<hash>` a `subject=<popis>`. Odmítne-li commit hook, oprav
-příčinu, nebo ji ohlas uživateli — neobcházej ji.
+Skript vrátí `commit=<hash>` a `subject=<popis>`. Odmítne-li commit hook, **ohlas
+příčinu uživateli** — opravit ji sám nemůžeš, skill soubory needituje. Přeformátoval-li
+hook soubory sám, stagni je znovu a commit zopakuj.
 
 ### 5. Pushni
 
-Spusť `scripts/push.sh`. Skončí-li s `error=no_upstream`, větev nemá kam pushnout:
-publikuj ji přes `--publish` **jen na výslovné přání uživatele**, jinak to ohlas
-ve shrnutí. Push úplně vynech, pokud uživatel řekl, že ho nechce.
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh"
+```
+
+Skončí-li s `error=no_upstream` (kód 3), větev nemá kam pushnout: publikuj ji
+přes `--publish` **jen na výslovné přání uživatele**, jinak to ohlas ve shrnutí.
+Push úplně vynech, pokud uživatel řekl, že ho nechce.
 
 ### 6. Shrň výsledek
 
