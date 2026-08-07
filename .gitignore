@@ -1,2 +1,5 @@
 .idea/
 .vs/
+
+# Lokální konfigurace MCP serverů — patří ke stroji, ne k repozitáři
+.mcp.json
