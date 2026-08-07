@@ -11,8 +11,9 @@ when_to_use: >-
   „vytvoř skill", „přidej skill na…", „napiš mi skill", „uprav frontmatter
   skillu" — ale i tehdy, když popisuje opakovaný postup, který by stálo za to
   zachytit jako skill, aniž by slovo skill zmínil. Nepoužívej pro zakládání
-  agentů ani commandů, ty mají vlastní pravidla; pro samotné posouzení
-  hotového skillu slouží review-skill; ani pro běžné použití existujícího skillu.
+  agentů, na to slouží write-agent; ani pro commandy, ty mají vlastní pravidla;
+  pro samotné posouzení hotového skillu slouží review-skill; ani pro běžné
+  použití existujícího skillu.
 argument-hint: "[název nebo téma skillu]"
 model: opus
 effort: high
@@ -68,8 +69,11 @@ projektem, kde relativní cesta `skills/…` míří někam jinam.
 5. Urči, kam skill patří: ve vývojovém repu pluginu do `skills/<název>/`,
    nad cizím projektem do jeho `.claude/skills/<název>/`. Není-li to jednoznačné,
    zeptej se v interview.
-6. Projdi existující skilly — stačí `description` a `when_to_use` z jejich
-   frontmatterů. Nový skill nesmí triggeringem kolidovat se sousedy; hranici je
+6. Projdi existující skilly — jak ty v `.claude/skills/` cílového projektu, tak ty,
+   které dodává plugin; v katalogu se potkají, takže kolidovat můžou obojí. Stačí
+   `description` a `when_to_use` z jejich frontmatterů. Ověř zároveň, že název
+   nekoliduje s žádným agentem — skilly a agenti sdílejí jmenný prostor v hlavě
+   toho, kdo je volá. Nový skill nesmí triggeringem kolidovat se sousedy; hranici je
    potřeba vytyčit negativním vymezením **na obou stranách**, takže pokud úprava
    souseda k zadání patří, udělej ji zároveň — a v kroku 5 ji pošli do review
    spolu s novým skillem.
@@ -137,6 +141,11 @@ v `.claude/skills/` projektu k jeho kořeni (`.claude/skills/<název>/…`). Mim
 plugin se `${CLAUDE_PLUGIN_ROOT}` nenastaví a skill by spadl na prvním volání.
 Tvar volání srovnej se zúžením v `allowed-tools`.
 
+**Výjimka: skill, který se spouští tím, že si ho subagent přečte jako soubor**
+(tak běží reviewery v této smyčce), bere kořen pluginu ze zadání a proměnnou
+nepoužívá vůbec — subagentovi se nerozvine a zůstane literálem. Píšeš-li takový
+skill, řekni mu ve Vstupním kontextu, odkud si kořen vzít a co dělat, když chybí.
+
 ### 4. Vlastní kontrola
 
 Projdi hotový skill proti kontrolnímu seznamu v závěru `skill-conventions.md`,
@@ -157,6 +166,11 @@ Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady, nemus�
    z frontmatteru `review-skill` a předej je explicitně: jako subagent si je
    sám neuplatní, takže co nepředáš, se nepoužije. Zadání sestav podle šablony
    ve Formátu výstupu.
+
+   **Do zadání dosaď rozvinutou absolutní cestu ke kořeni pluginu**, nikde
+   nenech proměnnou. Reviewer čte soubory jako subagent a nemá jak si ji
+   dopočítat; bez cesty si neotevře ani vlastní postup, ani konvence —
+   a z kola vypadne celá kontrola konformity, aniž by to bylo poznat.
 
    Subagent startuje s čistým kontextem — právě proto je jeho pohled nezávislý,
    a právě proto si historii kol nepamatuje. Co mu nepředáš, pro něj neexistuje.
@@ -203,11 +217,12 @@ Reviewer ho parsuje a nekompletní zadání označí za nález, kterým kolo sko
 proto ho posílej v této struktuře:
 
 ```
-Přečti si soubor `${CLAUDE_PLUGIN_ROOT}/skills/review-skill/SKILL.md`
+Přečti si soubor `<kořen pluginu>/skills/review-skill/SKILL.md`
 a proveď přesně jeho postup.
 
 Zadání pro tvůj běh:
-- Repozitář: <absolutní cesta>
+- Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>
+- Repozitář: <absolutní cesta k repozitáři cílového projektu, do kterého skill míří>
 - Posuzované skilly: <cesta k novému skillu; cesty ke všem upraveným sousedům>
 - Číslo kola: <N>
 - Nevyřešené nálezy z minulého kola: <žádné, jde o první kolo | seznam nálezů

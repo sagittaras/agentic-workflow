@@ -10,7 +10,8 @@ when_to_use: >-
   jako subagenta s čistým kontextem spouští write-skill po každém kole úprav,
   ručně když uživatel řekne „zreviduj skill", „zkontroluj ten skill" nebo
   „projdi skill proti konvencím". Nepoužívej pro psaní ani opravu skillu,
-  na to slouží write-skill; ani pro review kódu či jiných dokumentů.
+  na to slouží write-skill; pro review agenta slouží review-agent; ani pro
+  review kódu či jiných dokumentů.
 argument-hint: "[cesty ke skillům, číslo kola, nevyřešené nálezy]"
 context: fork
 agent: Plan
@@ -44,8 +45,8 @@ disallowed-tools:
 
 Jsi nezávislý reviewer skillu — ne jeho autor a ne jeho opravář. Běžíš
 v odděleném kontextu bez přístupu k uživateli, takže co ze skillu nepochopíš,
-je **nález, ne tvoje selhání**. Závazným kontraktem jsou konvence ve
-`${CLAUDE_PLUGIN_ROOT}/skills/write-skill/`; při rozporu s tímto skillem mají
+je **nález, ne tvoje selhání**. Závazným kontraktem jsou konvence ve složce
+`<kořen pluginu>/skills/write-skill/`; při rozporu s tímto skillem mají
 přednost ony.
 
 ## Vstupní kontext
@@ -57,27 +58,39 @@ tak tě spouští `write-skill`: subagent tento soubor jen čte, takže se injek
 výše nerozvine a zůstane literálem. Nebo **v argumentech** při přímém vyvolání.
 Ber první zdroj, ve kterém zadání najdeš.
 
-Zadání obsahuje **cesty ke všem posuzovaným skillům** (nový skill i sousedy,
-které autor upravil kvůli vzájemnému vymezení), **číslo kola** a od druhého kola
-**nevyřešené nálezy z minulého kola** i s tím, jak je autor řešil. Chybí-li číslo
-kola, jde o kolo 1. Není-li cesta ani v promptu, ani v argumentech, je nálezem
-už samo zadání — řekni to a skonči.
+Zadání obsahuje **absolutní cestu ke kořeni pluginu**, **absolutní cestu
+k repozitáři cílového projektu** (odtud najdeš jeho `.claude/skills/`
+a `.claude/agents/`, které máš projít), **cesty ke všem posuzovaným skillům**
+(nový skill i sousedy, které autor upravil kvůli vzájemnému vymezení),
+**číslo kola** a od druhého kola **nevyřešené nálezy z minulého kola** i s tím,
+jak je autor řešil. Chybí-li číslo kola, jde o kolo 1.
+
+Bez cesty k posuzovanému skillu je nálezem už samo zadání — řekni to a skonči.
+Chybí-li kořen pluginu, zkus ho odvodit z cesty, po které jsi četl tento soubor;
+nepovede-li se to, posuď, co jde, a v Shrnutí uveď, že konformitu nebylo proti
+čemu ověřit. **Proměnnou `${CLAUDE_PLUGIN_ROOT}` nikdy nepoužívej jako cestu** —
+jako subagentovi se ti nerozvine a zůstane literálem.
 
 ## Postup
 
 ### 1. Načtení podkladů
 
 1. Přečti každý posuzovaný `SKILL.md` celý, včetně frontmatteru a komentářů v něm.
+   **Urči z jeho cesty, kde leží** — uvnitř pluginu (`skills/`), nebo
+   v `.claude/skills/` cílového projektu. Na umístění závisí kritérium ukotvení
+   cest v kroku 2, takže tohle je první, co potřebuješ vědět.
 2. Přečti konvence, vůči kterým konformitu posuzuješ — `skill-conventions.md`,
    `skill-template.md` a `model-effort-matrix.md` ve složce
-   `${CLAUDE_PLUGIN_ROOT}/skills/write-skill/`. Čti je přes plugin root, ne
-   relativně vůči posuzovanému skillu: ten může ležet v `.claude/skills/`
-   cizího projektu, kde konvence nejsou — a bez nich by z review vypadla celá
-   kontrola konformity.
+   `<kořen pluginu>/skills/write-skill/`, kde kořen pluginu bereš **ze zadání**.
+   Čti je odtud, ne relativně vůči posuzovanému skillu: ten může ležet
+   v `.claude/skills/` cizího projektu, kde konvence nejsou — a bez nich by
+   z review vypadla celá kontrola konformity.
 3. Projdi `description` a `when_to_use` sousedních skillů — jak těch
-   v `${CLAUDE_PLUGIN_ROOT}/skills/`, tak těch v `.claude/skills/` cílového
-   projektu, pokud tam nějaké jsou. V katalogu se potkají, takže kolidovat
-   můžou obojí.
+   v `<kořen pluginu>/skills/`, tak těch v `.claude/skills/` cílového projektu,
+   pokud tam nějaké jsou. V katalogu se potkají, takže kolidovat můžou obojí.
+   Projdi zároveň názvy agentů v `<kořen pluginu>/agents/` a `.claude/agents/`
+   cílového projektu — kritérium na název v kroku 2 kolizi s nimi kontroluje,
+   takže bez tohoto průchodu ji nemáš z čeho ověřit.
 4. Přečti doprovodné soubory posuzovaných skillů, na které se jejich tělo odkazuje.
 5. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, zda ho nová verze
    skutečně řeší. Autorovo tvrzení, že nález vyřešil, není důkaz — ověř to
@@ -98,7 +111,9 @@ se zadáním. Kritéria níže jsou nad jeho rámec.
 
 **Konformita s konvencemi** — formální kontrola, tady buď doslovný:
 
-- Název je `<činnost>-<předmět>` v kebab-case a shoduje se s názvem složky.
+- Název je `<činnost>-<předmět>` v kebab-case, shoduje se s názvem složky
+  a nekoliduje s názvem žádného agenta — ani v `agents/` pluginu, ani
+  v `.claude/agents/` cílového projektu.
 - Povinná pětice je vyplněná: `name`, `description` (věcně *co*), `when_to_use`
   (*kdy* + negativní vymezení vůči sousedům), `model`, `effort`. Výjimka:
   u `model: haiku` se `effort` naopak **vynechává** — jeho nastavení hodí chybu,
@@ -126,10 +141,23 @@ se zadáním. Kritéria níže jsou nad jeho rámec.
 - `allowed-tools` sedí na to, co postup skutečně potřebuje — ani širší, ani
   těsnější. Chybějící nástroj skill zasekne uprostřed práce; nástroj, který
   žádný krok nepoužívá, je zbytečně široké oprávnění.
-- **Skill je spustitelný i mimo repozitář pluginu.** Cesty ke skriptům a
-  doprovodným souborům musí být ukotvené k `${CLAUDE_PLUGIN_ROOT}`, tvar volání
-  musí odpovídat zúžení v `allowed-tools`, a každý popsaný nenulový návratový
-  kód musí mít v postupu reakci.
+- **Skill je spustitelný tam, kde leží.** Ukotvení cest posuzuj podle větve,
+  kterou jsi určil v kroku 1, ne paušálně — chyby jsou blokující, ale v každé
+  větvi opačné:
+  - Skill uvnitř pluginu, který spouští loader, ukotvuje cesty ke skriptům
+    a doprovodným souborům k `${CLAUDE_PLUGIN_ROOT}`. Relativní cesta nebo cizí
+    kořen je nález.
+  - Skill uvnitř pluginu, který se spouští tím, že si ho **subagent přečte jako
+    soubor** — tak běží reviewery v této smyčce — bere kořen pluginu **ze
+    zadání**. Výskyt `${CLAUDE_PLUGIN_ROOT}` je i tady nález: subagentovi se
+    nerozvine a zůstane literálem, takže si skill neotevře vlastní podklady.
+  - Skill v `.claude/skills/` cílového projektu ukotvuje ke kořeni projektu.
+    Výskyt `${CLAUDE_PLUGIN_ROOT}` je nález — mimo plugin se nenastaví
+    a skill spadne na prvním volání.
+
+  Dál platí pro všechny větve: tvar volání musí odpovídat zúžení
+  v `allowed-tools` a každý popsaný nenulový návratový kód musí mít v postupu
+  reakci.
 - Tělo je přiměřeně stručné, objemný materiál je v doprovodných souborech
   a u každého odkazu je řečeno, **kdy** se má otevřít.
 - Formáty výstupů, na kterých závisí navazující proces, jsou dané doslovnou
