@@ -1,8 +1,11 @@
 # Konvence psaní agentů
 
 > **Rozsah:** Referenční soubor skillu `write-agent`. Závazné konvence pro zakládání
-> a úpravu agentů v `.claude/agents/` projektů, nad kterými plugin běží. Volbu `model:`
-> a `effort:` řeší [agent-model-matrix.md](agent-model-matrix.md), kostru těla
+> a úpravu agentů — jak těch v `.claude/agents/` projektů, nad kterými plugin běží,
+> tak těch, které dodává plugin sám ve složce `agents/`. Obě umístění se řídí týmiž
+> pravidly; liší se jen ukotvení cest a tři pole, která se plugin agentům neuplatní
+> (viz kapitola 3). Volbu `model:`, `effort:` a `maxTurns:` řeší
+> [agent-model-matrix.md](agent-model-matrix.md), kostru těla
 > [agent-template.md](agent-template.md).
 >
 > Konvence skillů drží [skill-conventions.md](../write-skill/skill-conventions.md) —

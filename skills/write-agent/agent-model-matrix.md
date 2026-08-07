@@ -1,8 +1,9 @@
 # Matice model × effort × maxTurns
 
 > **Rozsah:** Referenční soubor skillu `write-agent`. Platí **výhradně pro agenty** —
-> pro volbu `model:`, `effort:` a `maxTurns:` ve frontmatteru zakládaného
-> `.claude/agents/<role>.md`. Na skilly se nevztahuje; ty mají vlastní matici.
+> pro volbu `model:`, `effort:` a `maxTurns:` ve frontmatteru zakládaného agenta,
+> ať už leží v `.claude/agents/` cílového projektu, nebo v `agents/` pluginu.
+> Na skilly se nevztahuje; ty mají vlastní matici.
 >
 > Fakta o modelech (ceny, kontext, výstup) jsou vědomě duplikovaná ze skillové matice —
 > `write-agent` má být použitelný bez `write-skill`. **Při změně ceníku uprav oba soubory.**

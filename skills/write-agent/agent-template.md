@@ -5,9 +5,9 @@
 > volbu `model` × `effort` × `maxTurns` [agent-model-matrix.md](agent-model-matrix.md) —
 > při rozporu mají tyto dokumenty přednost před šablonou.
 
-Šablona míří na **role-agenty** do `.claude/agents/` cílového projektu: agent drží obor,
-běží ve vlastním kontextu a vrací report. Pro jednorázový postup, který nevyžaduje
-úsudek, se agent nepíše — patří to do skillu.
+Šablona míří na **role-agenty** — do `.claude/agents/` cílového projektu i do složky
+`agents/` pluginu: agent drží obor, běží ve vlastním kontextu a vrací report.
+Pro jednorázový postup, který nevyžaduje úsudek, se agent nepíše — patří to do skillu.
 
 ## Jak šablonu použít
 

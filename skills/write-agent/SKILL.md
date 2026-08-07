@@ -70,9 +70,8 @@ projektem, kde relativní cesta `skills/…` míří někam jinam.
 5. Urči, kam agent patří: nad cizím projektem do jeho `.claude/agents/<název>.md`,
    ve vývojovém repu pluginu do `agents/<název>.md`. Není-li to jednoznačné,
    zeptej se v interview — na volbě visí ukotvení cest v kroku 3 a špatná větev
-   znamená agenta s nefunkčními odkazy. Referenční soubory jsou psané pro typický
-   případ, tedy agenta v `.claude/agents/` cílového projektu; pro agenta uvnitř
-   pluginu platí beze změny, liší se jen ukotvení cest a to, že se mu
+   znamená agenta s nefunkčními odkazy. Konvence i šablona platí pro obě umístění
+   stejně; liší se jen ukotvení cest a to, že se agentovi uvnitř pluginu
    `permissionMode`, `mcpServers` ani `hooks` neuplatní.
 6. **Zjisti, jakým slovníkem projekt mluví o rolích.** Projdi `README.md`,
    `CONTRIBUTING.md`, `CODEOWNERS`, dokumentaci, ADR a názvy štítků nebo týmů,
@@ -175,10 +174,15 @@ Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady, nemus�
 ### 5. Nezávislé review
 
 1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`) —
-   bez verdiktu nemáš jak pokračovat. Typ agenta, model a effort vezmi
-   z frontmatteru `review-agent` a předej je explicitně: jako subagent si je
-   sám neuplatní, takže co nepředáš, se nepoužije. Zadání sestav podle šablony
+   bez verdiktu nemáš jak pokračovat. Typ agenta a model vezmi z frontmatteru
+   `review-agent` a předej je parametry nástroje: jako subagent si je sám
+   neuplatní, takže co nepředáš, se nepoužije. Zadání sestav podle šablony
    ve Formátu výstupu.
+
+   **Effort parametrem předat nejde** — nástroj Agent ho nemá, takže ho napiš
+   do zadání jako pokyn. Je to slabší záruka než parametr, ale bez něj poběží
+   reviewer s effortem tvojí session, který bývá nižší než ten, na kterém má
+   poslední brána pracovat.
 
    **Do zadání dosaď rozvinutou absolutní cestu ke kořeni pluginu**, nikde
    nenech proměnnou. Reviewer čte soubory jako subagent a nemá jak si ji
@@ -230,7 +234,8 @@ proto ho posílej v této struktuře:
 
 ```
 Přečti si soubor `<kořen pluginu>/skills/review-agent/SKILL.md`
-a proveď přesně jeho postup.
+a proveď přesně jeho postup. Pracuj s effortem <hodnota z frontmatteru
+review-agent>.
 
 Zadání pro tvůj běh:
 - Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>
