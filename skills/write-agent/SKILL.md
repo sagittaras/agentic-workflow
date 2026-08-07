@@ -12,7 +12,8 @@ when_to_use: >-
   agenta" — i tehdy, když popisuje obor, který by měl někdo na projektu trvale
   vlastnit, aniž by slovo agent zmínil. Nepoužívej pro zakládání skillů, na to
   slouží write-skill; pro posouzení hotového agenta slouží review-agent;
-  ani pro běžné spuštění existujícího agenta.
+  pro naplnění jeho paměti train-agent; ani pro běžné spuštění existujícího
+  agenta.
 argument-hint: "[role nebo téma agenta]"
 model: opus
 effort: high
@@ -255,6 +256,9 @@ Vrať verdikt přesně ve struktuře, kterou review-agent předepisuje v sekci
 Agent: <název> (<cesta>)
 Mandát: <jednou větou, co role vlastní>
 Konfigurace: <model> × <effort> × <maxTurns> — <důvod zařazení včetně frekvence>
+Paměť: <hodnota memory: — u nového agenta „zatím prázdná, naplní se skillem
+  train-agent", u upraveného „tímto během se neměnila" nebo „doplněna/změněna
+  tímto během z <původní> na <nová>" | vynechána>
 Vynechaná zvažovaná pole: <výčet>
 Kol review: <N>
 Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">
