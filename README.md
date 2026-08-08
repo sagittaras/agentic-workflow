@@ -73,8 +73,9 @@ aktualizace.
 ## Ověření
 
 Restartuj Claude Code a v `/help` zkontroluj sekci skillů — mají být vidět pod
-prefixem `sagittaras:`, tedy `sagittaras:make-commit` a spol. Plugin se
-v konfiguraci hlásí jako `sagittaras@skills-dir`.
+prefixem `sagittaras:`, tedy `sagittaras:make-commit` a spol. Výjimkou je
+rozcestník: ten se hlásí jako holé `sagittaras` a volá se `/sagittaras`. Plugin
+se v konfiguraci hlásí jako `sagittaras@skills-dir`.
 
 ## Aktualizace
 
@@ -110,6 +111,7 @@ Remove-Item -Recurse -Force "$HOME\.claude\skills\sagittaras"
 
 | Skill | K čemu |
 | --- | --- |
+| `sagittaras` | Rozcestník — řekne, co plugin nabízí, a podle rozdělané práce navede na správný skill. Volá se jako `/sagittaras`, bez namespace |
 | `create-branch` | Založí pracovní větev z čerstvé výchozí větve remotu, název ve tvaru `<type>/<popis>` si nechá potvrdit |
 | `make-commit` | Zapíše rozdělanou práci podle Conventional Commits, rozdělí ji do logických celků a volitelně pushne |
 | `write-skill` | Vytvoří nebo upraví skill podle konvencí pluginu a nechá ho zrevidovat subagentem |
@@ -128,5 +130,8 @@ oddělené klony téhož repozitáře. Je to záměr: vývojová kopie leží mi
 `.claude`, takže se její skilly nenačítají a rozdělaná práce neovlivňuje běžící
 session. Změny se do ostré instalace dostanou až pushem a aktualizací výše.
 
-`SKILL.md` a `plugin.json` v kořeni jsou pozůstatek scaffoldu z `claude plugin init`
-a záměrně zůstávají nevyplněné — skilly žijí ve `skills/`.
+`SKILL.md` v kořeni není součástí `skills/` — do pluginu ho zapojuje položka
+`"skills": ["./"]` v `.claude-plugin/plugin.json` a bez ní se nenačte. Slouží
+jako rozcestník `/sagittaras`. Přejmenovat ho podle konvence
+`<činnost>-<předmět>` nejde: `name` se musí shodovat s názvem pluginu, jinak
+se změní i příkaz, kterým se volá.

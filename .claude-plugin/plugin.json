@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "sagittaras",
   "version": "0.1.0",
-  "description": "TODO: describe what this plugin provides",
+  "description": "Skills a agentic workflow studia Sagittaras — práce s gitem podle Conventional Commits a zakládání skillů i agentů podle konvencí pluginu, včetně nezávislého review.",
   "author": {
     "name": "Jan 'Zechy' Zechovský",
     "email": "jan.zechovsky@sagittaras.cz"
