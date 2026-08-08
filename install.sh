@@ -52,7 +52,9 @@ normalize_remote() {
 
 # --- instalace nebo aktualizace ------------------------------------------
 if [ -e "$target" ]; then
-  if [ ! -d "$target/.git" ]; then
+  # Ne test na složku .git — u worktree a submodulu je to soubor a legitimní
+  # instalace by se označila za cizí obsah k ručnímu úklidu.
+  if ! git -C "$target" rev-parse --git-dir >/dev/null 2>&1; then
     err "V $target už něco je, ale není to git repozitář."
     info "Zkontroluj obsah a odstraň ho ručně, pak spusť skript znovu."
     exit 2

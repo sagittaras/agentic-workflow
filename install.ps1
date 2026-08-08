@@ -75,7 +75,10 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 
 # --- instalace nebo aktualizace ------------------------------------------
 if (Test-Path -LiteralPath $Target) {
-    if (-not (Test-Path -LiteralPath (Join-Path $Target '.git'))) {
+    # Ne test na složku .git — u worktree a submodulu je to soubor a legitimní
+    # instalace by se označila za cizí obsah k ručnímu úklidu.
+    & git -C $Target rev-parse --git-dir *> $null
+    if ($LASTEXITCODE -ne 0) {
         Write-Err "V $Target už něco je, ale není to git repozitář."
         Write-Info 'Zkontroluj obsah a odstraň ho ručně, pak spusť skript znovu.'
         exit 2
