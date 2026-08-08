@@ -79,6 +79,16 @@ se v konfiguraci hlásí jako `sagittaras@skills-dir`.
 
 ## Aktualizace
 
+Obvyklá cesta je skill — z běžící session:
+
+```
+/sagittaras:update-plugin
+```
+
+Stáhne poslední stav, vypíše které skilly se změnily a řekne, jestli stačí
+`/reload-plugins`, nebo je potřeba restart. Skripty níž zůstávají jako záložní
+cesta pro situace, kdy Claude Code neběží.
+
 Stejný skript, který instaluje, i aktualizuje:
 
 ```powershell
@@ -119,6 +129,7 @@ Remove-Item -Recurse -Force "$HOME\.claude\skills\sagittaras"
 | `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
 | `review-agent` | Nezávislé review agenta s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
 | `train-agent` | Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé paměti, co se týká jeho role |
+| `update-plugin` | Stáhne poslední stav do instalace, vypíše co se změnilo a poradí, jestli stačí reload, nebo je nutný restart |
 
 Skripty, na které se skilly odkazují, si cesty kotví přes `${CLAUDE_PLUGIN_ROOT}`,
 protože plugin běží nad cizími projekty, kde relativní cesty míří jinam.

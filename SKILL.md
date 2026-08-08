@@ -9,8 +9,8 @@ when_to_use: >-
   Použij, když se uživatel ptá, co plugin sagittaras umí nebo kudy do něj —
   „co tady můžu použít", „co ten plugin nabízí", „jak s tímhle začít" —
   typicky přes /sagittaras. Nepoužívej místo konkrétního skillu: patří-li práce
-  některému z nich, sáhni rovnou po něm a rozcestník přeskoč. Ani pro instalaci
-  a aktualizaci pluginu, ty popisuje README.md v kořeni pluginu.
+  některému z nich, sáhni rovnou po něm a rozcestník přeskoč. Na aktualizaci
+  pluginu je update-plugin, na první instalaci README.md v kořeni pluginu.
 argument-hint: "[co potřebuješ udělat]"
 model: sonnet
 effort: medium
@@ -109,8 +109,9 @@ hotové práce, na to slouží make-commit" u `create-branch` znamená, že nás
 je `make-commit`. Dvojice `create-branch` → práce → `make-commit` je ilustrace,
 ne úplný seznam.
 
-Instalaci, aktualizaci ani odinstalaci nevysvětluj — na to je `README.md`
-v kořeni pluginu, odkaž se na něj.
+**Aktualizaci neodbývej odkazem na README** — na tu je `/sagittaras:update-plugin`
+a doporuč ho stejně jako kterýkoli jiný skill. Do `README.md` v kořeni pluginu
+posílej jen první instalaci a odinstalaci; ty skill neumí.
 
 ## Formát výstupu
 
@@ -127,7 +128,7 @@ Plugin sagittaras nabízí [počet] skillů:
 - `/sagittaras:[název]` — [co udělá, jednou větou vlastními slovy, ne citace description]
 
 [Jedna věta o obvyklém zřetězení.]
-[Instalace a aktualizace → odkaz na README.md.]
+[První instalace a odinstalace → odkaz na README.md.]
 ```
 
 **Doporučení** (konkrétní zadání):
@@ -163,7 +164,8 @@ Postup nápravy je v `README.md` v kořeni pluginu.
   může říct ne, je jediná brzda před skillem, který sahá na repozitář.
 - **Seznam skillů vždy z disku.** Výčet z paměti zastará první přidaným skillem
   a pozná se to až selháním.
-- **Instalace patří README.** Rozcestník řeší orientaci uvnitř session, ne
-  nasazení pluginu; dvojí popis instalace se rozejde.
+- **První instalace patří README.** Rozcestník řeší orientaci uvnitř session, ne
+  nasazení pluginu; dvojí popis instalace se rozejde. Aktualizace je výjimka —
+  tu umí `/sagittaras:update-plugin` a patří do doporučení jako každý jiný skill.
 - **Necituj `description` doslova.** Přeformuluj to k situaci uživatele —
   odříkaný katalog mu neřekne víc než výpis skillů, který už vidí.
