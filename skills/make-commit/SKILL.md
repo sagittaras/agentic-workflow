@@ -162,8 +162,12 @@ hook soubory sám, stagni je znovu a commit zopakuj.
 bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh"
 ```
 
-Skončí-li s `error=no_upstream` (kód 3), větev nemá kam pushnout: publikuj ji
-přes `--publish` **jen na výslovné přání uživatele**, jinak to ohlas ve shrnutí.
+Skončí-li s `error=no_upstream` (kód 3), větev nemá kam pushnout. Publikuj ji
+přes `--publish` **jen tehdy, když to někdo výslovně zadal** — buď uživatel
+v konverzaci, nebo volající skill v zadání (typicky `sagittaras:open-pr`, který
+bez publikované větve nemá z čeho založit PR). Zmocnění musí být v zadání
+skutečně vyslovené; z toho, že by se to teď hodilo, neplyne. Jinak publikaci
+vynech a ohlas ji ve shrnutí jako nedokončený krok.
 Push úplně vynech, pokud uživatel řekl, že ho nechce.
 
 ### 6. Shrň výsledek
@@ -180,5 +184,6 @@ z rozsahu vynechal i s důvodem.
   jinou cestou.
 - **Zpráva se píše z diffu.** Konverzace je vodítko, diff je pravda.
 - **Staged výběr je zadání**, ne návrh k rozšíření.
-- **Publikování větve patří uživateli.** Větev bez upstreamu nikdy nepublikuj
-  sám od sebe.
+- **Publikování větve se nedělá samo od sebe.** Větev bez upstreamu publikuj
+  jen s výslovným zmocněním — od uživatele, nebo od volajícího skillu, který ho
+  má v zadání. Ticho zmocnění není.
