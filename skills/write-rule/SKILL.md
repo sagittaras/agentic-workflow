@@ -11,9 +11,11 @@ when_to_use: >-
   „přidej rule na…", „napiš pravidla pro testy", „ať Claude ví, jak psát naše
   API", „uprav rule" — i když uživatel jen popisuje konvenci, kterou má dodržet
   každý, kdo sáhne na určitou část repozitáře. Použij i na rozpad dlouhého
-  CLAUDE.md do rules. Nepoužívej pro zakládání skillů, na to slouží write-skill;
-  ani agentů, na to write-agent; pro posouzení hotové rule slouží review-rule;
-  ani pro paměť agenta, tu plní train-agent.
+  CLAUDE.md, mají-li se bloky přestěhovat do path-scoped rules. Nepoužívej pro
+  sepsání ani zeštíhlení samotného CLAUDE.md škrtáním, na to slouží
+  write-claude-md; ani pro zakládání skillů, na to write-skill; ani agentů, na to
+  write-agent; pro posouzení hotové rule slouží review-rule; ani pro paměť
+  agenta, tu plní train-agent.
 argument-hint: "[téma pravidla nebo cesta k existující rule]"
 model: opus
 effort: high
@@ -199,6 +201,12 @@ Interview k této větvi zužuje krok 3; sem přijď s tabulkou, ne s pravidly.
    výčet, který už tam není. Úplnost přesunu sama o sobě nezaručí, že zbytek
    souboru dává smysl.
 4. Vzniklé rules i upravený `CLAUDE.md` jdou do review společně.
+
+**Rozpad není zeštíhlení.** Sem patří jen bloky, které se stěhují do rules,
+protože jsou vázané na část repozitáře. Je-li `CLAUDE.md` i po přesunu rozvláčný,
+je to práce pro `write-claude-md` — ten škrtá a přeformulovává, což tenhle skill
+záměrně nedělá: instrukci, kterou má vlastnit `CLAUDE.md`, nepřepisuj cestou
+kolem.
 
 ### 5. Vlastní kontrola
 

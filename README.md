@@ -129,6 +129,7 @@ Remove-Item -Recurse -Force "$HOME\.claude\skills\sagittaras"
 | `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
 | `review-agent` | Nezávislé review agenta s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
 | `train-agent` | Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé paměti, co se týká jeho role |
+| `write-claude-md` | Sepíše nebo zeštíhlí CLAUDE.md cílového projektu — cíl ~80 řádků, hlubší dokumentaci odkazuje místo opisování |
 | `write-rule` | Vytvoří nebo upraví pravidlo v `.claude/rules/` cílového projektu, ověří `paths` globy a nechá ho zrevidovat subagentem |
 | `review-rule` | Nezávislé review rule s čistým kontextem — ověří globy proti repozitáři, vrátí verdikt a nálezy, neopravuje |
 | `update-plugin` | Stáhne poslední stav do instalace, vypíše co se změnilo a poradí, jestli stačí reload, nebo je nutný restart |

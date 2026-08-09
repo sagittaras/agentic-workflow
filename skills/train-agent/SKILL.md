@@ -11,9 +11,10 @@ when_to_use: >-
   „ať si tech-lead zapíše nálezy z review", „aktualizuj paměť agentů podle téhle
   specifikace" — i jako závěrečný krok jiného skillu, který vytvořil dokument
   nebo poznatek spadající do domény některého agenta. Nepoužívej pro úpravu
-  definice agenta, na to slouží write-agent; ani pro pravidlo, které má platit
-  všem napříč projektem, na to slouží write-rule; ani pro paměť vlastní session,
-  ta má vlastní mechanismus.
+  definice agenta, na to slouží write-agent; pro pravidlo vázané na část
+  repozitáře write-rule; pro projektové instrukce, které se čtou v každé
+  session, write-claude-md; ani pro paměť vlastní session, ta má vlastní
+  mechanismus.
 argument-hint: "[jméno agenta] [vstup — cesta, odkaz nebo text]"
 model: sonnet
 effort: high
