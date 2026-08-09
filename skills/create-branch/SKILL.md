@@ -1,7 +1,8 @@
 ---
 name: create-branch
 description: >-
-  Založí novou pracovní větev z čerstvé výchozí větve remotu a přepne na ni.
+  Založí novou pracovní větev z čerstvé výchozí větve remotu — nebo ze základu,
+  který volající výslovně určí — a přepne na ni.
   Název odvodí z povahy práce ve tvaru <type>/<popis> a nechá si ho potvrdit.
   Veškeré operace nad gitem provádí přes připravené skripty, které ověří tvar
   názvu, kolize a stav repozitáře dřív, než cokoli změní.
@@ -63,6 +64,14 @@ vyhodnoť — `branch_exists_locally` znamená jiný postup než `default_branch
 `create-branch.sh` umí `--check <název>` — ověří tvar i kolize a nic nezmění.
 Používej ho, než název předložíš uživateli k potvrzení; ušetří to kolo,
 ve kterém by se ukázalo, že větev už existuje.
+
+Umí i `--base <ref>`, který založí větev z jiného základu než z výchozí větve.
+Sáhni po něm jen tehdy, když volající základ **výslovně určil** — typicky
+`implement-issue`, který v běhu milestonu větví nad `milestone/<slug>`, protože
+práce na issue patří nad integrační větev, ne nad výchozí. Sám od sebe základ
+neměň: nevyžádané větvení z aktuální větve je přesně ta chyba, které se tenhle
+skill vyhýbá. Přednost má `origin/<ref>`; lokální větev se použije, jen když na
+remotu není.
 
 ## Vstupní kontext
 
@@ -139,8 +148,14 @@ název sám, potvrzení není co doplňovat a můžeš pokračovat.
 bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" <název>
 ```
 
-Skript fetchne výchozí větev, založí novou z `origin/<default>` bez upstreamu
-a přepne na ni. Vrátí `created=true` a `head=<hash>`.
+Skript fetchne základ, založí z něj novou větev bez upstreamu a přepne na ni.
+Vrátí `base=`, `created=true` a `head=<hash>`. Určil-li volající základ,
+připoj `--base <ref>` před název; `base=` v odpovědi pak ověř — je to jediné
+místo, kde se pozná, že se větvilo odjinud, než sis myslel.
+
+Skončí-li s `error=base_branch_not_found` (kód 5), zadaný základ neexistuje ani
+na remotu, ani lokálně. Nezakládej větev náhradně z výchozí větve — u milestone
+běhu by tím vznikl PR, který obchází integrační větev.
 
 Skončí-li s `error=checkout_failed` (kód 7), kolidují rozpracované změny
 s rozdílem proti čerstvé výchozí větvi. Větev nevznikla a zůstáváš na původní —
@@ -155,8 +170,9 @@ změny. Připomeň, že větev zatím nemá upstream — publikuje se až první
 ## Zásady
 
 - **Git jen přes skripty.** Přímé volání obchází ověření názvu i kolizí.
-- **Vždy z čerstvé výchozí větve.** Skill nevětví z aktuální větve, i kdyby to
-  bylo pohodlnější — zděděné commity v nové větvi jsou tichý problém.
+- **Vždy z čerstvého základu, nikdy z aktuální větve.** Základem je výchozí
+  větev remotu; jiný jen tehdy, když ho volající výslovně určil (`--base`).
+  Zděděné commity z aktuální větve jsou tichý problém, který se pozná až u merge.
 - **Upstream nezakládej.** Nová větev je lokální, dokud ji uživatel nepublikuje.
   Publikování je viditelné navenek a patří jemu.
 - **Název si nech potvrdit**, pokud ho uživatel nezadal sám.

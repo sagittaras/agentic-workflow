@@ -156,23 +156,18 @@ Základní ref (dál `<base-ref>`) je `origin/<základní větev>`, existuje-li;
 `<základní větev>`. **Neexistuje-li ani jeden, eskaluj** — základ, který v repozitáři
 nikde není, znamená jiné zadání, než jaké repozitář zná.
 
-Větev pak založ podle toho, co je základem:
+Větev zakládej vždy přes `sagittaras:create-branch` (nástroj `Skill`) a **předej mu
+hotový název** — bez názvu si ho nechá potvrdit uživatelem a v autonomním běhu se
+zastaví.
 
-- **Základ je výchozí větev** → zavolej nástrojem `Skill` skill
-  `sagittaras:create-branch` a **předej mu hotový název**. Bez názvu si ho nechá
-  potvrdit uživatelem a v autonomním běhu se zastaví. Skript v něm větví
-  z `origin/<výchozí větev>`, takže `<base-ref>` je tenhle remote ref.
-- **Základ je integrační nebo jiná nevýchozí větev** → `create-branch` tenhle případ
-  neumí, větví výhradně z čerstvé výchozí větve remotu. Založ ji proto sám, a **jen
-  tady**:
+- **Základ je výchozí větev** → stačí název; skill větví z `origin/<výchozí větev>`.
+- **Základ je integrační nebo jiná nevýchozí větev** → řekni mu základ výslovně,
+  aby zavolal skript s `--base <základní větev>`. Bez toho by větev vyšla z výchozí
+  větve, přišla by o kód, na kterém issue stojí, a chyba by se ukázala až u review.
 
-  ```bash
-  git switch --no-track -c <název> "<base-ref>"
-  ```
-
-  Delegace by tu tiše vyrobila větev bez kódu, na kterém issue stojí, a chyba by se
-  ukázala až u review. Je to vědomá výjimka ze zásady „git jen přes delegaci", ne
-  volnost psát si git mechaniku podle potřeby.
+Ve výstupu ověř řádek `base=` — je to jediné místo, kde se pozná, že se větvilo
+odjinud, než jsi zamýšlel. Skončí-li skript s `error=base_branch_not_found` (kód 5),
+**eskaluj**; nezakládej větev náhradně z výchozí větve.
 
 Ať jsi větev založil jakkoli, ověř, že opravdu vyšla ze základu:
 
@@ -286,9 +281,8 @@ PR: žádné
   po review, do výchozí větve jen člověk.
 - **Kritéria jsou zadání, ne inspirace.** Nic navíc, nic míň; podspecifikované
   kritérium se hlásí, nedomýšlí.
-- **Git jen přes delegaci.** `create-branch` a `open-pr`; výjimky jsou dvě, obě
-  vyjmenované v kroku 5 — čtecí kontroly a založení větve z nevýchozího základu,
-  který delegovaný skill neumí.
+- **Git jen přes delegaci.** `create-branch` a `open-pr`; jedinou výjimkou jsou
+  čtecí kontroly vyjmenované v kroku 5, které nic nemění.
 - **Zaškrtávátka patří `verify-issue`.** Neodškrtávej je, ani když sis kritérium
   ověřil — jinak recenzent posuzuje tvoje tvrzení místo skutečnosti. Nástroj na zápis
   do issue přitom po kroku 1 načtený máš; hranici drží tahle zásada, ne práva.
