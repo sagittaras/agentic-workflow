@@ -57,6 +57,25 @@ Vmerguje aktuální výchozí větev do zadané větve a pushne.
 Při konfliktu merge **abortuj** a skonči kódem `5`. Řešit obsahový konflikt bez dohledu
 není práce pro skript.
 
+### `pr-worktree.sh <label> <ref>` / `pr-worktree.sh --remove <label>`
+
+Připraví oddělenou pracovní kopii větve v dočasném worktree — pro postupy, které nad
+kódem pracují ve **víc voláních** za sebou (typicky `verify-issue`).
+
+- **Výstup:** `worktree=`, `reused=true|false`, `ref=`, `head=`; u `--remove`
+  `removed=true|false`.
+- **Kódy:** `0` · `2` nejde o git repozitář, chybný argument nebo ref neexistuje ·
+  `3` remote neodpověděl, fetch nebo založení selhalo.
+
+Cesta se odvozuje z `<label>` **deterministicky, ne z `mktemp`**: mezi voláními Bash
+nepřežije stav shellu, takže náhodná cesta by napodruhé založila druhý, prázdný
+worktree — a ověřovací příkaz by pak spadl na chybějícím prostředí, ne na kódu.
+Opakované spuštění nad týmž labelem worktree převezme i s obnovenými závislostmi.
+
+Worktree stojí na odpojené HEAD: do ověřovací kopie se nemá commitovat.
+Úklid po sobě je součást postupu, ne úklid navíc — nechaný worktree drží referenci
+a mate další běh.
+
 ### `integration-gate.sh <pr-branch> <integration-branch> -- <příkaz…>`
 
 Ověří, že PR obstojí proti aktuální špičce integrační větve. Merge dělá v dočasném

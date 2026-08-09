@@ -196,17 +196,19 @@ worktree**, aby pracovní strom, ve kterém běžíš, zůstal nedotčený — v
 běhu v něm může souběžně pracovat někdo jiný:
 
 ```bash
-wt="${TMPDIR:-/tmp}/sagittaras-verify-pr-<číslo PR>"
-git fetch origin "<pr-head>" "<pr-base>"
-[ -d "$wt" ] || git worktree add --detach "$wt" "origin/<pr-head>"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/pr-worktree.sh" pr-<číslo PR> <pr-head>
 ```
 
-**Cestu odvozuj z čísla PR, ne z `mktemp`, a proměnnou `wt` si přepočítej na
-začátku každého volání Bash** — mezi voláními nástroje přežívá jen pracovní
-adresář, ne stav shellu. Náhodně vylosovaná cesta by se ve druhém volání
-rozexpandovala naprázdno, nebo hůř: opakované `mktemp` by založilo druhý,
-prázdný worktree bez obnovených závislostí, a ověření by pak selhalo na
-prostředí, přestože s PR nic není. Totéž platí pro `base` v kroku 5.
+Skript vrátí `worktree=<cesta>`, `reused=` a `head=`. **Cestu si z výstupu přečti
+a v každém dalším volání Bash ji napiš znovu celou** — mezi voláními nástroje
+přežívá jen pracovní adresář, ne stav shellu, takže shellová proměnná nastavená
+teď bude příště prázdná. Cesta je odvozená od labelu deterministicky, takže je
+napodruhé stejná; opakované volání skriptu tentýž worktree převezme
+(`reused=true`) i s obnovenými závislostmi. Totéž platí pro `base` v kroku 5 —
+i ten si pokaždé spočítej znovu.
+
+Kód `2` s `error=ref_not_found` znamená, že head větev PR v repozitáři není —
+typicky u PR z forku, viz omezení na konci kroku.
 
 Všechny příkazy pak spouštěj s pracovním adresářem `$wt`. Rozsah změny si zjisti
 jako `git -C "$wt" diff "origin/<pr-base>...origin/<pr-head>"`.
@@ -220,11 +222,18 @@ ověřovací příkaz, obnov závislosti tím, co repozitář používá (`pnpm 
 a manifestu. Jsou-li závislosti nainstalované v pracovní kopii, ze které jsi
 worktree založil, je levnější je do `$wt` nakopírovat než stahovat znovu.
 
-Git tu voláš přímo, protože pro tuhle operaci sdílený inventář skriptů recept
-nemá. Drž se proto výhradně čtecích a lokálních operací: **žádný commit, žádný
-push, žádný merge, žádné mazání větví**. Až budeš hotov, worktree ukliď
-(`git worktree remove --force "$wt"` a `git worktree prune`) — i když ověřování
-skončilo `Blocked`.
+Uvnitř worktree pak git voláš přímo, ale drž se výhradně **čtecích a lokálních**
+operací: žádný commit, žádný push, žádný merge, žádné mazání větví. Worktree stojí
+na odpojené HEAD právě proto, aby se do něj commitovat nedalo omylem.
+
+Až budeš hotov, ukliď ho — i když ověřování skončilo `Blocked`:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/pr-worktree.sh" --remove pr-<číslo PR>
+```
+
+Vrátí-li `removed=false`, adresář drží běžící proces; uveď to v závěrečné zprávě,
+ať po tobě někdo uklidí.
 
 Nedá-li se větev PR získat, skonči verdiktem `Blocked`. **PR z forku tímhle
 postupem ověřit nejde** — `git fetch origin <větev>` dosáhne jen na větve téhož
@@ -362,9 +371,9 @@ v reportu, takže do trackeru dorazí něco jiného, než jsi napsal.
 
 Selže-li uložení komentáře, závěrečnou zprávu vrať i tak a selhání v ní uveď.
 
-Nakonec po sobě ukliď: worktree (`git worktree remove --force "$wt"`,
-`git worktree prune`) i dočasný soubor s tělem reportu. Nechané artefakty
-z předchozího běhu zmatou ten příští.
+Nakonec po sobě ukliď: worktree (`pr-worktree.sh --remove pr-<číslo PR>`, viz
+krok 4) i dočasný soubor s tělem reportu. Nechané artefakty z předchozího běhu
+zmatou ten příští.
 
 ## Formát výstupu
 
