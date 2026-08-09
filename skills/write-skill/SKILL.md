@@ -12,8 +12,8 @@ when_to_use: >-
   skillu" — ale i tehdy, když popisuje opakovaný postup, který by stálo za to
   zachytit jako skill, aniž by slovo skill zmínil. Nepoužívej pro zakládání
   agentů, na to slouží write-agent; ani pro commandy, ty mají vlastní pravidla;
-  pro samotné posouzení hotového skillu slouží review-skill; ani pro běžné
-  použití existujícího skillu.
+  pro CLAUDE.md cílového projektu slouží write-claude-md; pro samotné posouzení
+  hotového skillu slouží review-skill; ani pro běžné použití existujícího skillu.
 argument-hint: "[název nebo téma skillu]"
 model: opus
 effort: high
