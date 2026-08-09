@@ -113,11 +113,28 @@ Nezvážené vynechání je stejná chyba jako špatná hodnota.
 | Pole | Kdy nastavit |
 | --- | --- |
 | `allowed-tools` | Skill má mít užší práva než session. **Zvaž vždy** — zejména u skillů, které nic nemění (`Read, Grep, Glob`), a u těch, které naopak sahají na systém. |
+| `disallowed-tools` | Skill práva nezužuje výčtem, **nebo** drží invariant, který musí platit i tam, kde se `allowed-tools` neuplatní. Rozhoduje způsob spuštění — viz níže. |
 | `user-invocable` | Skill má/nemá být volatelný přes `/nazev`. Nastav `false` u servisních skillů, které volají jiné skilly a uživatel je nemá vidět v nabídce. |
 | `disable-model-invocation` | Skill smí spustit jen uživatel explicitně, ne model sám. Pro drahé, dlouhé nebo nevratné operace. |
 | `argument-hint` | Skill přijímá argumenty — napovídá jejich tvar při volání. |
 | `version` | Skill se verzuje a je na něj závislost odjinud. |
 | `license` | Skill se distribuuje mimo interní použití. |
+
+#### `disallowed-tools` vedle uzavřeného `allowed-tools`
+
+Obojí najednou vypadá jako duplicita a většinou jí je: nástroj, který není ve výčtu,
+stejně k dispozici není. Rozhoduje ale to, **kdo skill spouští**:
+
+- **Skill se vždy spouští loaderem** (nástroj `Skill`, `/název`) → frontmatter se
+  uplatní celý. `disallowed-tools` vynech a vynechání zdůvodni komentářem.
+- **Skill si může načíst subagent jako soubor** — typicky reviewery ve smyčce
+  `write-skill` a `write-agent` — → na uplatnění `allowed-tools` nespoléhej.
+  Vypiš do `disallowed-tools` ten jeden invariant, který musí platit vždycky;
+  u recenzentů je to `AskUserQuestion`, protože doptávat se nemá koho.
+
+Nikdy tam nevypisuj celý zbytek katalogu nástrojů. Pole nese invariant, ne zrcadlo
+`allowed-tools` — dva výčty téhož se dřív nebo později rozejdou a platit bude ten,
+o kterém se zapomnělo, že existuje.
 
 ---
 
