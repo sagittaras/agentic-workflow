@@ -11,9 +11,9 @@ when_to_use: >-
   „vytvoř agenta", „přidej agenta na…", „potřebuju roli, která…", „uprav
   agenta" — i tehdy, když popisuje obor, který by měl někdo na projektu trvale
   vlastnit, aniž by slovo agent zmínil. Nepoužívej pro zakládání skillů, na to
-  slouží write-skill; pro posouzení hotového agenta slouží review-agent;
-  pro naplnění jeho paměti train-agent; ani pro běžné spuštění existujícího
-  agenta.
+  slouží write-skill; ani pro pravidla v `.claude/rules/`, na to write-rule;
+  pro posouzení hotového agenta slouží review-agent; pro naplnění jeho paměti
+  train-agent; ani pro běžné spuštění existujícího agenta.
 argument-hint: "[role nebo téma agenta]"
 model: opus
 effort: high

@@ -10,9 +10,9 @@ when_to_use: >-
   jako subagenta s čistým kontextem spouští write-agent po každém kole úprav,
   ručně když uživatel řekne „zreviduj agenta", „zkontroluj toho agenta" nebo
   „projdi agenta proti konvencím". Nepoužívej pro psaní ani opravu agenta,
-  na to slouží write-agent; pro review skillu slouží review-skill; ani pro
-  review kódu či jiných dokumentů.
-argument-hint: "[cesty k agentům, číslo kola, nevyřešené nálezy]"
+  na to slouží write-agent; pro review skillu slouží review-skill, pro review
+  rule review-rule; ani pro review kódu či jiných dokumentů.
+argument-hint: "[kořen pluginu, repozitář, cesty k agentům, číslo kola, nevyřešené nálezy]"
 context: fork
 agent: Plan
 model: opus
