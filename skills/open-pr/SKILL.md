@@ -161,22 +161,17 @@ z kroku 1), krok přeskoč. Jinak zavolej nástrojem `Skill` skill
 formát zprávy i push jsou jeho práce a psát je podruhé znamená dvě různá
 pravidla pro tutéž věc.
 
-Do zadání pro `make-commit` napiš výslovně, že si **volající vyžádal PR nad
-touhle větví, takže ji má publikovat** (`push.sh --publish`). `make-commit`
-větev bez upstreamu sám od sebe nepublikuje a `create-branch` upstream nezakládá
-— bez téhle věty autonomní běh spolehlivě uvízne na `no_upstream`. Přání
-publikovat tu nevymýšlí volající skill: kdo si řekl o PR, řekl si i o publikaci,
-protože nad nepushnutou větví PR založit nejde.
+Do zadání pro `make-commit` napiš výslovně, že si **volající vyžádal PR nad touhle
+větví, takže ji má publikovat** (`push.sh --publish`). `make-commit` větev bez
+upstreamu bez zmocnění nepublikuje a `create-branch` upstream nezakládá — bez téhle
+věty autonomní běh spolehlivě uvízne na `no_upstream`. Zmocnění si tu volající
+nevymýšlí: kdo si řekl o PR, řekl si i o publikaci, protože nad nepushnutou větví
+PR založit nejde.
 
-Skončí-li `make-commit` přesto s nepublikovanou větví, dopushni ji jediným
-voláním
-
-```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh" --publish
-```
-
-a v souhrnu to uveď. Je to jediné místo, kde skill sahá na git mimo delegaci —
-právě proto, že je to poslední chybějící předpoklad PR, ne kus commit logiky.
+Skončí-li `make-commit` přesto s nepublikovanou větví, **zastav se a eskaluj**.
+Nedopushovávej ji sám: když delegovaný skill zmocnění nepřijal, je to porucha
+v předání, ne chybějící příkaz — a obejít ji vlastním pushem znamená publikovat
+větev, o které nevíš, proč publikovaná není.
 
 Ohlásí-li `make-commit`, že **necommitnul** (zastavil se na brzdě, odmítl commit
 hook), **zastav se a ohlas příčinu**. Commit kolem něj neobcházej.
@@ -291,7 +286,7 @@ Přeruš postup a ohlas stav, nastane-li kterákoli z těchto situací:
 - `owner/repo` z detekce se liší od konfigurace;
 - stojíš na výchozí větvi se vším zapsaným, nebo na odpojené HEAD;
 - `create-branch` větev nezaložil (`checkout_failed`);
-- `make-commit` necommitnul, nebo větev zůstala nepublikovaná i po `--publish`;
+- `make-commit` necommitnul, nebo větev zůstala nepublikovaná i přes zmocnění;
 - head větev nemá ani po kroku 4 proti základní žádný commit navíc;
 - z téhle head větve už existuje otevřené PR proti **jiné** základní větvi
   (shodné PR není důvod k eskalaci — vrať ho a skonči);
@@ -336,10 +331,9 @@ Merge: neprovádí se
   merge do výchozí větve podle konfigurace jen člověk. Výstupem je otevřené PR.
 - **Základní větev se nedomýšlí.** Co předal volající, platí; výchozí větev
   z konfigurace je až fallback.
-- **Git mechanika se deleguje.** Commit a push přes `sagittaras:make-commit`,
-  větev přes `sagittaras:create-branch`. Napsat je potřetí znamená tři různá
-  chování téže operace. Jediná výjimka je dopublikování větve v kroku 4 —
-  chybějící upstream je předpoklad PR, ne kus commit logiky.
+- **Git mechanika se deleguje bez výjimky.** Commit, push i publikace větve přes
+  `sagittaras:make-commit`, větev přes `sagittaras:create-branch`. Napsat je
+  potřetí znamená tři různá chování téže operace.
 - **Jedna head větev, jedno PR.** Před zakládáním se ověřuje, že už neexistuje.
 - **Tělo `gh` skriptům vždy souborem, nikdy argumentem.** Na Gitea, kde shell
   v cestě není, se předává obsah přímo.
