@@ -16,7 +16,8 @@ when_to_use: >-
   write-claude-md; ani pro zakládání skillů, na to write-skill; ani agentů, na to
   write-agent; pro posouzení hotové rule slouží review-rule; ani pro paměť
   agenta, tu plní train-agent; ani pro závazný popis vzhledu projektu jako celku
-  (paleta, typografie, katalog prvků), na to slouží write-art-bible.
+  (paleta, typografie, katalog prvků), na to slouží write-art-bible; ani pro popis
+  jedné obrazovky nebo flow, na to write-ux-spec.
 argument-hint: "[téma pravidla nebo cesta k existující rule]"
 model: opus
 effort: high

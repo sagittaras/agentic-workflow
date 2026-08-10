@@ -12,10 +12,11 @@ when_to_use: >-
   vzhledu — „napiš art bible", „potřebujeme sjednotit vizuál", „doplň do art
   bible ten nový prvek" — i tehdy, když si uživatel stěžuje, že rozhraní vzniká
   pokaždé jinak nebo šedé a bez identity. Nepoužívej pro pravidlo v
-  `.claude/rules/`, na to slouží write-rule; pro projektové instrukce čtené
-  v každé session write-claude-md; pro rozhodnutí o technologii stylingu, to
-  patří do ADR projektu; pro zápis hotového dokumentu do paměti agenta
-  train-agent; ani pro implementaci vzhledu do kódu, tu vlastní implement-issue.
+  `.claude/rules/`, na to slouží write-rule; pro popis jedné obrazovky nebo flow
+  write-ux-spec; pro projektové instrukce čtené v každé session write-claude-md;
+  pro rozhodnutí o technologii stylingu, to patří do ADR projektu; pro zápis
+  hotového dokumentu do paměti agenta train-agent; ani pro implementaci vzhledu
+  do kódu, tu vlastní implement-issue.
 argument-hint: "[téma nebo cesta k existující art bible]"
 # Odchylka od konvence pojmenování: název má tři slova. `art-bible` je ale jeden
 # název artefaktu, ne dva předměty — skill dělá jednu věc. Zkrácení na
