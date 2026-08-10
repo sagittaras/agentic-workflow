@@ -165,7 +165,8 @@ odložení stranou.
 ### 4. Shrň výsledek
 
 Uveď název větve, ze kterého bodu vznikla, a jestli s sebou nesla rozpracované
-změny. Připomeň, že větev zatím nemá upstream — publikuje se až prvním pushem.
+změny. Připomeň, že větev zatím nemá upstream — publikuje ji až první commit
+přes `make-commit`, který pushuje sám od sebe.
 
 ## Zásady
 
@@ -173,8 +174,9 @@ změny. Připomeň, že větev zatím nemá upstream — publikuje se až první
 - **Vždy z čerstvého základu, nikdy z aktuální větve.** Základem je výchozí
   větev remotu; jiný jen tehdy, když ho volající výslovně určil (`--base`).
   Zděděné commity z aktuální větve jsou tichý problém, který se pozná až u merge.
-- **Upstream nezakládej.** Nová větev je lokální, dokud ji uživatel nepublikuje.
-  Publikování je viditelné navenek a patří jemu.
+- **Upstream nezakládej.** Prázdná větev na remotu nemá co nést; publikuje ji
+  první commit, a to je práce `make-commit`. Dvě místa, která zakládají upstream,
+  znamenají dvě různá pravidla pro tutéž věc.
 - **Název si nech potvrdit**, pokud ho uživatel nezadal sám.
 - **Nic nepřepisuj.** Skill neumí přejmenovat ani smazat větev; obojí je zásah
   do cizí práce, pokud už je větev publikovaná.
