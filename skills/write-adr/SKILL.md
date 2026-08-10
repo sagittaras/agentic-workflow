@@ -14,8 +14,10 @@ when_to_use: >-
   Nepoužívej pro posouzení už sepsaného ADR, na to slouží review-adr; pro
   pravidlo vázané na část repozitáře write-rule; pro projektové instrukce
   čtené v každé session write-claude-md; pro zapsání rozhodnutí do paměti
-  agenta train-agent; ani pro rozepsání práce na issues, na to je
-  plan-milestone.
+  agenta train-agent; pro závazný popis vzhledu projektu write-art-bible
+  a pro popis jedné obrazovky nebo flow write-ux-spec — ty říkají, jak to má
+  vypadat a fungovat, kdežto ADR proč se to tak rozhodlo; ani pro rozepsání
+  práce na issues, na to je plan-milestone.
 argument-hint: "[číslo ADR] [téma rozhodnutí]"
 model: opus
 effort: high

@@ -13,7 +13,8 @@ when_to_use: >-
   nebo „je ten spec připravený k implementaci". Nepoužívej pro psaní ani opravu
   specu, na to slouží write-ux-spec; ani pro posouzení vzhledu projektu jako
   celku — art bible není UX spec a tenhle skill ji odmítne; pro review skillu
-  slouží review-skill, rule review-rule, agenta review-agent; ani pro ověření
+  slouží review-skill, rule review-rule, agenta review-agent, ADR review-adr;
+  ani pro ověření
   hotové implementace proti zadání, to dělá verify-issue.
 argument-hint: "[kořen pluginu, kořen repozitáře, cesta ke specu, cesta k art bible, vybrané moduly, číslo kola, nevyřešené nálezy]"
 # Odchylka od konvence pojmenování: název má tři slova. `ux-spec` je ale jeden

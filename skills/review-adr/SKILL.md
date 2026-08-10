@@ -13,8 +13,9 @@ when_to_use: >-
   řekne „zreviduj ADR", „zkontroluj ADR 3", „je to rozhodnutí v pořádku" nebo
   „projeď to review". Nepoužívej pro sepsání, dořešení ani opravu ADR, na to
   slouží write-adr; pro review skillu review-skill, agenta review-agent, rule
-  review-rule; pro posouzení naplánovaného milestonu review-milestone; ani pro
-  review kódu, PR nebo diffu — tenhle skill čte dokument rozhodnutí.
+  review-rule, UX specu review-ux-spec; pro posouzení naplánovaného milestonu
+  review-milestone; ani pro review kódu, PR nebo diffu — tenhle skill čte
+  dokument rozhodnutí.
 argument-hint: "[kořen pluginu, repozitář, cesty k ADR, režim, dořešené otázky a diff u zásahu do přijatého ADR, číslo PR, číslo kola, nevyřešené nálezy]"
 context: fork
 model: opus

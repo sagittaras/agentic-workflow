@@ -119,19 +119,63 @@ Remove-Item -Recurse -Force "$HOME\.claude\skills\sagittaras"
 
 ## Co plugin obsahuje
 
+Tenhle výčet se udržuje ručně a může za instalací zaostávat. Aktuální přehled
+dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku.
+
+**Rozcestník**
+
 | Skill | K čemu |
 | --- | --- |
-| `sagittaras` | Rozcestník — řekne, co plugin nabízí, a podle rozdělané práce navede na správný skill. Volá se jako `/sagittaras`, bez namespace |
+| `sagittaras` | Řekne, co plugin nabízí, a podle rozdělané práce navede na správný skill. Volá se jako `/sagittaras`, bez namespace |
+
+**Práce s gitem**
+
+| Skill | K čemu |
+| --- | --- |
 | `create-branch` | Založí pracovní větev z čerstvé výchozí větve remotu, název ve tvaru `<type>/<popis>` si nechá potvrdit |
 | `make-commit` | Zapíše rozdělanou práci podle Conventional Commits, rozdělí ji do logických celků a pushne; větev bez upstreamu rovnou publikuje |
-| `write-skill` | Vytvoří nebo upraví skill podle konvencí pluginu a nechá ho zrevidovat subagentem |
-| `review-skill` | Nezávislé review skillu s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
-| `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
-| `review-agent` | Nezávislé review agenta s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
-| `train-agent` | Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé paměti, co se týká jeho role |
+| `open-pr` | Otevře pull request pro práci na aktuální větvi — název, tělo i `Closes #N`; commit deleguje na `make-commit`, merge nechává člověku |
+
+**Milestone workflow**
+
+| Skill | K čemu |
+| --- | --- |
+| `init-workflow` | Jednorázově nastaví projekt pro milestone workflow — forge, větvení, labely, mapu `area:*` → agent, ověřovací příkazy |
+| `plan-milestone` | Rozepíše téma na issues, ukotví akceptační kritéria ve zdrojích pravdy a po potvrzení je založí v trackeru |
+| `review-milestone` | Nezávislé review naplánovaného milestonu — kritéria, graf závislostí, díry a překryvy; report uloží do trackeru |
+| `run-milestone` | Autonomně provede milestone — dispečuje odblokovaná issues agentům v dávkách a mergeuje je do integrační větve |
+| `implement-issue` | Naimplementuje jedno issue přesně v rozsahu jeho akceptačních kritérií a otevře na něj PR |
+| `verify-issue` | Ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a kritéria opřená o regresní test mutačně otestuje |
+| `close-milestone` | Zavře milestone, u kterého ověřil, že všechna issues jsou zavřená a integrační PR opravdu zmergované |
+| `file-issue` | Založí jeden ad hoc issue mimo plánování milestonu, v závazném tvaru pluginu a se správnými labely |
+
+**Projektová dokumentace**
+
+| Skill | K čemu |
+| --- | --- |
+| `write-adr` | Sepíše architektonické rozhodnutí (ADR) — interview, dokument podle šablony, větev a PR, nezávislé review |
+| `review-adr` | Nezávislé review ADR — konkrétnost rozhodnutí, reálné alternativy, přiznaná cena; verdikt uloží do PR |
+| `write-art-bible` | Sepíše nebo aktualizuje art bible projektu — vytěží z repozitáře, co o vzhledu platí, kontrastní poměry počítá |
+| `write-ux-spec` | Sepíše UX spec jedné obrazovky nebo flow a nechá ho zrevidovat subagentem |
+| `review-ux-spec` | Nezávislé review UX specu — konkrétnost layoutu a stavů, věrnost art bible a ADR; každou citaci ověří ve zdroji |
+
+**Instrukce pro Claude v projektu**
+
+| Skill | K čemu |
+| --- | --- |
 | `write-claude-md` | Sepíše nebo zeštíhlí CLAUDE.md cílového projektu — cíl ~80 řádků, hlubší dokumentaci odkazuje místo opisování |
 | `write-rule` | Vytvoří nebo upraví pravidlo v `.claude/rules/` cílového projektu, ověří `paths` globy a nechá ho zrevidovat subagentem |
 | `review-rule` | Nezávislé review rule s čistým kontextem — ověří globy proti repozitáři, vrátí verdikt a nálezy, neopravuje |
+| `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
+| `review-agent` | Nezávislé review agenta s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
+| `train-agent` | Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé paměti, co se týká jeho role |
+
+**Rozšiřování a údržba pluginu**
+
+| Skill | K čemu |
+| --- | --- |
+| `write-skill` | Vytvoří nebo upraví skill podle konvencí pluginu a nechá ho zrevidovat subagentem |
+| `review-skill` | Nezávislé review skillu s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
 | `update-plugin` | Stáhne poslední stav do instalace, vypíše co se změnilo a poradí, jestli stačí reload, nebo je nutný restart |
 
 Skripty, na které se skilly odkazují, si cesty kotví přes `${CLAUDE_PLUGIN_ROOT}`,

@@ -13,8 +13,10 @@ when_to_use: >-
   flow", „doplň otevřené otázky ve specu N" — i tehdy, když uživatel popisuje
   rozvržení obrazovky, kterou má někdo postavit. Nepoužívej pro popis vzhledu
   projektu jako celku (paleta, typografie, katalog prvků), na to slouží
-  write-art-bible; pro pravidlo v `.claude/rules/` write-rule; pro posouzení
-  hotového specu review-ux-spec; pro implementaci obrazovky implement-issue;
+  write-art-bible; pro pravidlo v `.claude/rules/` write-rule; pro záznam
+  architektonického rozhodnutí i s alternativami a důsledky write-adr;
+  pro posouzení hotového specu review-ux-spec; pro implementaci obrazovky
+  implement-issue;
   ani pro neformální rozmýšlení návrhu, které sepsání dokumentu předchází.
 argument-hint: "[obrazovka nebo flow, případně číslo existujícího specu]"
 # Odchylka od konvence pojmenování: název má tři slova. `ux-spec` je ale jeden

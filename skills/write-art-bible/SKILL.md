@@ -14,7 +14,7 @@ when_to_use: >-
   pokaždé jinak nebo šedé a bez identity. Nepoužívej pro pravidlo v
   `.claude/rules/`, na to slouží write-rule; pro popis jedné obrazovky nebo flow
   write-ux-spec; pro projektové instrukce čtené v každé session write-claude-md;
-  pro rozhodnutí o technologii stylingu, to patří do ADR projektu; pro zápis
+  pro rozhodnutí o technologii stylingu i s alternativami write-adr; pro zápis
   hotového dokumentu do paměti agenta train-agent; ani pro implementaci vzhledu
   do kódu, tu vlastní implement-issue.
 argument-hint: "[téma nebo cesta k existující art bible]"
