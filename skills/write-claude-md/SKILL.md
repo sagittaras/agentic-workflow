@@ -14,7 +14,8 @@ when_to_use: >-
   /init, jehož výstup bývá rozvláčný. Nepoužívej, mají-li se bloky přestěhovat
   do path-scoped rules místo škrtnutí — to je rozpad a umí ho write-rule;
   ani pro zakládání skillů, na to slouží write-skill; pro agenty write-agent;
-  ani pro zápis do trvalé paměti agenta, na to je train-agent.
+  pro záznam architektonického rozhodnutí write-adr; ani pro zápis do trvalé
+  paměti agenta, na to je train-agent.
 argument-hint: "[co má soubor zdůraznit]"
 model: sonnet
 effort: high

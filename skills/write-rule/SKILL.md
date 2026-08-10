@@ -14,8 +14,9 @@ when_to_use: >-
   CLAUDE.md, mají-li se bloky přestěhovat do path-scoped rules. Nepoužívej pro
   sepsání ani zeštíhlení samotného CLAUDE.md škrtáním, na to slouží
   write-claude-md; ani pro zakládání skillů, na to write-skill; ani agentů, na to
-  write-agent; pro posouzení hotové rule slouží review-rule; ani pro paměť
-  agenta, tu plní train-agent.
+  write-agent; ani pro záznam architektonického rozhodnutí i s alternativami
+  a důsledky, na to je write-adr; pro posouzení hotové rule slouží review-rule;
+  ani pro paměť agenta, tu plní train-agent.
 argument-hint: "[téma pravidla nebo cesta k existující rule]"
 model: opus
 effort: high

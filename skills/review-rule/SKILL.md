@@ -11,8 +11,8 @@ when_to_use: >-
   subagenta s čistým kontextem spouští write-rule po každém kole úprav, ručně
   když uživatel řekne „zreviduj rule", „zkontroluj ta pravidla" nebo „projdi
   rules proti konvencím". Nepoužívej pro psaní ani opravu rule, na to slouží
-  write-rule; pro review skillu slouží review-skill, agenta review-agent;
-  ani pro review kódu či jiných dokumentů.
+  write-rule; pro review skillu slouží review-skill, agenta review-agent, ADR
+  review-adr; ani pro review kódu či jiných dokumentů.
 argument-hint: "[kořen pluginu, kořen repozitáře, cesty k rules, schválené globy bez shody, tabulka rozpadu, číslo kola, nevyřešené nálezy]"
 context: fork
 agent: Plan
