@@ -15,7 +15,8 @@ when_to_use: >-
   sepsání ani zeštíhlení samotného CLAUDE.md škrtáním, na to slouží
   write-claude-md; ani pro zakládání skillů, na to write-skill; ani agentů, na to
   write-agent; pro posouzení hotové rule slouží review-rule; ani pro paměť
-  agenta, tu plní train-agent.
+  agenta, tu plní train-agent; ani pro závazný popis vzhledu projektu jako celku
+  (paleta, typografie, katalog prvků), na to slouží write-art-bible.
 argument-hint: "[téma pravidla nebo cesta k existující rule]"
 model: opus
 effort: high
@@ -126,9 +127,11 @@ dávají smysl. Zjisti:
   platit i po `/compact` a bez doteku odpovídajících souborů, patří do
   `CLAUDE.md`, nebo do rule bez `paths` — podle toho, jestli by blok `CLAUDE.md`
   utopil; vícekrokový postup do skillu; co se musí vynutit bez výjimky, do hooku;
-  co už hlídá linter, nikam. Vyjde-li z toho jiné místo než rule, řekni to
-  uživateli a navrhni ho — rule napsaná místo hooku vypadá jako řešení, ale
-  nic nevynutí.
+  co už hlídá linter, nikam. Závazný popis vzhledu projektu jako celku — paleta,
+  typografie, katalog prvků — patří do art bible; navrhni `write-art-bible`
+  a v rule nech jen tu část, která je vymahatelná a vázaná na konkrétní soubory.
+  Vyjde-li z toho jiné místo než rule, řekni to uživateli a navrhni ho — rule
+  napsaná místo hooku vypadá jako řešení, ale nic nevynutí.
 - **Téma a hranice** — čeho se pravidla týkají a co už je za hranicí.
 - **Rozsah platnosti** — na které soubory rule dopadá. Odtud plynou globy;
   navrhni je a nech si je potvrdit. **Ještě před potvrzením je ověř nástrojem
@@ -330,9 +333,11 @@ Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">
 
 - Referenční soubory mají přednost před tímto skillem. Když si odporují, platí
   konvence a šablona, ne tento postup.
-- **Patří-li obsah do `CLAUDE.md`, skillu nebo hooku, rule nepiš** a navrhni
-  správné místo. Rule napsaná místo hooku vypadá jako řešení, ale nic nevynutí —
-  a to se pozná, až když na ní někdo postaví postup.
+- **Patří-li obsah do `CLAUDE.md`, skillu, hooku nebo art bible, rule nepiš**
+  a navrhni správné místo. Rule napsaná místo hooku vypadá jako řešení, ale nic
+  nevynutí — a to se pozná, až když na ní někdo postaví postup; paleta
+  a typografie zapsané do rule místo do art bible platí jen tam, kam dosáhnou
+  `paths`, takže zbytek projektu vypadá jinak.
 - **Pravidlo, u kterého nejde poznat porušení, do rule nepatří.** Nevymahatelná
   odrážka zabírá kontext v každé session a nezmění nic.
 - **Rule se nesmí rozejít s `CLAUDE.md` ani se sousedy.** Rozpor neřeš přidáním
