@@ -11,7 +11,8 @@ when_to_use: >-
   ručně když uživatel řekne „zreviduj skill", „zkontroluj ten skill" nebo
   „projdi skill proti konvencím". Nepoužívej pro psaní ani opravu skillu,
   na to slouží write-skill; pro review agenta slouží review-agent, pro review
-  rule review-rule; ani pro review kódu či jiných dokumentů.
+  rule review-rule, pro review ADR review-adr; ani pro review kódu či jiných
+  dokumentů.
 argument-hint: "[kořen pluginu, repozitář, cesty ke skillům, číslo kola, nevyřešené nálezy]"
 context: fork
 agent: Plan

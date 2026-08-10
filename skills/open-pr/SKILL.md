@@ -161,17 +161,15 @@ z kroku 1), krok přeskoč. Jinak zavolej nástrojem `Skill` skill
 formát zprávy i push jsou jeho práce a psát je podruhé znamená dvě různá
 pravidla pro tutéž věc.
 
-Do zadání pro `make-commit` napiš výslovně, že si **volající vyžádal PR nad touhle
-větví, takže ji má publikovat** (`push.sh --publish`). `make-commit` větev bez
-upstreamu bez zmocnění nepublikuje a `create-branch` upstream nezakládá — bez téhle
-věty autonomní běh spolehlivě uvízne na `no_upstream`. Zmocnění si tu volající
-nevymýšlí: kdo si řekl o PR, řekl si i o publikaci, protože nad nepushnutou větví
-PR založit nejde.
+Publikaci větve si vyžadovat nemusíš — `make-commit` pushuje po každém commitu
+a větev bez upstreamu sám publikuje. **Push mu proto nezakazuj**: nad nepushnutou
+větví PR založit nejde.
 
 Skončí-li `make-commit` přesto s nepublikovanou větví, **zastav se a eskaluj**.
-Nedopushovávej ji sám: když delegovaný skill zmocnění nepřijal, je to porucha
-v předání, ne chybějící příkaz — a obejít ji vlastním pushem znamená publikovat
-větev, o které nevíš, proč publikovaná není.
+Nedopushovávej ji sám: publikace je jeho výchozí chování, takže její absence
+znamená překážku, kterou ohlásil (chybí remote, remote push odmítl) — a obejít
+ji vlastním pushem znamená publikovat větev, o které nevíš, proč publikovaná
+není.
 
 Ohlásí-li `make-commit`, že **necommitnul** (zastavil se na brzdě, odmítl commit
 hook), **zastav se a ohlas příčinu**. Commit kolem něj neobcházej.

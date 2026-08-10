@@ -3,7 +3,8 @@ name: make-commit
 description: >-
   Zapíše rozdělanou práci jako commit podle Conventional Commits — zjistí stav
   repozitáře, rozdělí změny do logických celků, sestaví zprávu z diffu
-  a commitne; pushne, pokud si to uživatel nevymíní jinak. Všechny operace nad
+  a commitne; hotový commit rovnou pushne, a nemá-li větev upstream, publikuje
+  ji. Vynechá to jen tehdy, když si to uživatel vymíní. Všechny operace nad
   gitem provádí přes připravené skripty, které neumí přepsat historii.
 when_to_use: >-
   Použij, když má uživatel rozdělanou práci k zapsání — „commitni to",
@@ -16,9 +17,10 @@ model: sonnet
 effort: medium
 # Zařazení dle matice: rutinní tvorba podle jasného zadání → sonnet × medium.
 # Matice u medium varuje před rozhodnutími, která se těžko vrací zpět — commit
-# takový je. Zůstáváme přesto na medium, protože nevratnost tu nesnižuje kvalita
-# úsudku, ale absence brzdy: proti ní stojí potvrzení rozdělení uživatelem,
-# zastavení na výchozí větvi a fakt, že push je samostatný krok.
+# a jeho push takové jsou. Zůstáváme přesto na medium, protože nevratnost tu
+# nesnižuje kvalita úsudku, ale absence brzdy: proti ní stojí potvrzení
+# rozdělení uživatelem, zastavení na výchozí větvi a fakt, že publikace míří
+# na vlastní pracovní větev, kde nikomu nepřekáží.
 user-invocable: true
 allowed-tools:
   - Read
@@ -62,7 +64,7 @@ vždy tvarem `bash <cesta>` — bez toho nespadnou do zúžení v `allowed-tools
 | `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/preflight.sh` | Stav repozitáře jako `key=value`, výpis změn a zavedené scopy |
 | `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/show-diff.sh` | Staged diff; s `--worktree` vše necommitnuté proti HEAD |
 | `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/commit.sh` | Stagne zadané cesty a commitne se zprávou ze stdinu |
-| `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh` | Pushne větev; `--publish` založí upstream nové větvi |
+| `${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh` | Pushne větev; nemá-li upstream, publikuje ji na `origin` |
 
 Každý skript má v hlavičce popis použití a návratových kódů. Nenulový kód vždy
 vyhodnoť — `nothing_staged` znamená jiný postup než `detached_head`.
@@ -98,7 +100,9 @@ a vyhodnoť výstup:
 - **`on_default_branch=unknown`** (offline, `default_branch_source=unavailable`)
   → chovej se, jako bys na výchozí větvi byl.
 - **`staged_count=0` i `unstaged_count=0` i `untracked_count=0`** → není co
-  commitovat, skonči.
+  commitovat. Přeskoč rovnou na krok 5: větev může mít nepushnuté commity nebo
+  vůbec žádný upstream a odejít odsud znamená nechat je ležet lokálně. Má-li
+  upstream a předstih nula, je push levný no-op.
 
 Ze sekce `[recent_scopes]` si vezmi slovník scopů, které repozitář už používá.
 
@@ -162,13 +166,25 @@ hook soubory sám, stagni je znovu a commit zopakuj.
 bash "${CLAUDE_PLUGIN_ROOT}/skills/make-commit/scripts/push.sh"
 ```
 
-Skončí-li s `error=no_upstream` (kód 3), větev nemá kam pushnout. Publikuj ji
-přes `--publish` **jen tehdy, když to někdo výslovně zadal** — buď uživatel
-v konverzaci, nebo volající skill v zadání (typicky `sagittaras:open-pr`, který
-bez publikované větve nemá z čeho založit PR). Zmocnění musí být v zadání
-skutečně vyslovené; z toho, že by se to teď hodilo, neplyne. Jinak publikaci
-vynech a ohlas ji ve shrnutí jako nedokončený krok.
-Push úplně vynech, pokud uživatel řekl, že ho nechce.
+Pushni **po každém commitu**, ať už větev upstream má, nebo ne — v druhém
+případě ji skript publikuje na `origin`. Čekat na zvláštní pokyn nemá o co
+se opřít: commit, který zůstane jen lokálně, je ztracená práce při první ztrátě
+pracovní kopie a `open-pr` nad ním nemá z čeho PR založit. Vlastní pracovní
+větev na remotu nikomu nepřekáží — dokud není zmergovaná, nic v projektu nemění.
+
+Push vynech **jen** tehdy, když ho uživatel odmítl — v konverzaci, nebo
+v zadání od volajícího skillu. Vynechání pak ohlas ve shrnutí, ať se ví, že
+commit leží jen lokálně.
+
+Nenulový kód vyhodnoť:
+
+- **`error=no_remote`** (kód 4) → repozitář nemá kam publikovat. Není to chyba
+  skillu; ohlas, že commit zůstal lokálně, a remote sám nezakládej.
+- **`error=detached_head`** (kód 2) → sem se běh po kroku 1 nedostane; dorazí-li
+  přesto, zastav se a ohlas to.
+- **Odmítnutý push** (zamítnuto remotem, chybějící oprávnění, mezitím posunutá
+  větev) → ohlas příčinu. Nezkoušej ji obejít force pushem ani přepsáním
+  historie; commit je zapsaný a push jde zopakovat, až bude příčina odstraněná.
 
 ### 6. Shrň výsledek
 
@@ -184,6 +200,7 @@ z rozsahu vynechal i s důvodem.
   jinou cestou.
 - **Zpráva se píše z diffu.** Konverzace je vodítko, diff je pravda.
 - **Staged výběr je zadání**, ne návrh k rozšíření.
-- **Publikování větve se nedělá samo od sebe.** Větev bez upstreamu publikuj
-  jen s výslovným zmocněním — od uživatele, nebo od volajícího skillu, který ho
-  má v zadání. Ticho zmocnění není.
+- **Commit nezůstává lokálně.** Push i publikace nové větve jsou výchozí konec
+  práce, ne zvláštní krok na vyžádání. Zdrženlivost tu nic nechrání: pracovní
+  větev na remotu do ničeho nezasahuje, kdežto commit jen v pracovní kopii se dá
+  ztratit. Vynech push jen tehdy, když ho někdo výslovně odmítl.

@@ -13,8 +13,9 @@ when_to_use: >-
   „zreviduj milestone", „zkontroluj plán milestonu" nebo „je ten milestone
   připravený k běhu". Nepoužívej pro sestavení ani opravu plánu, na to slouží
   plan-milestone; pro ověření hotové implementace proti kritériím slouží
-  verify-issue; ani pro review kódu, PR nebo diffu — tenhle skill čte plán,
-  ne změnu v repozitáři. Zavření hotového milestonu dělá close-milestone.
+  verify-issue; pro posouzení sepsaného ADR review-adr; ani pro review kódu, PR
+  nebo diffu — tenhle skill čte plán, ne změnu v repozitáři. Zavření hotového
+  milestonu dělá close-milestone.
 model: opus
 effort: high
 context: fork

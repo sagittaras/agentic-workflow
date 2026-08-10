@@ -92,7 +92,7 @@ na projektu.
 | **Větvení** | `run-milestone`, `implement-issue`, `open-pr`, `close-milestone` | odkud se větví, kam se mergeuje, co smí jen člověk |
 | **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat |
 | **Agenti** | `run-milestone` | komu poslat issue a kdo posoudí PR |
-| **Zdroje pravdy** | `plan-milestone`, `file-issue`, `review-milestone`, `implement-issue`, `verify-issue` | kde se ukotvují a ověřují akceptační kritéria |
+| **Zdroje pravdy** | `plan-milestone`, `file-issue`, `review-milestone`, `implement-issue`, `verify-issue`, `write-adr`, `review-adr` | kde se ukotvují a ověřují akceptační kritéria a tvrzení ADR |
 | **Ověřovací příkazy** | `verify-issue`, `run-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
 | **Jazyk issues** | `plan-milestone`, `file-issue` | aby milestone nebyl dvojjazyčný |
 
