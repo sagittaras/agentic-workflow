@@ -284,7 +284,7 @@ Přeruš postup a ohlas stav, nastane-li kterákoli z těchto situací:
 - `owner/repo` z detekce se liší od konfigurace;
 - stojíš na výchozí větvi se vším zapsaným, nebo na odpojené HEAD;
 - `create-branch` větev nezaložil (`checkout_failed`);
-- `make-commit` necommitnul, nebo větev zůstala nepublikovaná i přes zmocnění;
+- `make-commit` necommitnul, nebo větev zůstala nepublikovaná;
 - head větev nemá ani po kroku 4 proti základní žádný commit navíc;
 - z téhle head větve už existuje otevřené PR proti **jiné** základní větvi
   (shodné PR není důvod k eskalaci — vrať ho a skonči);

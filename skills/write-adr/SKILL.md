@@ -339,13 +339,17 @@ a všechno si musí přečíst ze souborů — přesně na to je `review-adr` na
    každé další kolo sekci s vypořádáním toho minulého — vlastní komentář k PR
    proto nepiš.
 
-   Zápis se řídí tím, co vzniklo v kroku 6 — stavy jsou tři a pletou se:
+   Zápis se řídí tím, co vzniklo v kroku 6:
 
    | Stav po kroku 6 | Co udělat |
    | --- | --- |
-   | PR existuje | zapiš a do zadání pro `make-commit` dej **zmocnění větev publikovat** (`push.sh --publish`) — bez pushe by review běželo nad jinou verzí, než jakou ukazuje PR |
-   | PR nevzniklo (chybí konfigurace), větev ano | zapiš, ale napiš výslovně, že **větev zůstává lokální**; `make-commit` bez zmocnění nepublikuje a mlčení by běh zaseklo na `no_upstream` |
+   | Větev existuje (s PR i bez něj) | zapiš přes `make-commit` a nech ho pracovat — pushuje po každém commitu a větev bez upstreamu sám publikuje |
    | Vypravení odložené, větev není | **nezapisuj vůbec** — oprav jen soubor v pracovním stromu |
+
+   **Push `make-commit` nezakazuj.** Běží-li review nad PR, nepushnutá oprava by
+   znamenala verdikt nad jinou verzí, než jakou PR ukazuje. Vyžadovat ho zvlášť
+   naopak nemusíš: push i publikace větve jsou jeho výchozí konec práce, ne krok
+   na zmocnění.
 
 3. **Schváleno** → pokračuj krokem 8.
 
@@ -357,11 +361,11 @@ ne do koše.
 
 1. U **nového ADR i u nahrazení** překlop Stav na `Přijato` — review je ta brána,
    která o přijetí rozhoduje. U **dořešení** Stav nech být, ADR je přijaté už dávno.
-2. Změnu zapiš přes `sagittaras:make-commit` podle **téže tabulky tří stavů jako
-   v kroku 7.2**. Nevzniklo-li PR kvůli chybějící konfiguraci, je tohle jediné
-   místo, kde se dokument vůbec zapíše — krok proto nepřeskakuj jen proto, že
-   `open-pr` v kroku 6.3 skončil bez PR. Při odloženém vypravení se naopak
-   nezapisuje nic; dokument zůstává v pracovním stromu.
+2. Změnu zapiš přes `sagittaras:make-commit` podle **téže tabulky jako v kroku
+   7.2**. Nevzniklo-li PR kvůli chybějící konfiguraci, je tohle jediné místo,
+   kde se dokument vůbec zapíše — krok proto nepřeskakuj jen proto, že `open-pr`
+   v kroku 6.3 skončil bez PR. Při odloženém vypravení se naopak nezapisuje nic;
+   dokument zůstává v pracovním stromu.
 3. Reportuj podle Formátu výstupu; do řádku `PR:` uveď i to, v jakém stavu
    vypravení skončilo.
 
@@ -422,8 +426,8 @@ ADR-<NNNN>: <název> (<cesta k souboru>)
 Režim: <nový | dořešení | nahrazení ADR-NNNN>
 Stav: Přijato<, u dořešení připoj „(beze změny, ADR bylo přijaté dřív)">
 PR: <„#<číslo> — <url>" | „nevzniklo — chybí konfigurace workflow, ADR zapsaný
-    na lokální větvi <název>" | „nevzniklo — vypravení odloženo, ADR leží
-    nezapsaný v pracovním stromu">
+    na větvi <název>" | „nevzniklo — vypravení odloženo, ADR leží nezapsaný
+    v pracovním stromu">
 Kol review: <N>
 Otevřené otázky: <počet ponechaných, nebo „žádné">
 Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">

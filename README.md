@@ -123,7 +123,7 @@ Remove-Item -Recurse -Force "$HOME\.claude\skills\sagittaras"
 | --- | --- |
 | `sagittaras` | Rozcestník — řekne, co plugin nabízí, a podle rozdělané práce navede na správný skill. Volá se jako `/sagittaras`, bez namespace |
 | `create-branch` | Založí pracovní větev z čerstvé výchozí větve remotu, název ve tvaru `<type>/<popis>` si nechá potvrdit |
-| `make-commit` | Zapíše rozdělanou práci podle Conventional Commits, rozdělí ji do logických celků a volitelně pushne |
+| `make-commit` | Zapíše rozdělanou práci podle Conventional Commits, rozdělí ji do logických celků a pushne; větev bez upstreamu rovnou publikuje |
 | `write-skill` | Vytvoří nebo upraví skill podle konvencí pluginu a nechá ho zrevidovat subagentem |
 | `review-skill` | Nezávislé review skillu s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
 | `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
