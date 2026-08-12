@@ -217,7 +217,9 @@ Zavolej nástrojem `Skill` skill `sagittaras:open-pr` a předej mu:
 - že **jsi už na své větvi** — má ji použít a novou nezakládat,
 - **základní větev PR** = ta z kroku 4,
 - **`Closes #N`** do těla,
-- **milestone issue**, patří-li do nějakého, aby `close-milestone` PR dohledal.
+- **milestone issue**, patří-li do nějakého, aby `close-milestone` PR dohledal,
+- **výslovný souhlas k mergi**, obsahoval-li ho prompt, kterým jsi byl spuštěn —
+  doslova. Bez týhle předávky `open-pr` souhlas nemá odkud vzít.
 
 Commit vzniká uvnitř přes `sagittaras:make-commit`; sám necommituj ani nepushuj.
 
@@ -277,8 +279,9 @@ PR: žádné
 - **Zpráva vždy končí řádkem `PR:`.** Dispečoval-li tě `run-milestone`, čte ji
   orchestrátor, ne uživatel, a bez toho řádku ji vyhodnotí jako selhaný dispatch.
   Proto eskalaci nikdy neformuluj tak, aby zněla jako úspěch.
-- **Vlastní PR nikdy nemergeuj.** Merge do integrační větve dělá `run-milestone`
-  po review, do výchozí větve jen člověk.
+- **Vlastní PR nikdy nemergeuj sám.** Merge do integrační větve dělá `run-milestone`
+  po review; do výchozí větve jen člověk, ledaže prompt, kterým jsi byl spuštěn,
+  obsahoval výslovný souhlas k mergi — pak ho v kroku 8 provede `open-pr`, ne ty.
 - **Kritéria jsou zadání, ne inspirace.** Nic navíc, nic míň; podspecifikované
   kritérium se hlásí, nedomýšlí.
 - **Git jen přes delegaci.** `create-branch` a `open-pr`; jedinou výjimkou jsou

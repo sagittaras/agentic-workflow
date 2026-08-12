@@ -132,7 +132,8 @@ jako otázka na formalitu a odpovídá se na ni „ano" i tehdy, když tam nic n
 Ze sekce **Větvení** je proměnná jedině výchozí větev. Ostatní řádky drží
 kontrakt a v šabloně nemají hranaté závorky: tvar issue větve `<type>/<popis>`,
 integrační větev `milestone/<slug>`, squash merge a věta, že do výchozí větve
-mergeuje jen člověk. Opiš je doslova a neptej se na ně — `run-milestone`
+mergeuje jen člověk, ledaže prompt, kterým byl aktuální běh spuštěn, obsahoval
+výslovný souhlas k mergi. Opiš je doslova a neptej se na ně — `run-milestone`
 i `implement-issue` s nimi počítají jako s daností, takže projektová odchylka
 by se projevila až selháním za běhu.
 

@@ -5,7 +5,9 @@ description: >-
   větev z projektové konfigurace, nezapsané změny nechá zapsat a odeslat přes
   make-commit, sestaví název podle Conventional Commits a krátké tělo
   s odkazem na uzavírané issue, založí PR podle sdílených receptů a případně
-  mu druhým voláním přiřadí milestone. Výstupem je číslo a odkaz PR.
+  mu druhým voláním přiřadí milestone. Obsahoval-li prompt, kterým byl
+  aktuální běh spuštěn, výslovný souhlas k mergi, PR i rovnou mergne. Výstupem
+  je číslo a odkaz PR, případně i výsledek merge.
 when_to_use: >-
   Použij, když má z odvedené práce vzniknout pull request — „otevři PR",
   „udělej z toho pull request", „pošli to na review" — a jako sdílený závěrečný
@@ -26,8 +28,9 @@ effort: medium
 # mechaniku. Nikoli low: postup má osm kroků, dvě forge větve a několik stavů,
 # které selhávají tiše (nepushnutá větev, duplicitní PR, nepřiřazený milestone).
 # Varování matice u medium („nevol u rozhodnutí, která se těžko vrací zpět")
-# tady neplatí naplno: PR se zavírá jedním kliknutím, merge skill neumí vůbec
-# a jedinou nevratnou operaci — publikaci větve — dělá cizí skript.
+# tady neplatí naplno: PR se zavírá jedním kliknutím a publikaci větve dělá
+# cizí skript. Merge do výchozí větve nevratný je, ale brzdou proti němu je
+# prokazatelný výslovný souhlas v promptu (krok 8), ne neschopnost mergovat.
 # Odchylka od konvence pojmenování: tabulka sloves zná pro nový artefakt
 # `write`/`create`, ale forge i uživatel říkají „otevři PR"; `open-pr` proto
 # trefí spouštěcí frázi líp než `create-pr`.
@@ -35,7 +38,7 @@ user-invocable: true
 # Vynechaná zvažovaná pole: allowed-tools — sada nástrojů se liší podle forge
 # a na Gitea jde o odložené `mcp__gitea__*` načítané za běhu přes ToolSearch;
 # uzavřený výčet by je nepokryl a gitea větev by tiše spadla při zakládání PR.
-# Hranicí je tady zákaz merge v Zásadách, ne zúžení práv;
+# Hranicí je tady podmínka výslovného souhlasu v Zásadách, ne zúžení práv;
 # disable-model-invocation — automatické vyvolání na konci implement-issue je
 # celý smysl skillu a PR je vratný artefakt (dá se zavřít);
 # context/agent/background — název a tělo PR se píšou z kontextu odvedené
@@ -69,12 +72,20 @@ jinak.
 - Zadání od volajícího (může být prázdné): $ARGUMENTS
 
 Ze zadání vytěž, co v něm je: **základní větev**, **číslo issue**, které PR
-uzavírá, a **milestone**, do kterého PR patří. Co v zadání není, doplň postupem
-níže — ale nikdy nepřebíjej to, co volající předal.
+uzavírá, **milestone**, do kterého PR patří, a **výslovný souhlas k mergi**
+(fráze jako „a mergni", „udělej i merge", „vytvoř PR a slej to", „a rovnou
+zmerguj"). Co v zadání není, doplň postupem níže — ale nikdy nepřebíjej to,
+co volající předal.
+
+**Souhlas k mergi musí být explicitní a musí pocházet z promptu, kterým byl
+aktuální běh spuštěn** — dispečuje-li tě `run-milestone` nebo `implement-issue`,
+souhlas hledej v zadání, které ti předaly ony (musí ho samy přenést z původního
+promptu uživatele, jinak ho nemáš odkud vzít). Domněnka z kontextu konverzace
+nestačí: „otevři PR" bez dalšího slova souhlas k mergi neznamená.
 
 **Skill běží často neinteraktivně**, spuštěný na konci jiné úlohy. Celý postup
 je proto napsaný tak, že se uživatele neptá — jediné místo, kde k němu míří
-otázka, je Eskalace v kroku 9.
+otázka, je Eskalace v kroku 10.
 
 ## Postup
 
@@ -269,13 +280,38 @@ mlčky přejít se to nedá, `close-milestone` by pak milestone nezavřel.
 
 Nepatří-li PR do milestonu, krok přeskoč.
 
-### 8. Shrň výsledek
+### 8. Proveď merge, obsahoval-li prompt výslovný souhlas
+
+Nenašel-li krok „Vstupní kontext" v promptu, kterým byl aktuální běh spuštěn,
+výslovný souhlas k mergi, **krok přeskoč** — PR zůstává otevřené, to je
+současné chování beze změny.
+
+Souhlas našel → mergni podle řádku „Mergni PR" v receptech, strategií ze
+sekce `Větvení` (squash) a se smazáním zdrojové větve:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-merge.sh" <n> --squash --delete-branch
+```
+
+Mergovat smíš **do jakékoli základní větve** — souhlas v promptu je přesně ta
+výjimka, kterou řádek `merge do výchozí větve: jen člověk` v sekci `Větvení`
+připouští; bez tohohle kroku by řádek platil bez výjimky. Neplyne z toho nic
+o integrační bránu `run-milestone` — ta svůj vlastní merge do integrační větve
+provádí sama (jeho vlastní krok 8), tenhle krok se týká jen PR, které
+zakládáš ty.
+
+`result=conflict` nebo jiné nenulové selhání merge **neobcházej** — PR zůstává
+otevřené a nemergnuté, ohlas to v souhrnu a eskaluj podle kroku 10. Nezkoušej
+force merge ani jiný recept.
+
+### 9. Shrň výsledek
 
 Vypiš souhrn podle Formátu výstupu: číslo a odkaz PR, base a head větev, co
-uzavírá, přiřazený milestone a co jsi cestou přeskočil nebo delegoval. **Merge
-nenabízej jako svůj další krok** — skill se tady zastavuje.
+uzavírá, přiřazený milestone, výsledek merge (proveden, nebo „neprovádí se")
+a co jsi cestou přeskočil nebo delegoval. **Merge nenabízej jako svůj další
+krok** — bez souhlasu v promptu se tady skill zastavuje.
 
-### 9. Eskalace
+### 10. Eskalace
 
 Přeruš postup a ohlas stav, nastane-li kterákoli z těchto situací:
 
@@ -289,6 +325,8 @@ Přeruš postup a ohlas stav, nastane-li kterákoli z těchto situací:
 - z téhle head větve už existuje otevřené PR proti **jiné** základní větvi
   (shodné PR není důvod k eskalaci — vrať ho a skonči);
 - PR vzniklo, ale přiřazení milestonu selhalo;
+- prompt obsahoval souhlas k mergi, ale merge v kroku 8 selhal (konflikt,
+  odmítnutí forge);
 - forge vrátí 404 nebo `gh` chybí či není přihlášené.
 
 Eskalace vždy shrne, co už vzniklo (commit, větev, PR), a položí **jednu
@@ -307,7 +345,7 @@ uklízí někdo ručně.
 Closes #<n>
 ```
 
-**Souhrn** (krok 8):
+**Souhrn** (krok 9) — řádek `Merge` má dvě platné podoby:
 
 ```
 PR #<číslo>: <název> — <url>
@@ -323,10 +361,19 @@ Commity: <počet, nebo „nic nového k zapsání">
 Merge: neprovádí se
 ```
 
+Obsahoval-li prompt souhlas a merge v kroku 8 prošel, poslední řádek nahraď:
+
+```
+Merge: proveden — squash do <základní větev>, zdrojová větev smazána
+```
+
 ## Zásady
 
-- **Skill nikdy nemergeuje.** Merge do integrační větve vlastní `run-milestone`,
-  merge do výchozí větve podle konfigurace jen člověk. Výstupem je otevřené PR.
+- **Skill mergne jen na výslovný souhlas v promptu, jinak nikdy.** Merge do
+  integrační větve vlastní `run-milestone` sám; do výchozí větve mergne
+  `open-pr` výhradně tehdy, když prompt, kterým byl aktuální běh spuštěn,
+  obsahoval výslovný souhlas k mergi (krok 8). Bez něj je výstupem jen
+  otevřené PR, stejně jako dosud.
 - **Základní větev se nedomýšlí.** Co předal volající, platí; výchozí větev
   z konfigurace je až fallback.
 - **Git mechanika se deleguje bez výjimky.** Commit, push i publikace větve přes

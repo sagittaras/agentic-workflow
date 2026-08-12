@@ -134,7 +134,7 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 | --- | --- |
 | `create-branch` | Založí pracovní větev z čerstvé výchozí větve remotu, název ve tvaru `<type>/<popis>` si nechá potvrdit |
 | `make-commit` | Zapíše rozdělanou práci podle Conventional Commits, rozdělí ji do logických celků a pushne; větev bez upstreamu rovnou publikuje |
-| `open-pr` | Otevře pull request pro práci na aktuální větvi — název, tělo i `Closes #N`; commit deleguje na `make-commit`, merge nechává člověku |
+| `open-pr` | Otevře pull request pro práci na aktuální větvi — název, tělo i `Closes #N`; commit deleguje na `make-commit`, merge nechává člověku, ledaže prompt výslovně žádal i merge |
 
 **Milestone workflow**
 

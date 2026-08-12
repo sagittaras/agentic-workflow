@@ -6,7 +6,9 @@ description: >-
   a v dávkách dispečuje odblokovaná issues paralelním agentům podle labelu
   `area:*`. Každé PR nechá zrevidovat na kvalitu kódu i na akceptační kritéria,
   protáhne integrační bránou a mergne do integrační větve; na konci předloží
-  jedno PR do výchozí větve. Sám neimplementuje ani nerecenzuje.
+  jedno PR do výchozí větve, a obsahoval-li prompt, kterým byl spuštěn,
+  výslovný souhlas k mergi, nechá ho i rovnou mergnout. Sám neimplementuje
+  ani nerecenzuje.
 when_to_use: >-
   Použij, když je milestone naplánovaný a zrevidovaný a má se začít
   implementovat — „spusť milestone", „proveď ten milestone", „nech to
@@ -343,8 +345,11 @@ Otevřené issue po merge by smyčku v kroku 3 držela v přesvědčení, že pr
 **Tenhle merge je autonomní** — uživatel ho autorizoval sekcí `Větvení` v konfiguraci
 a ptát se na každé PR by z autonomního běhu udělalo ruční klikání.
 
-**Do výchozí větve nemergeuj nikdy**, ani když si to uživatel vyžádá během běhu. Je to
-jediné místo, kde se rozhodnutí nedá vzít zpět bez zásahu do sdílené historie.
+**Do výchozí větve sám nikdy nemergeuješ.** Jediné místo, kde se to smí stát, je
+`open-pr` v kroku 10.3 — a jen tehdy, když prompt, kterým byl aktuální `run-milestone`
+spuštěn, obsahoval výslovný souhlas k mergi (viz krok 10). Bez toho souhlasu zůstává
+zákaz stejný jako dosud, i kdyby si merge uživatel vyžádal uprostřed běhu: rozhodnutí
+musí stát v promptu, kterým běh začal, ne v průběžné zprávě.
 
 ### 9. Sync mezi dávkami
 
@@ -367,14 +372,20 @@ Zbývají-li otevřená issues, ale žádné z nich není odblokované a nic neb
 2. Sestav název a tělo integračního PR: název jako Conventional Commit shrnující celý
    milestone, tělo podle šablony ve Formátu výstupu.
 3. **PR nech založit skillem `sagittaras:open-pr`** (nástroj `Skill`) — předej mu
-   základní větev (výchozí větev z konfigurace), milestone a hotový název i tělo; co
-   předá volající, to u něj platí. Mechaniku PR nepiš podruhé: `open-pr` řeší i push
-   nepushnuté větve, kontrolu, že z téhle větve PR ještě neexistuje, předání těla
-   souborem a **druhé volání, kterým se přiřazuje milestone** — při zakládání to nejde
-   ani na jedné forge a `close-milestone` podle té vazby integrační PR dohledává.
+   základní větev (výchozí větev z konfigurace), milestone, hotový název i tělo a —
+   obsahoval-li prompt, kterým byl aktuální `run-milestone` spuštěn, výslovný souhlas
+   k mergi — i ten, doslova. Bez týhle předávky `open-pr` souhlas nemá odkud vzít, protože
+   neviděl prompt, kterým byl spuštěn `run-milestone`. Mechaniku PR nepiš podruhé:
+   `open-pr` řeší i push nepushnuté větve, kontrolu, že z téhle větve PR ještě neexistuje,
+   předání těla souborem a **druhé volání, kterým se přiřazuje milestone** — při zakládání
+   to nejde ani na jedné forge a `close-milestone` podle té vazby integrační PR dohledává.
    Ověř v jeho souhrnu, že milestone opravdu přiřadil.
-4. Předlož PR uživateli a **skonči**. Merge do výchozí větve patří jemu.
-5. Doporuč `/sagittaras:close-milestone` — ale **až po merge**, ne teď.
+4. Vzniklo-li jen otevřené PR (`open-pr` bez souhlasu, nebo souhlas nebyl), předlož ho
+   uživateli a **skonči** — merge do výchozí větve patří jemu. Provedl-li `open-pr` merge
+   (souhlas byl a merge prošel), ohlas hotovo bez dalšího čekání — na mergnutou výchozí
+   větev už není na co čekat.
+5. Doporuč `/sagittaras:close-milestone` — ale **až po merge** (vlastním, nebo tím, které
+   provedl `open-pr`), ne dřív.
 
 ### 11. Eskalace
 
@@ -477,8 +488,9 @@ Eskalace: <co se stalo, co to blokuje> — <konkrétní otázka>.
 
 - **Nepíšeš kód a nedáváš známky.** Opravit nález sám nebo si PR posoudit vlastní hlavou
   je rychlejší jen zdánlivě: ruší nezávislost, kvůli které review existuje.
-- **Do výchozí větve nemergeuješ.** Ani squashem, ani „jen tenhle jeden", ani na přání
-  během běhu.
+- **Do výchozí větve sám nemergeuješ.** Ani squashem, ani „jen tenhle jeden", ani na
+  přání během běhu. Mergnout tam smí jen `open-pr`, a jen když souhlas stál v promptu,
+  kterým `run-milestone` začal — to je jediný způsob, jak se výjimka smí uplatnit.
 - **Rozhoduje strojově čitelný řádek, ne próza.** Verdikt review milestonu, číslo PR
   a `Blokuje merge: ano/ne` jsou jediné vstupy, podle kterých se rozhoduje; jejich absence
   je selhaný dispatch, ne souhlas.
