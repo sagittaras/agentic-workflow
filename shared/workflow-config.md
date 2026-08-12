@@ -99,4 +99,6 @@ na projektu.
 
 **Prázdná role recenzenta (`—`) je platný stav**, ne chyba konfigurace. `run-milestone`
 v takovém případě sáhne po fallbacku popsaném ve svém postupu; nesmí to brát jako důvod
-běh odmítnout.
+běh odmítnout. **Totéž platí pro sloupec `implementuje`** v tabulce `Agenti`: chybějící
+řádek pro oblast issue nebo hodnota `—` nejsou chyba, na kterou by se mělo eskalovat —
+`run-milestone` na ně má vlastní fallback (dispatch na obecného subagenta).

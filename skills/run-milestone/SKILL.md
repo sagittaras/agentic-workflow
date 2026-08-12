@@ -29,7 +29,7 @@ effort: xhigh
 # selhané implementace a nemergnout nic, co neprošlo. Chyba v tomhle rozhodování
 # stojí celý milestone, ne jedno kolo.
 user-invocable: true
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools:
   - Read
   - Glob
@@ -56,10 +56,13 @@ allowed-tools:
 # Bash je záměrně nezúžený: `integration-gate.sh` dostává jako argument
 # libovolný ověřovací příkaz projektu z konfigurace (`dotnet build`, `pnpm test`,
 # …) a vzor `Bash(bash:*)` by ho zablokoval.
-# disable-model-invocation: běh je dlouhý, drahý (paralelní opus agenti) a mění
-# repozitář i tracker. Spuštění patří výslovnému příkazu uživatele, ne modelu,
-# který v konverzaci zahlédl slovo milestone. when_to_use tím neztrácí smysl —
-# čte ho rozcestník a lidé hledající správný skill.
+# disable-model-invocation: false, přestože běh je dlouhý, drahý (paralelní
+# opus agenti) a mění repozitář i tracker — model smí spustit i jen na základě
+# fráze v konverzaci („spusť milestone", „rozjeď issues z milestonu"), protože
+# brzdou proti omylu nejsou zakázaná vyvolání, ale čtecí ověřovací kroky před
+# první zapisovací akcí (readiness check, review report, důkaz review v kroku 2)
+# a eskalace při čemkoli nejednoznačném. Sama práce zůstává nevratná stejně jako
+# dřív; nevratnost tu ale hlídá průběžná eskalace, ne odepřené vyvolání.
 # Vynechaná zvažovaná pole: disallowed-tools — allowed-tools je uzavřený výčet,
 # není co zakazovat navíc; context/agent — fork by odřízl uživatele, kterému se
 # eskaluje a předkládá závěrečné PR; background — uživatel průběh sleduje
@@ -235,10 +238,18 @@ a v `agents/` pluginů. **Nenajdeš-li ji, ber, že `Skill` nemá**; chybí-li p
 úplně, agent dědí všechno a podmínka je splněná. Nedosáhne-li, dispatch přesto proveď —
 šablona zadání mu ukládá to ohlásit místo obcházení postupu.
 
-Chybí-li na issue `area:*` label nebo pro jeho oblast řádek v mapě agentů, issue
-**nedispečuj** a eskaluj. Poslat práci náhodnému specialistovi se pozná až u review, kdy
-je hotová. **Odmítne-li nástroj `Agent` dispatch** (neznámý `subagent_type`, chyba
-volání), issue neztrácej z přehledu — eskaluj ho i s chybou, kterou nástroj vrátil.
+**Chybí-li na issue `area:*` label, nedispečuj a eskaluj.** Je to chyba dat na issue,
+ne limit konfigurace, a poslat práci náhodnému specialistovi se pozná až u review, kdy
+je hotová.
+
+**Chybí-li pro oblast issue řádek v mapě `Agenti`, nebo je hodnota `—`, eskalace to
+není** — sáhni po stejném fallbacku jako u recenzentů v kroku 5: dispečuj nástrojem
+`Agent` s `subagent_type: "general-purpose"` (`isolation` a `run_in_background` beze
+změny) a do zadání ulož, ať agent postupuje skillem `sagittaras:implement-issue`.
+Prázdná nebo chybějící role je platný stav konfigurace, ne důvod issue vynechat.
+
+**Odmítne-li nástroj `Agent` dispatch** (neznámý `subagent_type`, chyba volání), issue
+neztrácej z přehledu — eskaluj ho i s chybou, kterou nástroj vrátil.
 
 Veď si seznam běžících dispatchů (issue → agent). **Totéž issue nikdy nedispečuj podruhé,
 dokud jeho agent běží** — dva agenti nad jedním issue si otevřou dvě PR a jedno z nich je
@@ -395,8 +406,8 @@ Eskaluj v těchto konkrétních situacích:
 - `gh` chybí nebo není přihlášené (kód 7), případně forge vrací 404 na zápisu (skoro vždy
   chybějící oprávnění účtu, ne špatný název);
 - `integration-gate.sh` skončil kódem 2 nebo 3 — výpadek infrastruktury, ne nález review;
-- `area:*` label na issue chybí, pro jeho oblast není řádek v mapě agentů, nebo nástroj
-  `Agent` dispatch odmítl;
+- `area:*` label na issue chybí, nebo nástroj `Agent` dispatch odmítl — chybějící řádek
+  v mapě agentů mezi tyhle důvody nepatří, na to je fallback v kroku 3;
 - graf závislostí obsahuje cyklus, nebo `Závisí na` odkazuje mimo milestone;
 - počet načtených issues nesedí s počty na milestonu;
 - review report v trackeru chybí, nebo má verdikt `Needs attention` (v obou případech
