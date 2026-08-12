@@ -221,7 +221,26 @@ Projdi hotový dokument proti kontrolnímu seznamu v závěru `adr-conventions.m
 bod po bodu. Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady,
 nemusíš řešit v dalším kole.
 
+Po kontrole **prezentuj hotový dokument uživateli** (cestu k souboru, režim
+a Stav) a nástrojem AskUserQuestion se zeptej, jestli má pokračovat vypravení
+jako větev a PR s nezávislým review (kroky 6–8), nebo má ADR zatím zůstat jen
+v pracovním stromu k doplnění. **Bez výslovného pokynu k pokračování kroky 6–8
+nespouštěj** — write-adr se tady zastavuje stejně jako po interview nebo
+v kroku 3: ADR, které chce uživatel ještě něčím doplnit před review, si tenhle
+prostor zaslouží stejně jako otevřená otázka. Platí to beze zbytku i pro režim
+Dořešení — po editaci dokumentu v kroku 4 se tu zastavíš stejně jako u nového
+ADR, ne že by dořešení automaticky pokračovalo do zápisu a review.
+
+Selže-li AskUserQuestion nebo odpověď nedorazí, chovej se, jako by odpověď byla
+„zatím ne" — vypiš report podle varianty pro zastavený běh a skonči. Řekl-li
+uživatel „zatím ne", udělej totéž. Řekl-li, že se má pokračovat, jdi na krok 6 —
+ať už v tomtéž běhu, nebo při novém vyvolání `write-adr` nad týmž ADR.
+
 ### 6. Vypravení jako větev a PR
+
+**Do tohohle kroku se běh dostane jen po výslovném pokynu z konce kroku 5** —
+bez něj tu ADR čeká nezapsané dál. Jakmile pokyn přijde, platí následující beze
+změny bez ohledu na to, ve kterém běhu přišel.
 
 Řekl-li uživatel, že se zatím nic vypravovat nemá, **přeskoč podkroky 2 a 3
 a s nimi i zápis v krocích 7.2 a 8.2** — dokument zůstane nezapsaný v pracovním
@@ -394,6 +413,22 @@ Při eskalaci shrň stav (kolo, verdikt, sporný nález), odkaž na PR a polož
 
 ## Formát výstupu
 
+### Zastavený report (konec kroku 5)
+
+Vypiš ho místo Závěrečného reportu, když se běh po kroku 5 zastavil bez
+pokynu k pokračování — bez ohledu na to, jestli šlo o nový ADR, dořešení,
+nebo nahrazení:
+
+```
+ADR-<NNNN>: <název> (<cesta k souboru>)
+Režim: <nový | dořešení | nahrazení ADR-NNNN>
+Stav: <Navrženo | Přijato — u dořešení beze změny>
+PR: nevzniklo — čeká na pokyn k vypravení
+
+Další krok: potvrď vypravení jako větev a PR s nezávislým review — v týhle
+konverzaci, nebo novým vyvoláním /sagittaras:write-adr nad tímhle ADR.
+```
+
 ### Zadání pro reviewera
 
 Reviewer ho parsuje a nekompletní zadání označí za nález, kterým kolo skončí —
@@ -443,9 +478,10 @@ rozhodnutí týká", nebo „nic — rozhodnutí nespadá do domény žádného 
 
 - **Referenční soubory mají přednost.** Odporuje-li tenhle postup konvencím
   nebo šabloně, platí ony.
-- **Bez interview ADR nevzniká.** Interview, krok 3 a eskalace jsou jediné fáze,
-  které vyžadují uživatele; mezi nimi běží psaní a review autonomně a nepřerušuje
-  se kvůli průběžnému hlášení.
+- **Bez interview ADR nevzniká, a bez pokynu nejde do vypravení a review.**
+  Interview, zastavení po kroku 5, krok 3 a eskalace jsou fáze, které vyžadují
+  uživatele; uvnitř nich (psaní, vypravení, review a opravná smyčka) běží práce
+  autonomně a nepřerušuje se kvůli průběžnému hlášení.
 - **Nepiš nic, co uživatel neřekl nebo nepotvrdil** — a totéž platí ve smyčce:
   oprava nálezu nesmí tiše změnit podstatu rozhodnutí. Od toho je eskalace.
 - **Review si neděláš sám.** Vlastní kontrola v kroku 5 ho nenahrazuje: autor
