@@ -49,7 +49,8 @@ na projektu.
 - issue větev: <type>/<popis>
 - integrační větev: milestone/<slug>
 - merge strategie: squash
-- merge do výchozí větve: jen člověk
+- merge do výchozí větve: jen člověk, ledaže prompt, kterým byl aktuální běh
+  spuštěn, obsahoval výslovný souhlas k mergi — pak smí mergnout `open-pr`
 
 ## Labely
 
