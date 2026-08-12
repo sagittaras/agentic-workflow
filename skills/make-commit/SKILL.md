@@ -18,9 +18,9 @@ effort: medium
 # Zařazení dle matice: rutinní tvorba podle jasného zadání → sonnet × medium.
 # Matice u medium varuje před rozhodnutími, která se těžko vrací zpět — commit
 # a jeho push takové jsou. Zůstáváme přesto na medium, protože nevratnost tu
-# nesnižuje kvalita úsudku, ale absence brzdy: proti ní stojí potvrzení
-# rozdělení uživatelem, zastavení na výchozí větvi a fakt, že publikace míří
-# na vlastní pracovní větev, kde nikomu nepřekáží.
+# nesnižuje kvalita úsudku, ale absence brzdy: proti ní stojí zastavení na
+# výchozí větvi (krok 1) a fakt, že publikace míří na vlastní pracovní větev,
+# kde nikomu nepřekáží — rozdělení do commitů si skill určuje sám z diffu.
 user-invocable: true
 allowed-tools:
   - Read
@@ -32,10 +32,11 @@ allowed-tools:
 # Proto každé volání píš ve tvaru `bash <cesta>` — jinak nespadne do povolení.
 # Užší vzor by musel spoléhat na tvar cesty ke skriptu, což je křehčí.
 # Vynechaná zvažovaná pole: disable-model-invocation — automatické dokončení
-# úlohy commitem je žádoucí a brzdou jsou kroky 1 a 2, ne zákaz vyvolání;
+# úlohy commitem je žádoucí a brzdou je krok 1 (zastavení na výchozí větvi),
+# ne zákaz vyvolání;
 # Write/Edit — skill nezapisuje soubory, zpráva jde do gitu stdinem;
-# context/agent/background — rozdělení do celků konzultuje s uživatelem
-# a pracuje nad sdíleným pracovním stromem, fork by obojí rozbil; paths —
+# context/agent/background — skill pracuje nad sdíleným pracovním stromem
+# volajícího a fork by ho rozbil; paths —
 # spouští se z konverzace, ne prací nad konkrétními soubory; shell — skripty
 # se spouští explicitním `bash`; disallowed-tools — allowed-tools je uzavřený
 # výčet, není co zakazovat navíc.
@@ -119,12 +120,10 @@ Při přímém vyvolání uživatelem („commitni to") je rozsahem celý pracov
 pokud uživatel sám nezúžil. Při automatickém spuštění na konci jiné úlohy vynech
 změny, které s ní zjevně nesouvisejí — a vynechání ohlas.
 
-**Víc celků → víc commitů.** Návrh rozdělení vypiš prostým textem, ale
-**rozhodnutí si vyžádej nástrojem AskUserQuestion** (rozdělit podle návrhu /
-commitnout jako jeden celek). Rozhodnutí musí projít tímhle nástrojem, protože
-jeho selhání je jediný signál, podle kterého se pozná neinteraktivní běh — ptát
-se jen textem znamená, že se na odpověď čeká navždy. Neinteraktivně commitni vše
-jako jeden celek a rozdělení jen doporuč ve shrnutí.
+**Víc celků → víc commitů.** Rozdělení urči a proveď sám podle vlastního návrhu,
+bez čekání na potvrzení — a to i v interaktivním běhu. Návrh rozdělení do celků
+i tak vypiš prostým textem (v postupu commitování nebo ve shrnutí), ať zůstane
+vidět, jak byl diff rozdělen.
 
 ### 3. Napiš zprávu
 
