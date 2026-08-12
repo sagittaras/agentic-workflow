@@ -156,10 +156,11 @@ nenahradí — podle ní se práce posílá specialistovi.
    je legitimní zjištění — buď ji z výčtu vypusť, nebo ji nech s poznámkou,
    že agent chybí.
 
-**Nemá-li projekt agenty vůbec, není to chyba.** Do obou rolí recenzentů zapiš
-`—`; `run-milestone` na to má fallback a konfiguraci s pomlčkou přijímá. Řekni
-uživateli, že role může kdykoli doplnit přes `/sagittaras:write-agent`, a běh
-tím nekonči.
+**Nemá-li projekt agenty vůbec, není to chyba.** Do obou rolí recenzentů i do
+sloupce `implementuje` u každé oblasti zapiš `—`; `run-milestone` má fallback
+na všechny tři a konfiguraci s pomlčkami přijímá stejně. Řekni uživateli, že
+roli i implementujícího agenta může kdykoli doplnit přes `/sagittaras:write-agent`,
+a běh tím nekonči.
 
 Výčet oblastí, který tady vznikne, **musí do znaku sedět** na oblasti v sekci
 Labely (krok 6) i v ověřovacích příkazech (krok 4). Rozpor znamená issue, které
