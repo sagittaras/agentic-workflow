@@ -157,7 +157,7 @@ subagentovi se ti nerozvine a zůstane literálem.
    nepřiznané duplicity, což jsou nálezy, které nikdo jiný nenajde.
 4. Přečti zázemí, o které se dokument opírá: `<kořen projektu>/CLAUDE.md`,
    dokumenty citované v samotném ADR a — má-li projekt
-   `<kořen projektu>/.claude/sagittaras/workflow.md` — jeho sekci `Zdroje pravdy`.
+   `<kořen projektu>/.claude/workflow.md` — jeho sekci `Zdroje pravdy`.
    Cesty ukotvi ke kořeni projektu ze zadání, ne k pracovnímu adresáři: ten
    v izolovaném worktree nemusí být ten repozitář, o který jde.
 5. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, jestli ho nová verze
@@ -258,7 +258,7 @@ k PR. Je to trvalý a dohledatelný záznam, na kterém stojí zpětná analýza
 kolo review; odpověď v konverzaci zmizí s ní. Bez PR krok přeskoč a v reportu to
 uveď.
 
-1. Přečti `<kořen projektu>/.claude/sagittaras/workflow.md` a vezmi si ze sekce
+1. Přečti `<kořen projektu>/.claude/workflow.md` a vezmi si ze sekce
    `Forge` typ, `owner` a `repo`. **Chybí-li konfigurace nebo sekce**, komentář
    nezakládej — report vrať jen volajícímu a napiš do něj, proč do PR nedorazil.
    Není to důvod review neodevzdat. Zjistil-li sis `owner`/`repo` už při

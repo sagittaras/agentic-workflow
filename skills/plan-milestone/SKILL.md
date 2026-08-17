@@ -98,7 +98,7 @@ nestojí nic.
 
 ### 1. Načti projektovou konfiguraci
 
-Přečti `.claude/sagittaras/workflow.md` v kořeni cílového projektu. Potřebuješ z ní
+Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ z ní
 sekce **Forge** (kterou větev receptů použít), **Labely** (co smíš nasadit),
 **Zdroje pravdy** (o co se kritéria opírají) a **Jazyk issues**.
 

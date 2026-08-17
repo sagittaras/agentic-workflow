@@ -81,7 +81,7 @@ postupem platí ony.
 
 ### 1. Načti konfiguraci a urči milestone
 
-Přečti `.claude/sagittaras/workflow.md` v kořeni cílového projektu. Potřebuješ
+Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
 sekci **Forge** (kterou větev receptů použít, `owner/repo`) a **Větvení**
 (výchozí větev a tvar integrační větve `milestone/<slug>`).
 

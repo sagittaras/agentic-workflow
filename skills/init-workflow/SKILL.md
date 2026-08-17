@@ -4,7 +4,7 @@ description: >-
   Jednorázově nastaví cílový projekt pro milestone workflow — detekcí zjistí
   forge a repozitář, z agentů a souborů projektu odvodí mapu oblastí
   a ověřovací příkazy, na zbytek se doptá a založí konfiguraci
-  `.claude/sagittaras/workflow.md` v závazném tvaru. Chybějící labely doplní
+  `.claude/workflow.md` v závazném tvaru. Chybějící labely doplní
   v trackeru až po potvrzení. Existující konfiguraci nikdy nepřepíše tiše —
   nabídne aktualizaci po sekcích.
 when_to_use: >-
@@ -59,7 +59,7 @@ allowed-tools:
 
 # Init Workflow
 
-Cílem je jeden soubor: `.claude/sagittaras/workflow.md` v cílovém projektu, ze
+Cílem je jeden soubor: `.claude/workflow.md` v cílovém projektu, ze
 kterého všechny ostatní skilly milestone workflow čtou, aby se neptaly na totéž
 pokaždé znovu. Závazný tvar souboru drží
 `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` — **přečti si ho jako první**
@@ -111,11 +111,18 @@ a pozná se to až u review hotového PR.
      vypadající nesmysl — třeba zastaralou výchozí větev z lokálního refu,
      před čímž `git-scripts.md` výslovně varuje.
 
-2. Zjisti, jestli `.claude/sagittaras/workflow.md` už existuje. Existuje-li,
+2. Zjisti, jestli `.claude/workflow.md` už existuje. Existuje-li,
    **přečti ho celý** a přepni se do režimu aktualizace: v každém dalším kroku
    nejdřív ukaž současnou hodnotu, pak navrhovanou, a nech vybrat. Sekce, které
    uživatel nechce měnit, přenes do výsledku **doslova** — včetně poznámek,
    které si projekt dopsal sám.
+
+   Nenajdeš-li ho, podívej se ještě na **starší umístění**
+   `.claude/sagittaras/workflow.md`. Leží-li konfigurace tam, přečti ji, řekni
+   uživateli, že se soubor stěhuje o úroveň výš, a pokračuj režimem aktualizace
+   s jejím obsahem — zapíšeš ji na nové místo. Starý soubor **nemaž sám**:
+   `allowed-tools` na to nemá nástroj a smazání patří do commitu, který dělá
+   uživatel. Připomeň mu ho ve shrnutí.
 
 3. Cesta k souboru se ukotvuje ke **kořeni cílového projektu**, ne
    k `${CLAUDE_PLUGIN_ROOT}`. Zapsat konfiguraci do `.claude/` pluginu je tichá
@@ -247,12 +254,13 @@ Selhání, na která reaguj jinak než opakováním:
 
 ### 7. Zápis konfigurace
 
-Zapiš `.claude/sagittaras/workflow.md` přesně ve tvaru z
+Zapiš `.claude/workflow.md` přesně ve tvaru z
 `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` — **nadpisy a jejich pořadí
 jsou závazné**, protože se podle nich sekce vyhledávají bez parsování prózy.
-Chybějící složku `.claude/sagittaras/` vytvoří samo zapsání souboru nástrojem
-Write — shellový `mkdir` nespouštěj, `allowed-tools` ho nepustí a narazil bys
-na oprávnění uprostřed zápisu.
+Soubor leží **přímo v `.claude/`**, do žádné podsložky ho nezanořuj. Chybějící
+`.claude/` vytvoří samo zapsání souboru nástrojem Write — shellový `mkdir`
+nespouštěj, `allowed-tools` ho nepustí a narazil bys na oprávnění uprostřed
+zápisu.
 
 - **Nová konfigurace** → Write celého souboru.
 - **Aktualizace** → Edit po sekcích, jen tam, kde uživatel změnu odsouhlasil.
@@ -273,7 +281,8 @@ funkční, ale slabší než dispatch na specialistu.
 ## Formát výstupu
 
 ```
-Konfigurace: <cesta k souboru> (<založena | aktualizována>)
+Konfigurace: <cesta k souboru> (<založena | aktualizována | přenesena
+  ze staršího umístění — smaž `.claude/sagittaras/workflow.md`>)
 
 Forge: <typ> · <host> · <owner/repo> · výchozí větev <branch>
 Oblasti: <area:* → agent, po řádcích; nebo „žádné, projekt nemá agenty">

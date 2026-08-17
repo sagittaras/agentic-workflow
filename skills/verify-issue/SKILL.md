@@ -88,7 +88,7 @@ ověřovat — řekni to a skonči.
 
 ### 1. Načti konfiguraci a nástroje forge
 
-Přečti `.claude/sagittaras/workflow.md` v kořeni projektu. Potřebuješ z něj sekce
+Přečti `.claude/workflow.md` v kořeni projektu. Potřebuješ z něj sekce
 **Forge** (typ, `owner/repo`), **Ověřovací příkazy** (čím se kritérium doopravdy
 ověří), **Zdroje pravdy** (kde leží dokumenty citované v Reference) a **Větvení**
 (výchozí a integrační větev).

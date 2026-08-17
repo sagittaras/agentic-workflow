@@ -91,7 +91,7 @@ otázka, je Eskalace v kroku 10.
 
 ### 1. Načti konfiguraci a zjisti stav
 
-Přečti `.claude/sagittaras/workflow.md` v kořeni cílového projektu. Potřebuješ
+Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
 sekce **Forge** (kterou větev receptů použít a jaké `owner/repo` předat) a
 **Větvení** (výchozí větev, tvar integrační větve, a že do výchozí větve
 mergeuje jen člověk).

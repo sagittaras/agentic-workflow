@@ -100,7 +100,7 @@ rozhodnutí**. Co v zadání není, vytěž z konverzace a zbytek zjisti postupe
    dotýká, přečti celá). Nové rozhodnutí může na některé navazovat, nahrazovat
    ho, nebo s ním být v rozporu — a všechny tři případy mění, na co se budeš ptát.
 4. **Načti zázemí projektu**: `CLAUDE.md`, `.claude/rules/`, a pokud projekt má
-   `.claude/sagittaras/workflow.md`, i jeho sekci `Zdroje pravdy`. Bez konfigurace
+   `.claude/workflow.md`, i jeho sekci `Zdroje pravdy`. Bez konfigurace
    workflow skill běží dál — ADR se píše i v projektu, který milestone workflow
    nepoužívá; chybí ti pak jen ukazatel na dokumentaci, kterou musíš najít sám.
 5. **Urči režim.** Rozliší se podle toho, co se s rozhodnutím děje — hranici

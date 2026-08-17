@@ -97,7 +97,7 @@ které do specu půjdou jako citace a o kterých se v interview nediskutuje.
 | Architektonické invarianty — kdo je zdroj pravdy, co se kde nesmí počítat | ADR, `CLAUDE.md`, rules v `.claude/rules/` |
 | Data, akce, stavy a fail stavy, které obrazovka obsluhuje | Produktová nebo herní dokumentace |
 | Znovupoužitelné komponenty a vztahy rodič–sourozenec | Sousední UX specy |
-| Kam se hotový dokument registruje jako zdroj pravdy | `.claude/sagittaras/workflow.md`, sekce Zdroje pravdy |
+| Kam se hotový dokument registruje jako zdroj pravdy | `.claude/workflow.md`, sekce Zdroje pravdy |
 
 **Art bible přečti celou**, ne jen prohledej — je to hlavní zdroj všeho, co spec nesmí
 přerozhodovat, a část invariantů z ní plyne nepřímo (vyhrazený vzor, zakázaná kombinace).

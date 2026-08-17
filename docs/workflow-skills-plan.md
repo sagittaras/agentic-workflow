@@ -55,7 +55,7 @@ Dvě zásady převzaté z webgame beze změny, protože řeší reálná selhán
 
 ---
 
-## 3. Projektový kontrakt: `.claude/sagittaras/workflow.md`
+## 3. Projektový kontrakt: `.claude/workflow.md`
 
 Zakládá ho `init-workflow`, čtou ho všechny ostatní. Když chybí, skill se nespustí
 a nabídne `init-workflow` — hádat forge a mapu agentů za běhu znamená, že se každý běh
@@ -120,7 +120,7 @@ Sedm nových (`init-workflow` je osmý, konfigurační). Model × effort podle m
 odchylky od webgame jsou zdůvodněné.
 
 ### `init-workflow` — `sonnet` × `high`
-Jednorázově vyzpovídá projekt a založí `.claude/sagittaras/workflow.md`; doplní chybějící
+Jednorázově vyzpovídá projekt a založí `.claude/workflow.md`; doplní chybějící
 labely v trackeru. Ohraničené zadání se známým tvarem výstupu, ale s interview — proto
 `high`, ne `medium`.
 **Vstup:** projekt. **Výstup:** config + labely. **Navazuje:** `plan-milestone`.

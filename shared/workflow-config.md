@@ -1,7 +1,7 @@
 # Projektová konfigurace workflow
 
 > **Rozsah:** Sdílený kontrakt pluginu `sagittaras`. Popisuje soubor
-> `.claude/sagittaras/workflow.md` v cílovém projektu — zakládá ho `init-workflow`,
+> `.claude/workflow.md` v cílovém projektu — zakládá ho `init-workflow`,
 > čtou ho všechny skilly milestone workflow. Otevři tenhle soubor, když konfiguraci
 > **zakládáš** nebo když potřebuješ vědět, **kde v ní co hledat**.
 
@@ -13,8 +13,9 @@ záleží nejvíc — v mapě `area:*` → agent, podle které se práce posíl�
 
 ## Kde soubor leží
 
-`.claude/sagittaras/workflow.md` v kořeni cílového projektu. Složku `sagittaras/` vlastní
-plugin, takže nekoliduje s ničím jiným v `.claude/`.
+`.claude/workflow.md` v kořeni cílového projektu — přímo v `.claude/`, bez mezisložky.
+Název souboru je jednoznačný a `.claude/` v projektu obvykle už existuje, takže zápis
+nezakládá nic navíc.
 
 ---
 
