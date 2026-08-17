@@ -214,6 +214,31 @@ kapitola shrnuje principy, na kterých stojí.
 
 Obsah piš česky, identifikátory anglicky.
 
+### Na co se agent neodkazuje
+
+Definice agenta je statický systémový prompt: načítá se celá při každém spuštění a nic
+v ní nehlídá, jestli to, na co ukazuje, pořád existuje a pořád platí. Dva druhy odkazů
+proto do těla nepatří vůbec.
+
+**Konkrétní dokumenty cílového projektu.** Žádné „řiď se `docs/architecture.md`“,
+„vycházej z ADR-0003“ ani „konvence testů najdeš v `docs/testing.md`“. Dokumenty se
+přejmenovávají, dělí a ruší, kdežto definice agenta zůstává — agent pak čte neexistující
+cestu, nebo se řídí verzí, která už neplatí. Co má role vědět trvale, jde do její
+**paměti**; plní ji skill `train-agent` a záznam v ní se dá opravit i zahodit, aniž by
+kdokoli sahal na definici. Tělo agenta proto pojmenuje **druh znalosti a odkud ji bere** —
+„vzorce projektu máš v paměti“, „zdroje pravdy dostaneš v zadání“ — a ne soubory.
+Vyjde-li z interview, že role potřebuje znát konkrétní dokument, není to důvod ho
+do definice zapsat, ale položka pro následné spuštění `train-agent`.
+
+**Rules v `.claude/rules/`.** Rule se do kontextu dostane sama: bez `paths` při startu
+sezení, s `paths` ve chvíli, kdy agent sáhne na soubor odpovídající globu. Pokyn „přečti
+si `.claude/rules/api.md`“ tedy načte totéž podruhé a rozbije se, jakmile někdo rule
+přejmenuje nebo rozdělí. Agent o existenci rules nemá vědět nic.
+
+**Odkazovat naopak smí** na doprovodné soubory, které se s ním dodávají (to je případ
+agentů uvnitř pluginu), na skilly volané jmenovitě — název skillu je stabilní kontrakt —
+a na dokument, jehož cestu dostane od volajícího v zadání.
+
 ---
 
 ## 5. Report
@@ -266,5 +291,8 @@ Bez ní se nejasnosti ztratí a volající se dozví jen, že práce „proběhl
 - [ ] Každá hranice říká, co má agent udělat místo zakázané akce
 - [ ] `## Delegace` je v těle jen tehdy, má-li agent nástroj `Agent`
 - [ ] Postup neopisuje kroky skillů, které existují — volá je
+- [ ] Tělo neodkazuje na konkrétní dokumenty cílového projektu — trvalá znalost role
+      patří do paměti, kterou plní `train-agent`
+- [ ] Nikde není zmínka o `.claude/rules/` — rules se do kontextu načítají samy
 - [ ] Report drží jednotnou kostru včetně sekce „Čeho jsem se nedotkl“
 - [ ] Agent má jednu roli
