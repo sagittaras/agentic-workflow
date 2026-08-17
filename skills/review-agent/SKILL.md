@@ -93,6 +93,9 @@ jako subagentovi se ti nerozvine a zůstane literálem.
    i v `.claude/skills/` cílového projektu. Agent, jehož postup opisuje existující
    skill, drží druhou kopii téhož — a ta se rozejde.
 5. Přečti doprovodné soubory posuzovaných agentů, na které se jejich tělo odkazuje.
+   Míří-li odkaz na dokument cílového projektu nebo na `.claude/rules/`, jeho existenci
+   neověřuj — takový odkaz je nález sám o sobě (viz krok 2) a existující soubor na tom
+   nic nemění.
 6. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, zda ho nová verze
    skutečně řeší. Autorovo tvrzení, že nález vyřešil, není důkaz — ověř to
    v souboru.
@@ -165,6 +168,15 @@ se zadáním. Kritéria níže jsou nad jeho rámec.
   Holý příkaz bez důvodu je nález: model dodrží lépe to, čemu rozumí.
 - Triggering nekoliduje se sousedy a překryvy jsou vyřešené negativním
   vymezením **na obou stranách**. Jednostranné vymezení je nález u obou agentů.
+- **Tělo se neodkazuje na konkrétní dokumenty cílového projektu** — ADR, specifikace,
+  soubory v `docs/`. Blokující nález: dokumenty se přejmenovávají a ruší, kdežto
+  definice zůstává a agent pak čte neplatnou cestu. Doporučení formuluj vždy stejně —
+  znalost patří do paměti agenta, kterou plní `train-agent`, a v těle má zůstat jen
+  druh znalosti a odkud ji bere. Výjimkou je doprovodný soubor dodávaný s agentem
+  a dokument, jehož cestu agent dostane v zadání.
+- **Zmínka o `.claude/rules/` je blokující nález.** Rules se do kontextu načítají samy —
+  bez `paths` při startu, s `paths` při sáhnutí na odpovídající soubor — takže pokyn
+  přečíst si je načte totéž podruhé a rozbije se, jakmile někdo rule přejmenuje.
 - **Odkazy jsou ukotvené podle umístění agenta**, které jsi určil v kroku 1.
   Posuzuj podle větve, ne paušálně — obě chyby jsou blokující, ale opačné:
   - Agent v `.claude/agents/` cílového projektu **není** součástí pluginu,

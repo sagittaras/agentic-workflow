@@ -107,7 +107,10 @@ smysl. Zjisti:
   nemá. Práva musí sedět na mandát: agent, který má delegovat, nesmí mít `Write`.
 - **Frekvence spouštění** — poběží jednou za sprint, po každé změně, nebo
   automaticky? Do zařazení vstupuje stejně jako náročnost.
-- **Paměť** — má se role učit vzorce projektu napříč sezeními?
+- **Paměť a znalost projektu** — má se role učit vzorce projektu napříč sezeními?
+  Zjisti zároveň, které dokumenty nebo poznatky bude role potřebovat znát. **Do definice
+  je nepiš** — patří do paměti a naplní je `train-agent`; ty si je jen poznamenej
+  a vypiš je v závěrečném reportu jako navazující krok.
 - **Název** — navrhni ho ze slovníku rolí zjištěného v kroku 1 a nech si ho
   potvrdit.
 - **Zařazení do matice** — navrhni model × effort × maxTurns i s odůvodněním
@@ -153,8 +156,17 @@ u každé bylo i to, co agent udělá místo zakázané akce — **nikde nesmí 
 takový pokyn skončí předstíraným souhlasem, nebo zaseknutím. Kostru reportu
 okopíruj z kapitoly „Report“ v konvenci beze změny a přizpůsob jen volnou část.
 
-Odkazy uvnitř agenta ukotvi **podle cílového umístění z kroku 1**. Agent
-v `.claude/agents/` cílového projektu není součástí pluginu, takže se mu
+**Na dokumenty cílového projektu ani na rules se agent neodkazuje.** Do těla nepiš
+cesty k ADR, specifikacím a souborům v `docs/` — dokumenty se přejmenovávají a ruší,
+kdežto definice zůstává a agent pak čte neplatnou cestu. Trvalá znalost role patří
+do její paměti, kterou plní `train-agent`; v těle stačí pojmenovat druh znalosti
+a odkud ji bere. `.claude/rules/` v agentovi nezmiňuj vůbec — rules se do kontextu
+načítají samy, takže odkaz na ně načte totéž podruhé a rozbije se při přejmenování.
+Podrobně to řeší kapitola „Na co se agent neodkazuje“ v konvencích.
+
+Odkazy, které v agentovi zůstanou — na doprovodné soubory a skilly — ukotvi
+**podle cílového umístění z kroku 1**. Agent v `.claude/agents/` cílového
+projektu není součástí pluginu, takže se mu
 `${CLAUDE_PLUGIN_ROOT}` nerozvine — cesty v něm veď od kořene projektu
 a skilly pluginu volej jmenovitě i s namespacem (`sagittaras:<skill>`).
 Agent uvnitř pluginu naopak `${CLAUDE_PLUGIN_ROOT}` použít může.
@@ -168,7 +180,9 @@ bod po bodu. Zvlášť ověř, že:
 - `description` má všechny tři díly a vymezení sedí i z druhé strany;
 - `tools` neobsahuje nic nad rámec mandátu a všechny názvy nástrojů existují —
   neexistující položka agenta vůbec nespustí;
-- kostra reportu je úplná, včetně sekce „Čeho jsem se nedotkl“.
+- kostra reportu je úplná, včetně sekce „Čeho jsem se nedotkl“;
+- v těle nezůstal odkaz na dokument cílového projektu ani zmínka o `.claude/rules/` —
+  co z definice takhle vypadlo, patří do reportu jako práce pro `train-agent`.
 
 Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady, nemusíš
 řešit v dalším kole.
@@ -260,6 +274,9 @@ Konfigurace: <model> × <effort> × <maxTurns> — <důvod zařazení včetně f
 Paměť: <hodnota memory: — u nového agenta „zatím prázdná, naplní se skillem
   train-agent", u upraveného „tímto během se neměnila" nebo „doplněna/změněna
   tímto během z <původní> na <nová>" | vynechána>
+K naučení přes train-agent: <dokumenty a poznatky z interview, které do definice
+  nepatří a mají jít do paměti — konkrétními cestami, ať se dají skillu předat
+  | žádné>
 Vynechaná zvažovaná pole: <výčet>
 Kol review: <N>
 Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">

@@ -51,9 +51,10 @@ color, skills, disallowedTools, initialPrompt a další.]
 [2–4 věty ve druhé osobě, které zakládají identitu: kým jsi na tomto projektu,
 jaký obor vlastníš a čí slovo platí, když se názory rozejdou. Identita
 rozhoduje v situacích, které postup nepokrývá — proto ji nepiš jako popis
-schopností, ale jako mandát. Pojmenuj závazný kontrakt (konvence projektu,
-dokumentace, standardy) a řekni, že má při rozporu přednost před tímto
-souborem.]
+schopností, ale jako mandát. Pojmenuj, co má při rozporu přednost před tímto
+souborem, ale **druhem, ne jménem souboru** („zadání od volajícího“, „co máš
+v paměti o tomto projektu“) — na konkrétní dokumenty repozitáře se agent
+neodkazuje, ty patří do jeho paměti přes skill `train-agent`.]
 
 ## Vstupní kontrakt
 
@@ -127,7 +128,7 @@ přehlédnout.]
 | Sekce | Povinná | Co do ní patří | Typická chyba |
 | --- | --- | --- | --- |
 | Frontmatter | ✅ | Konfigurace běhu, hranice práv a komentáře nesoucí rozhodnutí | Zděděný `model`/`effort`; `tools` širší než mandát |
-| `# Nadpis` + persona | ✅ | Mandát role ve 2. osobě, 2–4 věty | Popis osobnosti („zkušený senior s citem pro detail“) místo odpovědnosti |
+| `# Nadpis` + persona | ✅ | Mandát role ve 2. osobě, 2–4 věty | Popis osobnosti („zkušený senior s citem pro detail“) místo odpovědnosti; odkaz na konkrétní dokument projektu místo paměti |
 | `## Vstupní kontrakt` | ✅ | Co přijde v promptu a co při chybějícím zadání | Předpoklad, že agent vidí historii volajícího |
 | `## Postup` | ✅ | Číslované fáze rozkazovacím způsobem | Opsané kroky skillu, který už existuje |
 | `## Hranice` | ✅ | Zákazy s náhradním chováním | „Zeptej se uživatele“ — agent nemá koho |
@@ -141,10 +142,16 @@ nemá komu eskalovat, náhradou je sekce „Čeho jsem se nedotkl“ v reportu.
 
 ### Rozsah a odkazy
 
-- **Tělo drž stručné.** Objemný materiál — kontrolní seznamy, referenční tabulky,
-  standardy projektu — patří do vedlejších souborů nebo do skillů, na které se odkážeš.
-  Systémový prompt agenta se načítá celý při každém spuštění, takže každý řádek navíc
-  se platí pokaždé.
-- **Každý odkaz musí říct, kdy soubor otevřít**, ne jen že existuje.
+- **Tělo drž stručné.** Objemný materiál — kontrolní seznamy a referenční tabulky —
+  patří do doprovodných souborů nebo do skillů, na které se odkážeš. Systémový prompt
+  agenta se načítá celý při každém spuštění, takže každý řádek navíc se platí pokaždé.
+- **Znalost projektu do těla nepatří.** Konvence, rozhodnutí a vzorce cílového projektu
+  jdou do paměti agenta, kterou plní skill `train-agent` — v definici by zastaraly
+  a nešly by opravit jinak než její úpravou.
+- **Neodkazuj na dokumenty repozitáře ani na `.claude/rules/`.** Dokumenty se přejmenují
+  a definice o tom neví; rules se do kontextu načtou samy. Viz kapitolu „Na co se agent
+  neodkazuje“ v [konvencích](agent-conventions.md).
+- **Každý odkaz, který v těle zůstane, musí říct, kdy soubor otevřít**, ne jen
+  že existuje.
 - **Jedna role.** Když se `## Postup` rozpadá na dvě nesouvisející odpovědnosti,
   jsou to dva agenti.
