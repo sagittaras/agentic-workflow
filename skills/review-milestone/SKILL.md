@@ -90,7 +90,7 @@ report o cizím plánu.
 
 ### 1. Zjisti, kde a s čím pracuješ
 
-1. Přečti `.claude/sagittaras/workflow.md` v kořeni projektu. **Chybí-li,
+1. Přečti `.claude/workflow.md` v kořeni projektu. **Chybí-li,
    nepokračuj** a nabídni `/sagittaras:init-workflow`; bez konfigurace neznáš
    forge, taxonomii labelů ani zdroje pravdy, takže bys polovinu kontrol jen
    předstíral. Nevíš-li, kde v konfiguraci co hledat, otevři

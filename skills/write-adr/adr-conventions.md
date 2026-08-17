@@ -14,7 +14,7 @@ Všechna pravidla níže slouží tomuhle jedinému účelu.
 ## 1. Kde ADR leží
 
 Plugin cestu nekonfiguruje a **odvozuje ji z repozitáře** — aby ADR šlo psát i v projektu,
-který milestone workflow nepoužívá a `.claude/sagittaras/workflow.md` nemá. Postup:
+který milestone workflow nepoužívá a `.claude/workflow.md` nemá. Postup:
 
 1. Najdi soubory ve tvaru `NNNN-*.md` (glob `**/[0-9][0-9][0-9][0-9]-*.md`, mimo
    `node_modules/`, `vendor/` a `.git/`). Složka, kde jich leží nejvíc, je log projektu.

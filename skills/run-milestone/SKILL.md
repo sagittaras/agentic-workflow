@@ -99,7 +99,7 @@ v pořadí, ale platí po celou dobu.
 
 ### 1. Před startem
 
-**Konfigurace.** Načti `.claude/sagittaras/workflow.md` v cílovém projektu. Když
+**Konfigurace.** Načti `.claude/workflow.md` v cílovém projektu. Když
 neexistuje, **nepokračuj a nedomýšlej si hodnoty** — řekni to a odkaž na
 `/sagittaras:init-workflow`. Potřebuješ z ní sekce `Forge`, `Větvení`, `Agenti`
 a `Ověřovací příkazy`; chybí-li některá, řekni která a skonči.

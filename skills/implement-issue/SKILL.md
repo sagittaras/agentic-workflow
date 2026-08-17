@@ -69,7 +69,7 @@ základní větev hledej i tam.
 
 ### 1. Načti konfiguraci a přečti issue celé
 
-Přečti `.claude/sagittaras/workflow.md` v kořeni projektu. Když soubor chybí,
+Přečti `.claude/workflow.md` v kořeni projektu. Když soubor chybí,
 **nepokračuj a nedomýšlej si hodnoty** — bez něj neznáš výchozí větev, ověřovací
 příkazy ani forge. Ohlas to a nabídni `/sagittaras:init-workflow`. Když v něm chybí
 sekce, kterou potřebuješ, řekni která a nedoplňuj ji za pochodu.

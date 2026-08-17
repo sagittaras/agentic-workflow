@@ -98,7 +98,7 @@ a skonči. Nepovedený issue někdo ručně zavírá, kdežto neodeslaný návrh
 
 ### 1. Načti projektovou konfiguraci
 
-Přečti `.claude/sagittaras/workflow.md` v kořeni cílového projektu. Potřebuješ
+Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
 z ní sekce **Forge** (kterou větev receptů použít a jaké `owner/repo` každému
 volání předat), **Labely** (co smíš nasadit),
 **Zdroje pravdy** (o co ukotvit kritéria) a **Jazyk issues**.
