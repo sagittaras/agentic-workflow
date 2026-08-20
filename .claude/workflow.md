@@ -35,6 +35,7 @@
 - shared/forge-recipes.md
 - shared/git-scripts.md
 - skills/ (SKILL.md a přidružené soubory každého skillu, např. skill-conventions.md)
+- scripts/
 - docs/
 - README.md
 
@@ -42,7 +43,7 @@
 
 | oblast | příkaz |
 | --- | --- |
-| area:skills | — |
+| area:skills | `bash scripts/lint-skills.sh` |
 
 ## Jazyk issues
 
