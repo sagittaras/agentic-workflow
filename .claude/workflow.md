@@ -34,7 +34,8 @@
 - shared/workflow-config.md
 - shared/forge-recipes.md
 - shared/git-scripts.md
-- SKILL.md
+- skills/ (SKILL.md a přidružené soubory každého skillu, např. skill-conventions.md)
+- docs/
 - README.md
 
 ## Ověřovací příkazy
