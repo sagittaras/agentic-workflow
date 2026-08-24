@@ -1,13 +1,12 @@
 ---
 name: file-issue
 description: >-
-  Založí jeden ad hoc issue mimo plánování milestonu — z popisu uživatele
-  sestaví název i tělo v závazném tvaru pluginu, akceptační kritéria ukotví
-  ve zdrojích pravdy projektu, nasadí právě jeden `area:*` label a typový
-  label shodný s typem v názvu, a po potvrzení issue založí v trackeru
-  a vrátí jeho číslo s odkazem. Milestone přiřadí jen na výslovné přání,
-  tělo je ale ve stejném tvaru jako u issues z plánování, takže se dá
-  do milestonu zařadit později.
+  Založí jeden ad hoc issue mimo plánování milestonu jako Poznámku — z popisu
+  uživatele sestaví název i tělo v závazném tvaru pluginu se zachyceným
+  záměrem nebo pozorováním, bez vyplněných akceptačních kritérií, nasadí
+  právě jeden `area:*` label a typový label shodný s typem v názvu, a po
+  potvrzení issue založí v trackeru a vrátí jeho číslo s odkazem. Milestone
+  přiřadí jen na výslovné přání.
 when_to_use: >-
   Použij, když má vzniknout jediný issue mimo milestone — „založ issue",
   „zaeviduj tenhle bug", „přidej to do trackeru", „ať se to neztratí" —
@@ -23,16 +22,14 @@ model: sonnet
 effort: medium
 # Zařazení dle matice: ohraničené zadání se známým tvarem výstupu → sonnet
 # (bod 2 rozhodovacího stromu) × medium, bez odchylky. Tvar výstupu drží
-# šablona issue, rozsah je jediný issue a těžiště práce je formulace kritérií,
-# ne úsudek o rozsahu. Nikoli high jako u init-workflow: chybný jediný issue
-# se opraví editací nebo zavřením, kdežto chybná konfigurace mlčky rozbije
-# všechny další běhy. Nikoli opus: skill neplánuje rozsah, nestaví graf
-# závislostí ani nic neimplementuje.
+# šablona issue, rozsah je jediný issue a těžiště práce je rozlišení labelů
+# a formátu forge, ne formulace kritérií — tu dělá triage-issue. Nikoli high
+# jako u init-workflow: chybný jediný issue se opraví editací nebo zavřením,
+# kdežto chybná konfigurace mlčky rozbije všechny další běhy. Nikoli opus:
+# skill neplánuje rozsah, nestaví graf závislostí ani nic neimplementuje.
 user-invocable: true
 allowed-tools:
   - Read
-  - Glob
-  - Grep
   - Write
   - AskUserQuestion
   - ToolSearch
@@ -53,13 +50,14 @@ allowed-tools:
 # Vynechaná zvažovaná pole:
 # disable-model-invocation — automatické vyvolání ve chvíli, kdy během jiné
 # práce vypadne nález, je přesně to, k čemu skill je, a nic nezakládá dřív
-# než po potvrzení; context/agent/background — doptání na chybějící ukotvení
-# i potvrzení návrhu vyžadují uživatele v hlavním kontextu, fork ani běh
-# na pozadí nemají komu klást otázky; paths — spouští se z konverzace o nálezu,
+# než po potvrzení; context/agent/background — potvrzení návrhu vyžaduje
+# uživatele v hlavním kontextu, fork ani běh na pozadí nemají komu klást
+# otázku; paths — spouští se z konverzace o nálezu,
 # ne prací nad konkrétním souborem; shell — skripty se spouští explicitním
 # `bash`; disallowed-tools — allowed-tools je uzavřený výčet a skill běží
 # s uživatelem, takže není co zakazovat navíc; version/license — verzuje se
-# celý plugin, ne jednotlivý skill.
+# celý plugin, ne jednotlivý skill; Glob/Grep — po zúžení na Poznámku skill
+# už nehledá zdroj pravdy v repozitáři, jen čte soubory na známých cestách.
 # Sloveso `file` není v tabulce doporučených sloves konvencí; ponecháno vědomě —
 # je to ustálené „file an issue" a název fixuje .docs/workflow-skills-plan.md,
 # na který se odkazují sousední skilly sady.
@@ -67,15 +65,17 @@ allowed-tools:
 
 # File Issue
 
-Cílem je jeden issue, který se dá kdykoli později zařadit do milestonu a projít
-stejným řetězem jako issues z plánování — proto má **stejný tvar těla**, i když
-vzniká mimo něj. Závazným kontraktem jsou sdílené soubory pluginu; při rozporu
-s tímhle postupem platí ony.
+Cílem je jeden issue jako **Poznámka** — zachycuje záměr nebo pozorování ze
+vstupu uživatele, ne hotové zadání. Tvar těla je stejný jako u issues
+z plánování, ale bez vyplněných akceptačních kritérií; povýšení na Zadání
+ukotvené v kódu dělá `triage-issue`, ne tenhle skill. Závazným kontraktem
+jsou sdílené soubory pluginu; při rozporu s tímhle postupem platí ony,
+**s výjimkou tvaru Poznámky popsaného v kroku 2**.
 
 | Soubor | Kdy ho otevři |
 | --- | --- |
 | `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | V kroku 1, když projektová konfigurace chybí nebo v ní nenajdeš sekci, kterou potřebuješ |
-| `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 2, dřív než napíšeš název a první kritérium |
+| `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 2, dřív než napíšeš název a tělo |
 | `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | V kroku 3, dřív než poprvé sáhneš na tracker — včetně sekce s nástrahami |
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | V kroku 3, je-li forge GitHub — než spustíš první `gh/*.sh`, kvůli argumentům a návratovým kódům |
 
@@ -101,8 +101,7 @@ a skonči. Nepovedený issue někdo ručně zavírá, kdežto neodeslaný návrh
 
 Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
 z ní sekce **Forge** (kterou větev receptů použít a jaké `owner/repo` každému
-volání předat), **Labely** (co smíš nasadit),
-**Zdroje pravdy** (o co ukotvit kritéria) a **Jazyk issues**.
+volání předat), **Labely** (co smíš nasadit) a **Jazyk issues**.
 
 - **Soubor neexistuje** → nepokračuj a nedomýšlej si hodnoty. Řekni uživateli, že
   projekt nemá workflow konfiguraci, a nabídni `/sagittaras:init-workflow`.
@@ -110,31 +109,33 @@ volání předat), **Labely** (co smíš nasadit),
   pochodu nedoplňuj. Odhadnutý výčet oblastí vyrobí `area:*` label, který v projektu
   neexistuje, a s ním issue, jaké `run-milestone` neumí přiřadit.
 
-### 2. Sestav issue podle šablony
+### 2. Sestav issue jako Poznámku
 
-Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` a piš přesně podle něj —
-tvar názvu, sekce těla i pravidla pro psaní kritérií. Jazyk textu určuje sekce
-`Jazyk issues` z konfigurace.
+Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` kvůli tvaru názvu
+a sekcí těla. Jazyk textu určuje sekce `Jazyk issues` z konfigurace. Pro
+Poznámku se ale od šablony vědomě odchyluješ **ve třech bodech** — v nich
+platí tenhle postup, ne obecná věta o přednosti sdíleného kontraktu výše:
 
-Nad rámec šablony platí pro ad hoc issue:
+- **`Souhrn` nese záměr nebo pozorování tak, jak ho dal uživatel** — ne
+  závazné tvrzení, co issue dodá. Přenes do něj i kontext, který se jinam
+  nevejde (reprodukční kroky, odkaz, útržek logu); Poznámka nemá jinou
+  sekci, kam by ho uložila, a zahodit ho znamená ztratit informaci, kterou
+  bude `triage-issue` nebo člověk později potřebovat.
+- **`Akceptační kritéria` založ jako holý nadpis, bez jediného řádku pod
+  ním** — žádná odrážka, žádná pomlčka, žádný placeholder typu „doplní
+  triage-issue". Placeholder je text, který nikdo nepsal jako skutečné
+  kritérium — `triage-issue` ho stejně přepíše, ale člověk i
+  `review-milestone` by ho mezitím mohli číst jako pokus o zadání.
+  Nevymýšlej kritérium, ani přibližné — to je přesně ta vada, kterou má
+  `triage-issue` eliminovat, ne aby ji nejdřív vyrobil tenhle skill.
+- **Sekci `Reference` vynech celou.** Poznámka žádný precedent ještě nemá;
+  najde ho až `triage-issue`.
 
-- **Sekci `Závisí na` vynech celou.** Issue vzniká mimo plán, takže obvykle na ničem
-  nezávisí; uvést ji smíš jen tehdy, když jde o **skutečné číslo** existujícího issue,
-  které uživatel jmenoval. Vymyšlené číslo si `run-milestone` přečte jako hranu grafu
-  a pošle práci na základ, který neexistuje.
-- **Kritéria ukotvi ve zdrojích pravdy** z konfigurace a sekci dokumentu uveď
-  v `Reference`. To, že issue vzniká narychlo, ukotvení neruší — u nálezu z běhu
-  je zdrojem pravdy typicky dokument, proti kterému se chování rozešlo.
-
-**Neumíš-li kritérium ukotvit, doptej se — nedomýšlej.** Nástrojem AskUserQuestion
-se ptej na to, o který dokument a kterou jeho část se má kritérium opřít, případně
-na pozorovatelné chování, které má po opravě platit. Kritérium bez opory ve zdroji
-pravdy je přesně ta vada, kterou pak `verify-issue` nemá jak ověřit: zní věrohodně,
-projde založením i implementací a zastaví se až u ověřování, kde stojí čas inženýra
-i recenzenta.
-
-Zaškrtávátka zakládej prázdná — odškrtává je `verify-issue` podle toho, co skutečně
-ověřil.
+Nad rámec těchhle odchylek dál platí i pro Poznámku: **sekci `Závisí na`
+vynech celou**, pokud issue vzniká mimo plán a na ničem nezávisí — uvést ji
+smíš jen tehdy, když jde o **skutečné číslo** existujícího issue, které
+uživatel jmenoval. Vymyšlené číslo si `run-milestone` přečte jako hranu grafu
+a pošle práci na základ, který neexistuje.
 
 ### 3. Urči labely
 
@@ -158,7 +159,7 @@ Pak urči labely:
 1. **Načti existující labely z forge**, ne z konfigurace. Konfigurace říká, jaká
    taxonomie platí; forge říká, co v ní opravdu je. Bez načtení bys navrhoval
    duplicitu k labelu, který se jen jinak píše.
-2. Nasaď **právě jeden `area:*` label** podle kódu, kterého se kritéria dotýkají —
+2. Nasaď **právě jeden `area:*` label** podle kódu, kterého se Poznámka týká —
    ne podle tématu, ze kterého nález vypadl. Podle tohohle labelu vybírá
    `run-milestone` inženýra, až issue někdo do milestonu zařadí.
 3. Nasaď **typový label shodný s typem v názvu** issue. `implement-issue` z něj
@@ -192,10 +193,17 @@ zakládá `plan-milestone` spolu s celou sadou issues a jeho popis definuje, co 
 něj znamená „hotovo"; prázdný milestone založený kvůli jednomu ad hoc issue tuhle
 definici nemá a `close-milestone` ho pak nemá podle čeho zavřít.
 
+**Poznámka zařazená do milestonu na Zadání sama nepřejde.** `run-milestone`
+ji podle `area:*` labelu dispečuje, ale bez kritérií nemá inženýr proti
+čemu implementovat a `review-milestone` milestone vrátí jako `Not ready` —
+`triage-issue` je tu předpoklad, ne alternativa k zařazení. Řekni to
+v souhrnu řádkem `Stav` podle Formátu výstupu, ať se ví, že milestone samo
+o sobě nestačí.
+
 ### 5. Předlož návrh a počkej na potvrzení
 
 Vypiš návrh podle Formátu výstupu a **potvrzení si vyžádej nástrojem
-AskUserQuestion**. Je to jediná brzda celého postupu: název, kritéria a labely se
+AskUserQuestion**. Je to jediná brzda celého postupu: název, souhrn a labely se
 přečtou za půl minuty, kdežto issue se špatným `area:*` labelem projde až
 k dispatchi na špatného specialistu.
 
@@ -208,8 +216,7 @@ issue („Založ issue"). Opačné pořadí znamená issue bez labelu.
 
 Na GitHub větvi tělo **zapiš do dočasného souboru mimo pracovní strom repozitáře**
 a předej ho přes `--body-file`; víceřádkový markdown se v argumentu shellu rozpadne.
-Po založení soubor smaž. Uvnitř pracovního stromu by zůstal jako nesledovaná veteš
-a někdo by ho commitnul.
+Soubor leží mimo strom, takže ho není nutné po sobě mazat.
 
 Selže-li zápis, **neopakuj celé volání naslepo**: vypiš, co už vzniklo, a řekni,
 co selhalo. U chyby 404 na Gitea ověř oprávnění účtu podle nástrah v receptech
@@ -235,11 +242,8 @@ Název: <type>(<scope>): <popis>
 Labely: area:<oblast> · <typový label>
 Milestone: <název | „žádný — issue vzniká mimo milestone">
 
-Souhrn: <jedna až dvě věty, co issue dodá>
-
-Akceptační kritéria:
-- <kritérium> — ukotveno v <dokument § sekce>
-- <kritérium> — ukotveno v <dokument § sekce>
+Souhrn: <záměr/pozorování ze vstupu uživatele, včetně repro kroků, odkazu nebo útržku logu>
+Akceptační kritéria: prázdná — holý nadpis, doplní triage-issue
 
 Chybějící labely k založení: <název (barva hex)>, … | „žádné"
 ```
@@ -255,19 +259,24 @@ Issue #<číslo>: <název> — <url>
 Labely: area:<oblast> · <typový label>
 Milestone: <název | „žádný">
 Založené labely: <výčet, nebo „žádné">
+Stav: Poznámka — k dispatchi potřebuje triage-issue
+Poznámka ke konfiguraci: <doporučení init-workflow po založení nového area:* labelu, nebo „žádná">
 ```
 
 ## Zásady
 
 - **Jeden běh = jeden issue.** Rozpadá-li se popis na víc kusů práce, řekni to
   a nabídni `/sagittaras:plan-milestone`; sadu issues tenhle skill nezakládá.
-- **Tvar těla je stejný jako u plánovaných issues.** Právě proto se dá issue později
-  zařadit do milestonu — zkratka v těle („však je to jen drobnost") ho z řetězu
-  vyřadí.
-- **Neukotvené kritérium do issue nepatří.** Doptej se; když ani po doptání není
-  o co se opřít, pojmenuj to v návrhu jako mezeru místo abys kritérium vymyslel.
+- **Tvar těla je stejný jako u plánovaných issues, kritéria ale zůstávají
+  prázdná.** Právě proto se dá issue později zařadit do milestonu a povýšit
+  přes `triage-issue` — zkratka v těle („však je to jen drobnost") ho z řetězu
+  vyřadí. Zařazení do milestonu bez `triage-issue` samo o sobě k dispatchi
+  nestačí.
+- **Kritérium ani Reference se nevymýšlí.** To je práce `triage-issue`, ne
+  tady — issue založené tímhle skillem je vždy Poznámka.
 - **Právě jeden `area:*` label, podle kódu, ne podle tématu.**
 - **Do trackeru se zapisuje až po potvrzení návrhu.** Před krokem 6 skill tracker
   jen čte — existující labely a případný milestone — a nic v něm nemění.
-- **Sdílený kontrakt má přednost.** Odporuje-li tenhle postup šabloně issue,
-  konfiguraci nebo receptům, platí ony.
+- **Sdílený kontrakt má přednost**, mimo výjimku u tvaru Poznámky popsanou
+  v kroku 2. Odporuje-li tenhle postup šabloně issue **jinde**, konfiguraci
+  nebo receptům, platí ony.
