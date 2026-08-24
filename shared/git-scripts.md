@@ -52,10 +52,15 @@ Vmerguje aktuální výchozí větev do zadané větve a pushne.
 
 - **Výstup:** `result=up_to_date|fast_forward|merged|conflict`, `conflicts=` (seznam
   souborů, jen u `conflict`).
-- **Kódy:** `0` · `5` konflikt.
+- **Kódy:** `0` · `2` chybný nebo chybějící argument, cíl je výchozí větev, nebo
+  repozitář/větev neexistuje · `3` remote neodpověděl (fetch nebo push selhal) ·
+  `4` nečistý pracovní strom, checkout selhal, nebo se lokální větev rozešla
+  s remotem · `5` konflikt.
 
 Při konfliktu merge **abortuj** a skonči kódem `5`. Řešit obsahový konflikt bez dohledu
-není práce pro skript.
+není práce pro skript. Kódy `2`–`4` jsou výpadek volání nebo prostředí, ne konflikt —
+volající je řeší jako svůj vlastní stav (chybný argument opravit a zopakovat, nečistý
+strom nebo nedostupný remote eskalovat), ne jako nález review.
 
 ### `pr-worktree.sh <label> <ref>` / `pr-worktree.sh --remove <label>`
 
@@ -83,8 +88,12 @@ worktree, takže pracovní strom volajícího zůstane netknutý.
 
 - **Výstup:** `merge=ok|conflict`, `check=pass|fail|skipped`, `worktree=`, plus sekce
   `[output]` s výstupem příkazu.
-- **Kódy:** `0` merge i příkaz prošly · `5` konflikt při merge · `6` příkaz selhal.
+- **Kódy:** `0` merge i příkaz prošly · `2` chybný argument nebo některá z větví
+  neexistuje · `3` remote nedostupný, nebo založení dočasného worktree selhalo ·
+  `5` konflikt při merge · `6` příkaz selhal.
 - **Nikdy nepushuje a nemazává větve.** Je to brána, ne merge.
+- Kódy `2` a `3` jsou výpadek infrastruktury, ne nález review — nečerpají retry
+  rozpočet issue.
 
 ---
 
