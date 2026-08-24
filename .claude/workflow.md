@@ -36,7 +36,7 @@
 - shared/git-scripts.md
 - skills/ (SKILL.md a přidružené soubory každého skillu, např. skill-conventions.md)
 - scripts/
-- docs/
+- .docs/
 - README.md
 
 ## Ověřovací příkazy

@@ -26,7 +26,7 @@ effort: high
 # ani neimplementuje, jen zjišťuje, ptá se a zapisuje jeden soubor.
 # Odchylka od konvence pojmenování: `init` je zkratka, před kterými konvence
 # varují, a v tabulce doporučených sloves není. Ponecháno vědomě — název fixuje
-# docs/workflow-skills-plan.md, ostatní skilly sady se na něj odkazují a v gitu
+# .docs/workflow-skills-plan.md, ostatní skilly sady se na něj odkazují a v gitu
 # je „init" idiom, kterému rozumí i ten, kdo plugin nezná.
 user-invocable: true
 allowed-tools:

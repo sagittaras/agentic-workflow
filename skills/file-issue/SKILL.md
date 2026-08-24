@@ -60,7 +60,7 @@ allowed-tools:
 # s uživatelem, takže není co zakazovat navíc; version/license — verzuje se
 # celý plugin, ne jednotlivý skill.
 # Sloveso `file` není v tabulce doporučených sloves konvencí; ponecháno vědomě —
-# je to ustálené „file an issue" a název fixuje docs/workflow-skills-plan.md,
+# je to ustálené „file an issue" a název fixuje .docs/workflow-skills-plan.md,
 # na který se odkazují sousední skilly sady.
 ---
 

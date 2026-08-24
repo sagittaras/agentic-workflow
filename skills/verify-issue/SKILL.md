@@ -18,7 +18,7 @@ argument-hint: "[číslo issue, nebo číslo PR / název větve]"
 # Odchylka od tabulky sloves v konvencích, kde se posuzování existujícího stavu
 # jmenuje review/check: `verify` je vědomé, protože review-* v této sadě posuzují
 # plán a kvalitu, kdežto tenhle skill dokazuje splnění kritérií. Název navíc
-# fixuje docs/workflow-skills-plan.md a odkazuje se na něj sdílený kontrakt.
+# fixuje .docs/workflow-skills-plan.md a odkazuje se na něj sdílený kontrakt.
 context: fork
 model: opus
 effort: high
