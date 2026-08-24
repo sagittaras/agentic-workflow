@@ -133,9 +133,9 @@ je stav prostředí, ne nález na PR: skonči `Blocked`, ne `Nesplněno`.
 Ověřuješ vždy dvojici. Chybí-li jedna strana, není co s čím porovnat.
 
 1. **Argument je název větve** (není to číslo) → vypiš PR se `state: all`
-   a vyber ten, jehož hlavová větev se jménu rovná. Tabulka receptů na tuhle
-   operaci řádek nemá — filtrování podle `head` neumí ani jedna forge jako
-   parametr, takže filtruj až ve výstupu:
+   a vyber ten, jehož hlavová větev se jménu rovná — recept „Najdi PR podle
+   head větve" z `forge-recipes.md`. Filtrování podle `head` neumí ani jedna
+   forge jako parametr, takže filtruj až ve výstupu:
 
    ```bash
    bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-list.sh" -R "<owner/repo>" --state all
@@ -152,20 +152,19 @@ Ověřuješ vždy dvojici. Chybí-li jedna strana, není co s čím porovnat.
    `issue-read.sh`; kód `2` je chyba ve tvém volání, ne stav PR; kód `7` je
    prostředí → `Blocked`.
 3. **Máš PR, chybí issue** → vezmi číslo z `Closes #N` v těle PR.
-4. **Máš issue, chybí PR** → hledáš PR, jehož tělo obsahuje
-   `Closes #<číslo issue>`. Tabulka receptů na to řádek nemá a na GitHubu to
-   nejde jedním voláním: `pr-list.sh` těla PR nevrací. Postupuj proto dvoufázově —
-   vypiš PR se `--state all`, zúž kandidáty podle `baseRefName` a `milestone`,
-   a jejich těla dočti `pr-read.sh` po jednom. Na Gitea vrací `list_pull_requests`
-   i pole `body`, takže stačí jedno volání. **Syrové `gh` mimo skripty nepiš** —
-   kontrakt to zakazuje; mezeru v inventáři místo toho uveď v Doporučeních
-   reportu, ať se opraví tam, kde vznikla. Teprve nenajdeš-li žádné PR, zkus
-   shodu podle názvu větve.
+4. **Máš issue, chybí PR** → recept „Najdi PR patřící k issue" z
+   `forge-recipes.md`, podle forge:
+   - **GitHub** — issue, které jsi přečetl v kroku 2 (`issue-read.sh`), nese
+     pole `closedByPullRequestsReferences`: přímá vazba na PR, který ho
+     uzavírá, dohledávat `Closes #N` v tělech PR není potřeba.
+   - **Gitea** — vypiš PR nástrojem `list_pull_requests` se `state: "all"`
+     a najdi ten, jehož `body` obsahuje `Closes #<číslo issue>`.
+   Nenajdeš-li nic, zkus shodu podle názvu větve.
 
 Dvojici **nespojuj odhadem**. Nenajdeš-li protějšek, nebo vyjdou-li dva otevřené
 PR na stejný issue, skonči verdiktem `Blocked` a napiš, co jsi hledal a co našel —
 ověřit špatný PR je horší než neověřit žádný. Spároval-li jsi dvojici jen podle
-podobnosti názvu větve, uveď to v reportu.
+podobnosti názvu větve, uveď to ve Výhradách k ověření (viz Formát výstupu).
 
 Neznáš-li číslo PR, nemáš kam uložit komentář: report v takovém případě vrať jen
 jako závěrečnou zprávu.
@@ -227,14 +226,15 @@ Uvnitř worktree pak git voláš přímo, ale drž se výhradně **čtecích a l
 operací: žádný commit, žádný push, žádný merge, žádné mazání větví. Worktree stojí
 na odpojené HEAD právě proto, aby se do něj commitovat nedalo omylem.
 
-Až budeš hotov, ukliď ho — i když ověřování skončilo `Blocked`:
+Až budeš hotov, ukliď ho — **v kroku 8, dřív než uložíš report**, i když
+ověřování skončilo `Blocked`:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/pr-worktree.sh" --remove pr-<číslo PR>
 ```
 
-Vrátí-li `removed=false`, adresář drží běžící proces; uveď to v závěrečné zprávě,
-ať po tobě někdo uklidí.
+Vrátí-li `removed=false`, adresář drží běžící proces; uveď to ve Výhradách
+k ověření (viz Formát výstupu), ať po tobě někdo uklidí.
 
 Nedá-li se větev PR získat, skonči verdiktem `Blocked`. **PR z forku tímhle
 postupem ověřit nejde** — `git fetch origin <větev>` dosáhne jen na větve téhož
@@ -336,14 +336,23 @@ bys jinak přepsal, co mezitím přibylo). Pak v něm změň **jen zaškrtávát
 - kritérium `Splněno` → `- [ ]` přepiš na `- [x]`;
 - kritérium `Nesplněno` nebo `Neověřitelné` → nech `- [ ]`, a bylo-li políčko
   zaškrtnuté, **odškrtni ho** — tracker musí ukazovat skutečný stav, a předem
-  zaškrtnuté políčko je zároveň nález do reportu.
+  zaškrtnuté políčko je zároveň nález do reportu (Doporučení, `[issue]`).
 
 Text kritérií ani ostatní sekce **nepřepisuj a nemaž**. Zápis proveď receptem
 „Uprav tělo issue" z `forge-recipes.md`: na Gitea jde celé nové tělo v parametru
 `body`, na GitHubu ho `issue-update.sh` bere jako `--body-file`, takže si ho
 napřed ulož do dočasného souboru způsobem popsaným v kroku 8.
 
-### 8. Ulož report a vrať ho
+Ověř, že zápis prošel. Neprošel-li, kritéria zůstávají neodškrtnutá — samo
+ověření tím platnost neztrácí, ale příští běh bude zbytečně ověřovat znovu:
+uveď to ve Výhradách k ověření.
+
+### 8. Ukliď worktree, ulož report a vrať ho
+
+**Nejdřív ukliď worktree** (`pr-worktree.sh --remove pr-<číslo PR>`, viz
+krok 4) — i když ověřování skončilo `Blocked`. Jeho výsledek (`removed=false`)
+je vstup do sekce Výhrady k ověření v reportu, který sestavíš až pak; obráceně
+by se `removed=false` do uloženého komentáře nedostalo.
 
 Report ulož jako komentář k PR (recept „Komentář k PR (review)") a **vždy** ho
 vrať i jako závěrečnou zprávu. Komentář je trvalý záznam, závěrečná zpráva je to,
@@ -370,18 +379,23 @@ Ukončovač heredocu piš v uvozovkách a **bez odsazení na začátku řádku**
 ho shell nerozpozná, a bez uvozovek navíc rozexpanduje `$` a zpětné apostrofy
 v reportu, takže do trackeru dorazí něco jiného, než jsi napsal.
 
-Selže-li uložení komentáře, závěrečnou zprávu vrať i tak a selhání v ní uveď.
+Selže-li uložení komentáře, závěrečnou zprávu vrať i tak a selhání uveď ve
+Výhradách k ověření — komentář sám tuhle výhradu logicky nést nemůže.
 
-Nakonec po sobě ukliď: worktree (`pr-worktree.sh --remove pr-<číslo PR>`, viz
-krok 4) i dočasný soubor s tělem reportu. Nechané artefakty z předchozího běhu
-zmatou ten příští.
+Nakonec ukliď dočasné soubory s tělem issue (krok 7) a reportu — worktree je
+uklizený už z úvodu tohohle kroku. Nechané artefakty z předchozího běhu zmatou
+ten příští.
 
 ## Formát výstupu
 
 ````markdown
-## Ověření issue #<číslo> — PR #<číslo>
+## Ověření issue #<číslo | —> — PR #<číslo | —>
 
 **Verdikt:** <Pass | Needs work | Blocked>
+**Příčina blokace:** <jen u verdiktu Blocked — co chybí nebo co selhalo; u
+nedohledaného nebo nejednoznačného protějšku co jsi hledal a co jsi našel; u
+nezískatelné větve PR strukturální omezení skillu podle kroku 4. Jinak řádek
+úplně vynech.>
 
 ### Kritéria
 
@@ -389,22 +403,44 @@ zmatou ten příští.
 | --- | --- | --- | --- |
 | 1 | <doslovné znění kritéria> | <Splněno \| Nesplněno \| Neověřitelné> | <příkaz a jeho výsledek, `cesta:řádek`, nebo proč ověřit nelze> |
 
+<Skončil-li běh verdiktem `Blocked` dřív, než jsi tabulku měl z čeho
+sestavit, zůstává prázdná; důvod nese řádek „Příčina blokace" výše.>
+
 ### Ověřovací příkazy
 
 | Příkaz | Výsledek |
 | --- | --- |
 | `<příkaz z konfigurace>` | <pass \| fail — a čím selhal> |
 
+<Neběžel-li žádný příkaz (blokace dřív, než jsi k němu došel) → „Nespuštěno.">
+
 ### Mutační testy
 
 <Pro každé kritérium opřené o regresní test: co jsi vrátil, jestli test spadl,
-že jsi obnovil a že po obnovení prochází. Není-li takové kritérium → „Netýká se.">
+že jsi obnovil a že po obnovení prochází. Neproběhla-li mutace u kritéria, které
+o ni stojí (revert selhal, blokace dřív) → uveď to i s důvodem, důkaz nese
+sloupec Důkaz v tabulce Kritéria. Není-li takové kritérium → „Netýká se.">
+
+### Výhrady k ověření
+
+<Nepovinná sekce pro provozní výhrady k průběhu ověření: spárování jen podle
+podobnosti názvu větve (krok 2), neodstraněný worktree (krok 4), selhaný zápis
+odškrtnutí do těla issue (krok 7), selhané uložení komentáře k PR (krok 8).
+Vynech, není-li žádná taková výhrada.>
 
 ### Doporučení
 
-<Co konkrétně musí implement-issue opravit, kritérium po kritériu. Sem patří
-i nálezy na samotných kritériích i na sdíleném kontraktu. Pass bez výhrad →
-„Bez výhrad.">
+<Jen to, co z tohohle běhu ověřování vzešlo, s adresátem u každé položky:
+`[implement-issue]` nesplněné kritérium, nebo neověřitelné kritérium, jehož
+příčina je v kódu či testu, ne v zadání (kritérium po kritériu, co konkrétně
+opravit); `[issue]` vada samotného zadání — nejasná formulace, chybějící
+citovaný dokument, chybějící `area:*` label (krok 3), kritérium, které je samo
+špatně stanovené (krok 6), předem zaškrtnuté políčko (krok 7), i neověřitelné
+kritérium, jehož příčina je v samotném zadání; `[konfigurace]` chybějící sekce
+nebo řádek v konfiguraci cílového projektu, typicky oblast bez ověřovacího
+příkazu; `[kontrakt]` mezera ve sdíleném kontraktu pluginu, na kterou jsi
+narazil. Nic mimo to — žádná obecná poznámka ke kvalitě, stylu nebo architektuře
+PR, i kdyby byla pravdivá. Není-li co doporučit → „Bez nálezů.">
 
 Blokuje merge: <ano | ne>
 ````
@@ -425,8 +461,11 @@ v hlavičce — dva různé výroky v jednom reportu jsou horší než žádný.
   v souboru, kritérium není splněné. Zaškrtnuté políčko, popis PR ani commit
   message důkaz nejsou.
 - **Nikdy se neptáš.** Běžíš bez uživatele; nejasnost je nález, ne důvod k dotazu.
-- **Verdikt se řídí kritérii, ne dojmem z PR.** Kvalitu kódu, styl a architekturu
-  neposuzuješ — na to je code review, ne akceptace.
+- **Mandát je přísně ohraničený: za žádnou cenu nic navíc.** Report neobsahuje
+  nic nad rámec toho, co předepisuje Formát výstupu — žádné architektonické
+  poznámky, žádné styling připomínky, žádné „když už tu jsem". Kvalitu kódu,
+  styl a architekturu neposuzuješ vůbec, ani mimochodem — na to je code
+  review, ne akceptace.
 - **Řádek `Blokuje merge:` je závazek vůči navazujícímu skillu.** Nikdy ho
   nevynech a nikdy ho nepiš v rozporu s verdiktem.
 - **Pracovní kopii po sobě ukliď** a nikdy z ní nepushuj ani necommituj.
