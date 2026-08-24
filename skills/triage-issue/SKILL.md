@@ -13,9 +13,10 @@ when_to_use: >-
   Použij, když má issue bez kódem ukotvených akceptačních kritérií
   (Poznámka) přejít do stavu, kdy ho lze naimplementovat — „povyš issue #42
   na Zadání", „je tohle issue připravené k implementaci?", „zkus tomu najít
-  vzor v kódu", typicky ručně po `file-issue`. Navržen je i jako krok pro
-  budoucí vlnové plánování v `plan-milestone` — to volání zatím není
-  propojené, `plan-milestone` dnes zakládá issues v jedné dávce. Nepoužívej
+  vzor v kódu", typicky ručně po `file-issue`. `plan-milestone` tenhle skill
+  sám nevolá — klasifikuje backlog týmž testem precedentu (sdíleným přes
+  `shared/precedent-test.md`) ještě před založením issue; `triage-issue` se
+  spouští samostatně nad issue, které už v trackeru je. Nepoužívej
   pro založení nového issue z popisu, na to slouží `file-issue`; pro
   rozepsání tématu na celou sadu issues `plan-milestone`; pro implementaci
   už hotového Zadání `implement-issue`; ani pro nezávislé ověření hotového
@@ -23,7 +24,11 @@ when_to_use: >-
 argument-hint: "[číslo issue]"
 # Sloveso `triage` není v tabulce doporučených sloves konvencí; ponecháno
 # vědomě — je to ustálené označení pro tenhle typ klasifikace a název fixuje
-# interní `.docs/workflow-vision.md` § 3 pluginu.
+# interní `.docs/workflow-vision.md` § 3 pluginu. § 3 tam popisuje i volání
+# z plan-milestone's vlnového kroku — v realizaci odpadlo vědomě: triage
+# pracuje nad existujícím číslem issue, kdežto plan-milestone klasifikuje
+# položky dřív, než issue vznikne, takže volat tenhle skill nemá jak. Sdílení
+# testu mezi oběma drží `shared/precedent-test.md`.
 context: fork
 # Izoluje kontext a vlastní konfiguraci (model, effort) při volání z jiného
 # skillu — hledání precedentu jinak zaplní kontext volajícího a zdědí jeho
@@ -46,31 +51,26 @@ allowed-tools:
   - "Bash(bash:*)"
   - mcp__gitea__issue_read
   - mcp__gitea__issue_write
-disallowed-tools:
-  - AskUserQuestion
-# disallowed-tools je při uzavřeném allowed-tools redundantní záměrně: zákaz
-# doptávání je invariant, který musí platit i tam, kde se allowed-tools
-# neuplatní, protože skill běží bez uživatele (viz Zásady).
 # Bash je zúžený na spouštění skriptů; gh ani git se nikdy nevolá přímo,
 # proto volání piš ve tvaru `bash <cesta>`. Write slouží výhradně
 # k dočasnému souboru s přepsaným tělem issue na GitHubu (--body-file);
 # Edit ve výčtu není, skill do zdrojů projektu nezapisuje, jen do trackeru.
 # Grep/Glob/Read hledají precedent v kódu.
 # Vynechaná zvažovaná pole:
-# disable-model-invocation — skill má být volatelný modelem i dnes, bez
-# ohledu na budoucí propojení s plan-milestone: během konverzace o issue,
-# které nemá ukotvená kritéria, nebo když se inženýrský agent chystá issue
-# implementovat a zjistí, že na to nemá oporu, je automatické spuštění
-# žádoucí;
+# disable-model-invocation — skill má být volatelný modelem: během
+# konverzace o issue, které nemá ukotvená kritéria, nebo když se inženýrský
+# agent chystá issue implementovat a zjistí, že na to nemá oporu, je
+# automatické spuštění žádoucí;
 # agent — profil žádného z dostupných agentů nesedí (skill spouští skripty
 # a zapisuje do trackeru, neplánuje ani neopravuje), omezení práv nese
 # allowed-tools;
-# background — volající (typicky budoucí vlnová smyčka plan-milestone nebo
-# člověk čekající na výsledek) potřebuje verdikt hned, běh na pozadí by ho
-# oddálil bez důvodu;
+# background — volající (typicky člověk nebo inženýrský agent) potřebuje
+# verdikt hned, běh na pozadí by ho oddálil bez důvodu;
 # paths — spouští se číslem issue, ne prací nad konkrétními soubory;
 # shell — skripty se spouští explicitním `bash`; version/license — verzuje
-# se celý plugin, ne jednotlivý skill.
+# se celý plugin, ne jednotlivý skill; disallowed-tools — skill se vždy
+# spouští loaderem (viz Vstupní kontext), takže se uzavřený allowed-tools
+# (bez AskUserQuestion) uplatní celý — není co zakazovat navíc.
 ---
 
 # Triage Issue
@@ -88,6 +88,7 @@ ukotvení Reference popsanou v Zásadách**.
 | `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | V kroku 1, když projektová konfigurace chybí nebo v ní nenajdeš sekci, kterou potřebuješ |
 | `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | V kroku 1, dřív než sáhneš na tracker — včetně sekce s nástrahami |
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | V kroku 1, je-li forge GitHub — než spustíš první `gh/*.sh`, kvůli argumentům a návratovým kódům |
+| `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než začneš hledat precedent |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 4, dřív než přepíšeš tělo do tvaru Zadání |
 
 Obsah sdílených souborů si **přečti, ale nepřepisuj do odpovědi**. Šablona
@@ -98,11 +99,12 @@ dva různé tvary těla.
 
 - Vstup (číslo issue): $ARGUMENTS
 
-Vznikne-li v budoucnu vlnová smyčka v `plan-milestone` (dnes ještě
-nepropojená), číslo issue z ní přijde v jejím promptu, ne v argumentech —
-hledej ho i tam. **Chybí-li číslo úplně, nezastavuj se na dopyt** — skonči
-podle Formátu výstupu, varianta „Předčasný konec". Skill nemá od začátku do
-konce žádnou interaktivní větev.
+Skill se vždy spouští loaderem (`/sagittaras:triage-issue`, nebo nástrojem
+`Skill`) s číslem issue v argumentech — jedině tak se mu rozvine
+`${CLAUDE_PLUGIN_ROOT}` a otevře si vlastní recepty i `precedent-test.md`.
+**Chybí-li číslo úplně, nezastavuj se na dopyt** — skonči podle Formátu
+výstupu, varianta „Předčasný konec". Skill nemá od začátku do konce žádnou
+interaktivní větev.
 
 ## Postup
 
@@ -142,24 +144,16 @@ kterákoli z těchto situací:
    a přepis by smazal jeho ověřovací záznam.
 
 Neplatí-li ani jedna, jde o Poznámku pro účely tohohle skillu (typicky:
-kritéria nevyplněná vůbec, nebo vyplněná, ale Reference míří jen na
-dokument) — pokračuj krokem 3. Tenhle rozdíl je záměrný: issues z dnešního
-`file-issue`/`plan-milestone` mají kritéria ukotvená v próze, a právě tuhle
-populaci má `triage-issue` posunout na kódové ukotvení.
+kritéria nevyplněná vůbec z `file-issue`, nebo vyplněná, ale Reference míří
+jen na dokument u starších issues založených před přechodem na kódové
+ukotvení) — pokračuj krokem 3.
 
 ### 3. Hledej v repozitáři existující precedent
 
 Ze scope v názvu issue (`<type>(<scope>): …`) a ze Souhrnu vytěž, na jakou
-oblast kódu se práce vztahuje. Hledej `Glob`/`Grep`/`Read` existující
-soubor, skill, modul nebo vzor, který popsaný požadavek **rozšiřuje**, ne
-jen tematicky souvisí.
-
-Test, který rozhoduje: *jde požadavek splnit úpravou nebo rozšířením
-tohohle konkrétního souboru/vzoru, aniž by bylo nejdřív nutné vymyslet
-architekturu, která v repozitáři ještě neexistuje?* Odpověď ano/ne určuje
-větev v kroku 4. Nehledej vzor jen proto, aby se našel — vzdálená podobnost
-(„taky se to týká skillů") nestačí, precedent musí být to konkrétní místo,
-které issue rozšiřuje.
+oblast kódu se práce vztahuje. Proveď test podle
+`${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md`. Výsledek určuje větev
+v kroku 4.
 
 ### 4a. Precedent existuje → přepiš na Zadání
 
