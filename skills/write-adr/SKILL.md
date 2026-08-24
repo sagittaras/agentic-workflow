@@ -7,17 +7,19 @@ description: >-
   a nechá ho nezávisle zrevidovat subagentem s čistým kontextem. Umí i dořešit
   otevřené otázky už přijatého ADR. Merge nechává člověku.
 when_to_use: >-
-  Použij, když má vzniknout záznam architektonického nebo technologického
-  rozhodnutí — „udělej z toho ADR", „zapiš to rozhodnutí", „vybrali jsme
-  knihovnu X", „dořeš otevřené otázky v ADR 3" — i tehdy, když uživatel jen
-  popisuje volbu mezi přístupy, kterou by bylo škoda nechat v historii chatu.
-  Nepoužívej pro posouzení už sepsaného ADR, na to slouží review-adr; pro
-  pravidlo vázané na část repozitáře write-rule; pro projektové instrukce
-  čtené v každé session write-claude-md; pro zapsání rozhodnutí do paměti
-  agenta train-agent; pro závazný popis vzhledu projektu write-art-bible
-  a pro popis jedné obrazovky nebo flow write-ux-spec — ty říkají, jak to má
-  vypadat a fungovat, kdežto ADR proč se to tak rozhodlo; ani pro rozepsání
-  práce na issues, na to je plan-milestone.
+  Použij, když má vzniknout záznam architektonického rozhodnutí, které je
+  ohrožené — někdo bez kontextu by ho později mohl vnímat jako zbytečnou
+  komplikaci a pokusit se ho „opravit" — „udělej z toho ADR", „zapiš to
+  rozhodnutí", „proč tu máme vlastní vrstvu nad knihovnou X", „dořeš otevřené
+  otázky v ADR 3". Běžnou, levně vratnou volbu nástroje bez skryté ceny (např.
+  „vybrali jsme knihovnu X" bez dalšího kontextu) skill sám odmítne založit —
+  nenabízej ho na ni dopředu. Nepoužívej pro posouzení už sepsaného ADR, na to
+  slouží review-adr; pro pravidlo vázané na část repozitáře write-rule; pro
+  projektové instrukce čtené v každé session write-claude-md; pro zobecněný
+  poznatek z review zapsaný do paměti agenta train-agent; pro závazný popis
+  vzhledu projektu write-art-bible a pro popis jedné obrazovky nebo flow
+  write-ux-spec — ty říkají, jak to má vypadat a fungovat, kdežto ADR proč se
+  to tak rozhodlo; ani pro rozepsání práce na issues, na to je plan-milestone.
 argument-hint: "[číslo ADR] [téma rozhodnutí]"
 model: opus
 effort: high
@@ -127,6 +129,26 @@ z toho, co uživatel řekl nebo potvrdil — ne z tvých domněnek.
 už zaznělo v konverzaci a co stojí v podkladech z kroku 1. Otázka na něco, co je
 napsané v repozitáři, spálí kolo a uživateli řekne, že jsi nečetl — odpovědi pak
 chodí kratší a interview se tím zhorší celé.
+
+**U režimu Nový ADR pak nad tímhle vytěženým kontextem ověř, že rozhodnutí
+vůbec patří do ADR — ne každé rozhodnutí, jen ohrožené.** Test: narazí-li na
+tuhle konstrukci později někdo, člověk nebo agent, bez kontextu, pokusí se ji
+věrohodně „opravit" nebo zjednodušit jako zbytečnou komplikaci?
+
+- **Ano** → rozhodnutí je ohrožené, pokračuj interview dál.
+- **Ne** — jde o běžnou, levně vratnou, samovysvětlující volbu (typicky výběr
+  nástroje nebo knihovny bez skryté ceny) → **ADR se nezakládá**: řekni to
+  uživateli i s důvodem a skonči, nezakládej ani soubor, ani větev.
+- **Nejsi si jistý** → nerozhoduj to sám. Zeptej se nástrojem `AskUserQuestion`
+  s variantami „založit ADR" / „nezakládat", kompromis každé napiš do popisu.
+  Trvá-li uživatel na založení, pokračuj interview dál bez dalšího vymáhání
+  testu — obsah rozhodnutí je jeho, ne tvůj.
+
+**Test se neprovádí u režimu Dořešení ani Nahrazení** — z jiného důvodu
+u každého: u Dořešení se edituje **týž dokument**, který testem prošel při
+svém vzniku; u Nahrazení test smysl nedává, protože se zvrací rozhodnutí, které
+už jednou do logu patřilo, a bez nového dokumentu nemá původní ADR na co
+překlopit svůj Stav.
 
 **Rozliš, na co se ptát a co rozhodnout sám.** Věc se skutečnými kompromisy a bez
 zjevné výchozí volby patří uživateli. Věc s běžnou, levnou a vratnou výchozí
@@ -391,10 +413,7 @@ ne do koše.
    vypravení skončilo.
 
 **PR nemerguj.** Merge do výchozí větve patří člověku — je to pravidlo celého
-pluginu, ne opatrnost tohoto skillu. Do reportu připoj, že po mergi má smysl
-spustit `/sagittaras:train-agent`, dotýká-li se rozhodnutí domény některého
-agenta projektu; před mergem ne, protože paměť naučená z dokumentu, který se
-ještě může změnit, se bude přeučovat.
+pluginu, ne opatrnost tohoto skillu.
 
 ### 9. Eskalace
 
@@ -470,8 +489,6 @@ Otevřené otázky: <počet ponechaných, nebo „žádné">
 Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">
 
 Další krok: merge PR — patří člověku.
-Po mergi: <„/sagittaras:train-agent pro <jména agentů>, jejichž domény se
-rozhodnutí týká", nebo „nic — rozhodnutí nespadá do domény žádného agenta">
 ```
 
 ## Zásady
