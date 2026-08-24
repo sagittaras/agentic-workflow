@@ -14,9 +14,10 @@ when_to_use: >-
   i pro nálezy, které vypadnou mimochodem během jiné práce. Nepoužívej,
   když má z tématu vzniknout celá sada issues s milestonem a závislostmi,
   na to slouží plan-milestone; ani pro implementaci už existujícího issue,
-  tu vlastní implement-issue a v rámci milestonu ji dispečuje run-milestone.
-  Bez projektové konfigurace workflow skill nic nezakládá a odkáže
-  na init-workflow.
+  tu vlastní implement-issue a v rámci milestonu ji dispečuje run-milestone;
+  ani pro povýšení založené Poznámky na Zadání ukotvené v kódu, to dělá
+  triage-issue. Bez projektové konfigurace workflow skill nic nezakládá
+  a odkáže na init-workflow.
 argument-hint: "[co má issue řešit]"
 model: sonnet
 effort: medium

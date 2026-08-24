@@ -14,7 +14,8 @@ when_to_use: >-
   na to slouží file-issue; ani pro posouzení už hotového plánu, to dělá
   review-milestone; ani pro implementaci naplánovaných issues, tu řídí
   run-milestone; ani pro záznam architektonického rozhodnutí i s alternativami
-  a důsledky, na to je write-adr. Bez projektové konfigurace workflow skill
+  a důsledky, na to je write-adr; nemá-li jednotlivé issue kritéria ukotvená
+  v kódu, napřed triage-issue. Bez projektové konfigurace workflow skill
   nezakládá nic a odkáže na init-workflow.
 argument-hint: "[téma milestonu]"
 model: opus

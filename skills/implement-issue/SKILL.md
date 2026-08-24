@@ -13,6 +13,7 @@ when_to_use: >-
   plan-milestone; pro založení jednoho ad hoc issue file-issue; pro nezávislé
   ověření hotového PR verify-issue; pro pouhé otevření PR nad už hotovou prací
   open-pr; ani pro řízení celého milestonu a merge PR, to dělá run-milestone.
+  Nemá-li issue kritéria ukotvená v kódu, napřed triage-issue.
 argument-hint: "<číslo issue> [základní větev]"
 model: opus
 effort: xhigh
