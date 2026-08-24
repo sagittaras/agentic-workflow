@@ -3,9 +3,11 @@ name: review-milestone
 description: >-
   Nezávislé review naplánovaného milestonu s čistým kontextem — projde všechna
   jeho issues a posoudí tvar těl proti šabloně, ukotvení akceptačních kritérií
-  v citovaných sekcích dokumentů, graf závislostí, překryvy a díry proti popisu
-  milestonu, rozsah a area labely. Vrací verdikt Sound / Needs attention /
-  Not ready s nálezy tříděnými podle závažnosti a report ukládá jako komentář
+  v citovaném souboru nebo vzoru v kódu (ne v próze dokumentu), graf
+  závislostí, překryvy a vnitřní rozpory mezi existujícími issues, rozsah
+  a area labely. Neúplnou vlnu — issues chybějící proti budoucím vlnám —
+  nebere jako díru. Vrací verdikt Sound / Needs attention / Not ready
+  s nálezy tříděnými podle závažnosti a report ukládá jako komentář
   do trackeru. Neopravuje.
 when_to_use: >-
   Použij k posouzení milestonu, jehož issues už v trackeru existují — jako
@@ -14,7 +16,8 @@ when_to_use: >-
   připravený k běhu". Nepoužívej pro sestavení ani opravu plánu, na to slouží
   plan-milestone; pro ověření hotové implementace proti kritériím slouží
   verify-issue; pro posouzení sepsaného ADR review-adr; ani pro review kódu, PR
-  nebo diffu — tenhle skill čte plán, ne změnu v repozitáři. Zavření hotového
+  nebo diffu — tenhle skill čte plán, ne změnu v repozitáři. Posouzení a povýšení
+  jednoho issue mimo celý milestone dělá triage-issue. Zavření hotového
   milestonu dělá close-milestone.
 model: opus
 effort: high
@@ -22,11 +25,11 @@ context: fork
 argument-hint: "[název nebo číslo milestonu]"
 user-invocable: true
 # Zařazení dle matice: review a hledání chyb → opus × xhigh. Effort o stupeň
-# níž na high je záměr a shoduje se s plánem sady: skill nečte kód ani nespouští
-# ověřovací příkazy, jen porovnává konečný, dopředu ohraničený materiál — těla
-# issues proti šabloně a jejich tvrzení proti citovaným sekcím. Chybí tu dlouhý
-# agentic běh s nástroji, ve kterém se xhigh vrací; model zůstává opus, protože
-# rozpoznat věrohodně znějící parafrázi bez opory je úsudková práce.
+# níž na high je záměr a shoduje se s plánem sady: skill sice čte kód (cesty
+# z Reference), ale jen čte a porovnává — nic nespouští, nic neimplementuje,
+# a rozsah je dopředu ohraničený souborem issues jednoho milestonu. Chybí tu
+# dlouhý agentic běh s nástroji, ve kterém se xhigh vrací; model zůstává opus,
+# protože rozpoznat věrohodně znějící parafrázi bez opory je úsudková práce.
 # context: fork je nosný, ne kosmetický — viz úvod těla.
 # Vynechaná zvažovaná pole: agent — fork musí umět zapsat komentář do trackeru
 # a čtecí profily (Explore, Plan) by mu zápis vzaly, žádný jiný obecný profil
@@ -74,7 +77,10 @@ proto žádnou znalost konverzace, která milestone plánovala** — všechno, o
 opíráš, si přečti z trackeru a z dokumentů v repozitáři.
 
 Závazným kontraktem jsou sdílené soubory pluginu; při rozporu s tímto textem
-mají přednost ony.
+mají přednost ony, **s výjimkou ukotvení Reference popsanou v okruzích 4a
+a 4b** — tam, kde `issue-template.md` popisuje dokumentové ukotvení kritérií
+(sekci `Reference`, i pravidla pro psaní kritérií „ukotveno v sekci
+dokumentu"), platí místo něj kódové ukotvení.
 
 ## Vstupní kontext
 
@@ -92,9 +98,13 @@ report o cizím plánu.
 
 1. Přečti `.claude/workflow.md` v kořeni projektu. **Chybí-li,
    nepokračuj** a nabídni `/sagittaras:init-workflow`; bez konfigurace neznáš
-   forge, taxonomii labelů ani zdroje pravdy, takže bys polovinu kontrol jen
-   předstíral. Nevíš-li, kde v konfiguraci co hledat, otevři
-   `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`.
+   forge ani taxonomii labelů, takže bys polovinu kontrol jen předstíral. Nevíš-li, kde v konfiguraci co hledat, otevři
+   `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. **Chybí-li jen sekce,
+   kterou konkrétní kontrola v kroku 4 potřebuje** (`Labely` pro kontrolu
+   proti výčtu v 4f, `Jazyk issues` pro kontrolu jazyka v 4a) — nepředstírej
+   ji, vynech **jen tuhle jednu kontrolu** a řekni to v Shrnutí. Zbytek okruhu
+   (u 4f třeba „právě jeden `area:*` label", u 4a tvar názvu vs. typový
+   label) na té sekci nezávisí a provedeš ho dál.
 2. Ze sekce `Forge` si vezmi typ, `owner` a `repo`. Než sáhneš na první issue,
    otevři `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` a volání ber odtud —
    z hlavy je neodvozuj, obě forge mají v detailech odlišné konvence.
@@ -119,12 +129,13 @@ report o cizím plánu.
    | --- | --- | --- |
    | `2` | Chybný nebo chybějící argument — typicky vynechané `-R owner/repo` | Oprav volání a zopakuj; skript bez `-R` nezkoušej |
    | `7` | `gh` chybí nebo není přihlášené | Skonči podle kroku 7 — bez forge review nedoběhne |
+   | `127` | Skript na disku není | Ohlas, který chybí, a skonči podle kroku 7 — bez zbytku skriptů review nedoběhne |
    | jiný | Propuštěno z `gh` | Otevři `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` a řiď se jím; význam si nedomýšlej |
 
 ### 2. Načti milestone a všechna jeho issues
 
 1. Dohledej milestone podle zadání a **přečti jeho popis** — bez něj nemáš proti
-   čemu v kroku 4 měřit díry a překryvy.
+   čemu v okruhu 4e posoudit rozsah.
 2. Vypiš issues milestonu ve **všech stavech**. Omez výpis na typ `issues`:
    nefiltrovaný výpis vrací i PR a počet pak sedí omylem.
 3. **Ověř úplnost výpisu.** Stránkuje se po 30; porovnej počet načtených issues
@@ -134,47 +145,101 @@ report o cizím plánu.
 4. Přečti **celé tělo** každého issue, jeho název a jeho labely. Poznamenej si
    nejnižší číslo issue v milestonu; tam půjde report.
 
-### 3. Otevři dokumenty, o které se kritéria opírají
+### 3. Otevři precedenty, o které se kritéria opírají
 
-Sekce `Zdroje pravdy` v konfiguraci říká, kde dokumenty leží; sekce `Reference`
-v každém issue říká, který dokument a která jeho sekce kritérium ukotvuje.
+Sekce `Reference` v každém issue říká, který soubor nebo vzor v kódu
+repozitáře kritérium ukotvuje — to je dnes primární zdroj pravdy pro
+ukotvení, ne dokument. **Otevři každou citovanou cestu** (`Read`/`Glob`,
+`Grep` když jde o vzor napříč víc soubory, ne jeden konkrétní) a ověř, že
+v repozitáři skutečně existuje. Cituje-li issue vedle kódu i ADR jako
+doplňkové omezení, dohledej ho — jmenuje-li issue jen ADR bez cesty, hledej
+ho v sekci `Zdroje pravdy` konfigurace, a není-li tam, `Glob`em v obvyklém
+adresáři (`.docs/adr/` apod.). Nedohledatelné doplňkové ADR je nanejvýš
+`minor` — blocking zůstává vyhrazený kódové cestě, viz níže. ADR samo o sobě
+jako Reference nestačí (viz krok 4b).
 
-**Otevři každý citovaný dokument a najdi v něm citovanou sekci.** Parafráze
-v issue není důkaz — je to přesně to místo, kde plán selhává nejčastěji, protože
-věrohodně formulované kritérium se čte jako podložené i tehdy, když ho zdroj
-nikde neříká. Nepřečtený dokument znamená neprovedenou kontrolu, ne kontrolu bez
-nálezu.
+Parafráze v issue není důkaz — je to přesně to místo, kde plán selhává
+nejčastěji, protože věrohodně formulované kritérium se čte jako podložené
+i tehdy, když ho zdroj nikde neříká. Nepřečtený precedent znamená
+neprovedenou kontrolu, ne kontrolu bez nálezu.
 
-Nedohledatelný dokument nebo nedohledatelnou sekci ber jako blocking nález
-a pokračuj dál — jedno rozbité ukotvení nemá zastavit celé review.
+Nedohledatelnou cestu ber jako blocking nález u **otevřeného** issue
+a pokračuj dál — jedno rozbité ukotvení nemá zastavit celé review. U
+**zavřeného** issue je to jen `minor` záznam bez doporučení `triage-issue`
+(viz okruh 4b) — práce je zmergovaná, cesta mohla zaniknout pozdějším
+refaktorem a issue už nejde poslat zpátky do dispatche.
 
 ### 4. Posuď milestone
 
 Projdi šest okruhů. U každého nálezu si drž místo (číslo issue a konkrétní
 řádek nebo sekci) a konkrétní doporučení, jinak ho autor nemá jak opravit.
 
+**Okruhy a, b, e a f platí naplno jen pro otevřená issues, u kterých ještě
+neproběhla implementace.** Zavřené issue je hotová práce a `triage-issue`,
+kterým by se leckterá oprava doporučovala, zavřené issue sám odmítá (jeho
+krok 1, varianta „Předčasný konec") — u zavřeného issue proto totéž zjištění
+zapiš jako `minor` záznam bez doporučení k opravě, nikdy jako blocking.
+Zvláštní případ je otevřené issue se zaškrtnutými kritérii, které teprve
+čeká na merge (`verify-issue` škrtá před mergem, `run-milestone` zavírá až
+po něm) — skill na PR nevidí, takže tam, kde nejde rozhodnout, hlas nanejvýš
+`should-fix` s poznámkou, že může jít o záznam `verify-issue`. Okruh c (graf
+závislostí) tohle rozlišení nemá — `run-milestone` staví graf ze všech těl
+bez ohledu na stav, takže se hlásí vždy, i na zavřeném issue.
+
 **a) Struktura.** Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md`
-a **měř proti němu, ne proti tomuhle výčtu**: šablona je neměnný sdílený
-kontrakt na jednom místě a znění pravidel patří jí. Zkontroluj:
+a **měř proti němu, ne proti tomuhle výčtu** — s jednou výjimkou popsanou
+v okruhu 4b: šablona popisuje `Reference` jako odkaz na sekci dokumentu
+(sekce `Reference` i pasáž „Jak psát akceptační kritéria" o ukotvení
+v sekci dokumentu), ale platné ukotvení je dnes cesta ke kódu, protože
+kritérium ukotvené jen v próze nejde ukázat na nic ověřitelného (krok 3).
+Dokud se šablona sama nepřevede, měř tenhle bod proti kódovému ukotvení, ne
+proti jejímu znění — je to vědomý, přechodný rozpor mezi šablonou a vizí, ne
+nález. Zkontroluj:
 
 - sadu a pořadí sekcí těla, včetně toho, kdy se `Závisí na` vynechává celá;
 - tvar názvu a jeho shodu s typovým labelem na issue;
 - jazyk popisů proti sekci `Jazyk issues` v konfiguraci;
-- stav zaškrtávátek — v naplánovaném milestonu je odškrtnuté kritérium nález,
-  protože odškrtává až `verify-issue` podle toho, co skutečně ověřil;
+- stav zaškrtávátek — odškrtává až `verify-issue` podle toho, co skutečně
+  ověřil (viz obecné pravidlo o otevřených a zavřených issues výš);
 - způsob, jakým je kritérium napsané (pozorovatelné chování, jednoznačnost).
   Dvojznačné kritérium zdrží řetěz až u ověřování, kde už stojí čas inženýra
   i recenzenta.
 
-**b) Ukotvení kritérií.** Pro každý řádek checklistu porovnej, co issue tvrdí,
-s tím, co v otevřené sekci **doopravdy stojí**. Hlas zvlášť dvě věci, protože
-obě projdou zběžným čtením:
+**b) Ukotvení kritérií.** Nejdřív ověř samotnou Referenci (viz obecné pravidlo
+o otevřených a zavřených issues výš):
 
-- **parafrázi bez opory** — kritérium zní věrohodně, ale citovaná sekce ho
-  neříká, nebo říká něco jiného;
-- **předčasné rozhodnutí** — issue mluví o věci jako o rozhodnuté, zatímco zdroj
-  ji pořád vede jako otevřenou otázku. To není detail: implementace by tady
-  rozhodla za projekt a rozhodnutí by se schovalo do diffu.
+- **`Akceptační kritéria` jsou prázdná, nebo `Reference` chybí celá** — i jen
+  jedno z toho stačí. Issue je Poznámka, ne Zadání (přesně tvar, který
+  zakládá `file-issue`), a do milestonu nepatří jako práce k dispatchi.
+  Blocking, s doporučením `/sagittaras:triage-issue` na dotčené issue — bez
+  povýšení by ho `run-milestone` poslal inženýrskému agentovi bez opory
+  nebo bez jediného kritéria.
+- **Reference cituje dokument (ADR/UX-spec sekci) místo cesty ke kódu** —
+  blocking nález bez ohledu na to, jestli je kritérium samo věrohodné.
+  Kritérium ukotvené jen v próze nejde ukázat na nic ověřitelného v kódu.
+  Typicky jde o issue založené před přechodem na kódové ukotvení; jako
+  doporučení k opravě uveď `/sagittaras:triage-issue` na dotčené issue
+  (a je-li výsledkem hlášení, že precedent chybí úplně, spárovanou
+  implementační session).
+- **Reference cituje cestu, která v repozitáři neexistuje** — blocking,
+  viz krok 3.
+
+Pak otevři `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md`, dřív než
+posoudíš vztah mezi kritériem a citovaným precedentem — podle něj je
+Zadání ohraničený přírůstek, který precedent **rozšiřuje**; kritérium
+proto popisuje chování, které rozšířením vznikne, ne chování, které
+v citovaném kódu už dnes je. „Citovaný kód tohle zatím nedělá" sám o sobě
+**není** nález — přesně to má issue rozšířením doplnit. Nález je:
+
+- **kritérium tvrdí o citovaném kódu něco, co v něm dnes prokazatelně není**
+  — ne že chování chybí, ale že popsané rozšíření mu odporuje (jiné
+  rozhraní, jiná struktura, než na jaké by šlo navázat);
+- **citovaná cesta test z `precedent-test.md` neprojde** — jen tematicky
+  souvisí a rozšířit ji na tenhle konkrétní případ nejde;
+- **předčasné rozhodnutí** — issue mluví o věci jako o rozhodnuté, zatímco
+  citované ADR (je-li v Referenci jako doplňkové omezení) ji pořád vede jako
+  otevřenou otázku. To není detail: implementace by tady rozhodla za projekt
+  a rozhodnutí by se schovalo do diffu.
 
 **c) Graf závislostí.** Sesbírej všechna `#N` ze sekcí `Závisí na` a ověř, že
 každé míří na skutečné issue. Najdi cykly. Ověř, že existuje proveditelné
@@ -186,20 +251,34 @@ zastavení o krok dál. Otevřený cíl je blocking (běh by čekal na něco, co
 neplánuje udělat), zavřený should-fix (závislost je splněná, ale řádek zbytečně
 zastaví orchestrátor).
 
-**d) Překryvy a díry.** Dvě issues si nesmí nárokovat totéž — dva agenti by
-sáhli na stejný kód ve dvou worktree a rozešli by se. A sjednocení všech issues
-musí pokrýt to, co slibuje popis milestonu; co v popisu je a v žádném issue ne,
-je díra. Nemá-li milestone popis, řekni to a v tomhle okruhu nerozhoduj.
+**d) Překryvy a vnitřní rozpory.** Dvě issues si nesmí nárokovat totéž — dva
+agenti by sáhli na stejný kód ve dvou worktree a rozešli by se. Milestone smí
+legitimně pokrývat jen část zamýšleného rozsahu — vlnové plánování zakládá
+issues po vlnách a položky bez precedentu v kódu se schválně nezakládají.
+**Chybějící issue proti tomu, co popis
+milestonu slibuje jako celek, proto sama o sobě není díra** — je legitimní
+stav, ne nález. Nález je jen skutečný **rozpor mezi existujícími issues**:
+jedno issue předpokládá stav nebo rozhraní, které jiné existující issue
+v milestonu popírá nebo staví jinak. Takový rozpor hlas vždy, bez ohledu na
+to, kolik dalších vln teprve přijde.
 
 **e) Rozsah.** U každého issue se zeptej, jestli patří sem, nebo je to práce
-na později. Issue navíc není neškodné — protahuje běh a drží otevřený milestone.
+na později (viz obecné pravidlo o otevřených a zavřených issues výš — u
+zavřeného už tahle otázka nemá smysl). Issue navíc není neškodné — protahuje
+běh a drží otevřený milestone. Nemá-li milestone popis, rozsah v tomhle
+okruhu neposuzuj a řekni to v Shrnutí — bez definice „hotovo" nemáš proti
+čemu poměřovat.
 
-**f) Labely.** Právě jeden `area:*` na issue. Ověř, že odpovídá **kódu, kterého
-se dotýkají kritéria**, ne tématu milestonu, a že ho konfigurace zná v sekci
-`Labely` i v mapě v sekci `Agenti`. Tenhle label je nosný: `run-milestone` podle
-něj vybírá inženýrského agenta, takže chybný nebo nenamapovaný label pošle práci
-špatnému specialistovi a pozná se to až u review. Chybějící mapování ber jako
-blocking, i kdyby byl label sám o sobě správný.
+**f) Labely.** Ověř **právě jeden** `area:*` label na issue (viz obecné
+pravidlo o otevřených a zavřených issues výš) — chybějící i druhý je
+u otevřeného issue blocking, protože `run-milestone` (jeho krok 3) bez
+jednoznačného labelu nedispečuje a rovnou eskaluje. Ověř, že label odpovídá
+**kódu, kterého se dotýkají kritéria**, ne tématu milestonu, a že ho
+konfigurace zná v sekci `Labely`; label mimo tenhle výčet, nebo label
+ukazující na jinou oblast, než se kritéria dotýkají, je blocking. Mapu
+`Agenti` tenhle okruh nekontroluje — je to routing informace pro
+`run-milestone`, ne pro plán, a chybějící řádek nebo `—` je podle
+`shared/workflow-config.md` platný stav, ne nález.
 
 Každý nález zařaď do jedné ze tří závažností:
 
@@ -262,8 +341,9 @@ Běžíš bez uživatele, takže se nedoptávej — skonči a řekni proč. Konk
 chybí projektová konfigurace; milestone ze zadání v trackeru neexistuje; zadání
 nenese milestone a otevřených je víc; milestone nemá žádné issues; výpis issues
 se nepodařilo dostránkovat do úplnosti; forge není dostupná — `gh` chybí nebo
-není přihlášené (kód `7`), případně tracker vrací 404 na zápisu, což je skoro
-vždy chybějící oprávnění účtu, ne špatný název. V těchto případech
+není přihlášené (kód `7`), chybí skript, který postup potřebuje (kód `127`),
+případně tracker vrací 404 na zápisu, což je skoro vždy chybějící oprávnění
+účtu, ne špatný název. V těchto případech
 **komentář nezakládej**
 — záznam o review, které se nestalo, je horší než žádný. Závěrečná zpráva shrne,
 co se zjistit podařilo a co konkrétně chybí.
@@ -280,7 +360,8 @@ volnou formulací by se důkaz o proběhlém review stal nedohledatelným.
 **Verdikt:** <Sound | Needs attention | Not ready>
 
 **Rozsah:** <N> issues (#<nejnižší>–#<nejvyšší>) · ukotvení ověřeno proti:
-<výčet dokumentů, které jsi skutečně otevřel>
+<výčet souborů/vzorů v kódu, které jsi skutečně otevřel — případně i ADR
+citovaných jako doplňkové omezení>
 
 ### Nálezy
 
@@ -307,9 +388,14 @@ spuštěním run-milestone; blokující nálezy uveď první.>
   Oprava provedená recenzentem ničí nezávislost procesu — autor by pak
   schvaloval vlastní zásah cizíma rukama. Jediný zápis, který smíš udělat, je
   report jako komentář.
-- **Zdrojem pravdy je dokument, ne issue.** Kdykoli se tvrzení v issue rozchází
-  s citovanou sekcí, platí sekce a rozpor je nález. Parafráze se neověřuje
-  parafrází.
+- **Zdrojem pravdy je citovaný precedent, ne issue — ale kritérium ho smí
+  rozšiřovat.** Kritérium popisuje chování, které vznikne rozšířením
+  citovaného kódu, ne chování, které v něm už dnes je; „zatím to nedělá"
+  proto není nález. Nález je, když kritérium citovanému kódu odporuje, nebo
+  když citovaná cesta rozšířit nejde (viz okruh 4b).
+- **Neúplná vlna není díra.** Chybějící issue proti celkovému rozsahu
+  z popisu milestonu se nehlásí jako nález — vlnové plánování to počítá
+  jako výchozí stav. Nález je jen rozpor mezi issues, která už existují.
 - **Nikdy se neptáš.** Nejasnost zapiš jako nález, chybějící předpoklad jako
   důvod ukončení podle kroku 7.
 - **Nález musí být opravitelný.** Ke každému uveď číslo issue, konkrétní místo

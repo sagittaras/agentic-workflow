@@ -19,8 +19,9 @@ when_to_use: >-
   spouští samostatně nad issue, které už v trackeru je. Nepoužívej
   pro založení nového issue z popisu, na to slouží `file-issue`; pro
   rozepsání tématu na celou sadu issues `plan-milestone`; pro implementaci
-  už hotového Zadání `implement-issue`; ani pro nezávislé ověření hotového
-  PR proti kritériím, to dělá `verify-issue`.
+  už hotového Zadání `implement-issue`; pro nezávislé ověření hotového
+  PR proti kritériím `verify-issue`; ani pro posouzení celého naplánovaného
+  milestonu, to dělá `review-milestone`.
 argument-hint: "[číslo issue]"
 # Sloveso `triage` není v tabulce doporučených sloves konvencí; ponecháno
 # vědomě — je to ustálené označení pro tenhle typ klasifikace a název fixuje
@@ -189,7 +190,7 @@ sobě mazat.
 
 Skončí-li zápis chybou, postupuj podle forge: na GitHubu podle
 `git-scripts.md` — kód `7` znamená chybějící nebo nepřihlášené `gh`, kód `2`
-chybný argument (over hodnoty a zkus znovu jednou), jiný nenulový kód
+chybný argument (ověř hodnoty a zkus znovu jednou), jiný nenulový kód
 neopakuj naslepo. Na Gitea reaguj na chybu **404 při zápisu** podle nástrah
 v `forge-recipes.md` — skoro vždy jde o chybějící oprávnění účtu, ne
 o špatný název; jiný repozitář nezkoušej. V žádném z těchto případů

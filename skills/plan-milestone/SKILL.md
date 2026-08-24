@@ -264,8 +264,9 @@ jak odkázat:
 2. **Milestone**, jde-li o první vlnu. Do popisu napiš, co pro tenhle milestone
    znamená „hotovo" — a pokud backlog z kroku 3 obsahuje nezaložené položky,
    zmiň, že popis pokrývá i budoucí vlny, ne jen tuhle. Podle popisu
-   `review-milestone` hledá díry a překryvy a `close-milestone` pozná, že se
-   smí zavřít. **Jedna až dvě věty na jednom řádku**: popis se předává
+   `review-milestone` posuzuje rozsah (okruh 4e); `close-milestone` popis
+   nečte, zavření řídí jen počty zavřených issues a zmergované integrační PR.
+   **Jedna až dvě věty na jednom řádku**: popis se předává
    argumentem, takže víceřádkový markdown se v shellu tiše rozbije. Co se do
    dvou vět nevejde, patří do issues. Jde-li o další vlnu do existujícího
    milestonu, krok přeskoč — nezakládej ho znovu.
@@ -294,13 +295,14 @@ jiný repozitář nezkoušej.
 ### 8. Shrň výsledek
 
 Vypiš souhrnnou tabulku podle Formátu výstupu, backlog položek, které do téhle
-vlny nešly (a proč), řádek „Pozor u review" o přechodném stavu Reference,
-a jako další krok doporuč `/sagittaras:review-milestone` — i s výčtem
-nezaložených položek backlogu, ať je recenzent nečte jako díru v popisu
-milestonu (neúplná vlna je legitimní stav, ne nález). Plán **neposuzuješ
-sám**: recenzent sdílející kontext s autorem si odkývá vlastní úvahu, proto
-review patří někomu, kdo tvůj kontext nevidí. Sám ho nespouštěj — rozhodnutí
-patří uživateli.
+vlny nešly (a proč), řádek „Pozor v dalších krocích" o přechodném stavu
+Reference u `implement-issue`/`verify-issue`, a jako další krok doporuč
+`/sagittaras:review-milestone` — ten neúplnou vlnu ani kódovou Referenci
+jako nález nebere, takže recenzentovi stačí výčet nezaložených položek
+backlogu pro kontext, ne omluva. Plán **neposuzuješ sám**: recenzent
+sdílející kontext s autorem si odkývá vlastní úvahu, proto review patří
+někomu, kdo tvůj kontext nevidí. Sám ho nespouštěj — rozhodnutí patří
+uživateli.
 
 ## Formát výstupu
 
@@ -330,9 +332,9 @@ Milestone: <název> — <odkaz>
 
 Založené labely: <výčet, nebo „žádné">
 Backlog na příští vlnu: <výčet s důvodem, nebo „žádný">
-Pozor u review: Reference míří do kódu — dokud issue-template.md, review-milestone
-a implement-issue neumí kódové ukotvení, review-milestone Referenci hlásí
-jako nález (přechodný stav)
+Pozor v dalších krocích: Reference míří do kódu — dokud issue-template.md
+a implement-issue/verify-issue neumí kódové ukotvení jistě, ověř ručně, že se
+s ním vypořádají (review-milestone už kódové ukotvení umí)
 Další krok: /sagittaras:review-milestone
 ```
 
@@ -343,10 +345,11 @@ Další krok: /sagittaras:review-milestone
   skill se od ní vědomě odchyluje, protože kritérium ukotvené jen v próze
   nejde ukázat na nic ověřitelného v kódu. V tomhle bodě platí tenhle postup,
   ne obecná věta o přednosti sdíleného kontraktu níže. **Je to přechodný
-  stav** — dokud `issue-template.md` a na něj navázané `review-milestone`,
-  `implement-issue` a `verify-issue` neumí kódové ukotvení, hlásí Zadání
-  z tohohle skillu jako nález. To skill sám nemůže opravit; řekni to
-  uživateli v souhrnu podle Formátu výstupu, ať to při čtení review nepřekvapí.
+  stav** — dokud `issue-template.md` a na ni navázané `implement-issue`
+  a `verify-issue` neumí kódové ukotvení, mohou je zpracovat jinak, než
+  tenhle skill zamýšlí. `review-milestone` kódové ukotvení už umí. To skill
+  sám nemůže opravit; řekni to uživateli v souhrnu podle Formátu výstupu,
+  ať to při čtení dalších kroků nepřekvapí.
 - **Bez precedentu žádné issue, a neúplná vlna je v pořádku.** Položka bez
   precedentu se sama nezakládá (leda jako Poznámka na explicitní přání
   uživatele přes `file-issue`) a milestone i tak smí legitimně vzniknout
