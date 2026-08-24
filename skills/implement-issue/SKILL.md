@@ -2,7 +2,7 @@
 name: implement-issue
 description: >-
   Naimplementuje jeden issue z trackeru a otevře na něj PR — ověří závislosti,
-  otevře dokumenty citované v Referencích, založí větev, napíše kód přesně podle
+  otevře precedent citovaný v Referencích, založí větev, napíše kód přesně podle
   akceptačních kritérií, sám si je projde a zápis i PR předá sdíleným skillům.
   Výstupem je číslo a odkaz PR; merge nechává na tom, kdo skill spustil.
 when_to_use: >-
@@ -46,7 +46,11 @@ effort: xhigh
 Cílem je jeden issue naimplementovaný přesně v rozsahu svých akceptačních kritérií
 a otevřené PR, na které se dá odkázat číslem. Skill drží proces; doménové zázemí
 přináší agent, který ho spustil. Závazné jsou sdílené soubory pluginu a projektová
-konfigurace — při rozporu s tímhle postupem platí ony.
+konfigurace — při rozporu s tímhle postupem platí ony, **s jednou výjimkou:**
+sekci `Reference` čti podle kroku 3, ne podle `shared/issue-template.md`. Obecná
+šablona ji popisuje jako odkaz na dokument; tenhle skill se od ní vědomě
+odchyluje ve prospěch kódového precedentu — Reference mířící do kódu proto
+není odchylka od tvaru, kterou by šlo hlásit.
 
 Git mechaniku skill nepíše znovu: větev zakládá `sagittaras:create-branch`, zápis
 a PR obstará `sagittaras:open-pr` (ten uvnitř volá `sagittaras:make-commit`).
@@ -58,6 +62,7 @@ Psát ji potřetí znamená mít tři různá chování pro jednu operaci.
 | `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | V kroku 1, dřív než sáhneš na tracker — včetně sekce s nástrahami |
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | V kroku 1 před prvním voláním skriptu ze `scripts/` nebo `scripts/gh/` — jejich argumenty a návratové kódy |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 1, když tělo issue neodpovídá očekávanému tvaru |
+| `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než posoudíš, jestli citovaná cesta je precedent k rozšíření |
 
 ## Vstupní kontext
 
@@ -99,16 +104,33 @@ se bude po merge závislosti přepisovat.
 Chybí-li sekce `Závisí na` celá, issue nezávisí na ničem a pokračuješ. Prázdná
 sekce nebo „nic" je odchylka od šablony — ohlas ji, ale běh kvůli ní nezastavuj.
 
-### 3. Otevři skutečné dokumenty z Reference
+### 3. Otevři skutečný precedent z Reference
 
-Každý dokument citovaný v sekci `Reference` **otevři a přečti uvedenou sekci**.
-Ne parafrázi z těla issue, ne vzpomínku na to, co tam nejspíš je. Kritérium je
-v dokumentu ukotvené právě proto, že tělo issue je zkratka — implementace psaná
-podle zkratky projde tvojí vlastní kontrolou a spadne až u `verify-issue`.
+Sekce `Reference` je **primárně odkaz na existující soubor nebo vzor v kódu**,
+který se má rozšířit — ten otevři a přečti **jako první a hlavní zdroj
+zadání**. Implementuj podle vzoru, který tam skutečně je, ne podle toho, jak
+si ho pamatuješ nebo jak by „asi měl" vypadat. Ne parafrázi z těla issue —
+tělo issue je zkratka a implementace psaná podle zkratky projde tvojí vlastní
+kontrolou a spadne až u `verify-issue`.
 
-Cesty ke zdrojům pravdy drží sekce `Zdroje pravdy` v konfiguraci. Neexistuje-li
-dokument nebo sekce, nebo neříká-li to, co kritérium tvrdí, **eskaluj** — je to
-vada plánu, ne mezera k domyšlení.
+Cituje-li Reference i ADR nebo jiný dokument, čti ho jako **doplňkové
+omezení** — co nesahat, které rozhodnutí je chráněné — ne jako primární popis
+toho, co postavit. Tvar implementace určuje kódový precedent, ne próza
+dokumentu.
+
+**Citovaná cesta neexistuje** (soubor, vzor i dokument) → **eskaluj**, je to
+vada plánu. **Citovaná cesta existuje, ale kritérium popisuje chování, které
+v ní zatím není** → to není nález — přesně tenhle přírůstek issue přináší;
+implementuj ho jako rozšíření precedentu. Eskaluj až tehdy, kritérium
+citovanému precedentu **odporuje** (jiné rozhraní nebo struktura, na kterou
+nejde navázat), nebo citovaná cesta jen tematicky souvisí a rozšířit ji na
+tenhle případ nejde (test v `shared/precedent-test.md`).
+
+Cesty k doplňkovým dokumentům (ADR a další) drží sekce `Zdroje pravdy`
+v konfiguraci; cesta ke kódovému precedentu je vůči kořeni repozitáře.
+Nemá-li Reference žádný kódový precedent, jen odkaz na dokument, **neimplementuj
+a eskaluj** s doporučením `/sagittaras:triage-issue` — bez precedentu nezůstává
+primární zdroj zadání, na který by se implementace mohla opřít.
 
 ### 4. Urči základní větev
 
@@ -182,9 +204,10 @@ aniž by cokoli ověřila. Nenulový kód → **eskaluj**, neimplementuj.
 
 ### 6. Implementuj
 
-Nejdřív si přečti okolní existující kód — jak se v projektu pojmenovává, kde leží
-testy, jak vypadá obdobná už hotová věc. Vlastní vzor zavedený vedle zavedeného je
-nález pro recenzenta, ne přínos.
+Tvar implementace vychází z precedentu přečteného v kroku 3 — to je vzor, který
+rozšiřuješ. Okolní kód si přečti navíc kvůli tomu, co precedent sám neurčuje:
+jak se v projektu pojmenovává, kde leží testy, jak vypadá obdobná už hotová věc.
+Vlastní vzor zavedený vedle zavedeného je nález pro recenzenta, ne přínos.
 
 Implementuj **přesně to, co říkají akceptační kritéria**. Žádné rozšiřování rozsahu,
 žádné vylepšení navíc, žádný refaktor okolí „když už jsem tady": co není v kritériích,
@@ -236,7 +259,8 @@ Přeruš postup a ohlas stav, když:
 - chybí konfigurace nebo sekce, kterou potřebuješ (krok 1),
 - issue nejde načíst — neexistuje, 404, chybějící oprávnění nebo `gh` (krok 1),
 - kterýkoli issue ze `Závisí na` není zavřený (krok 2),
-- dokument nebo sekce z `Reference` neexistuje či neříká, co kritérium tvrdí (krok 3),
+- citovaný soubor, vzor nebo dokument z `Reference` neexistuje, kritériu odporuje,
+  nebo Reference nemá žádný kódový precedent (krok 3),
 - základní větev je skutečně nejednoznačná (krok 4),
 - typ z labelu nejde jednoznačně namapovat na přípustný typ větve (krok 5),
 - základní větev neexistuje ani na remotu, ani lokálně (krok 5),
@@ -290,5 +314,7 @@ PR: žádné
 - **Zaškrtávátka patří `verify-issue`.** Neodškrtávej je, ani když sis kritérium
   ověřil — jinak recenzent posuzuje tvoje tvrzení místo skutečnosti. Nástroj na zápis
   do issue přitom po kroku 1 načtený máš; hranici drží tahle zásada, ne práva.
-- **Reference se otevírají, ne parafrázují.** Tělo issue je zkratka dokumentu,
-  ne jeho náhrada.
+- **Reference se otevírá, ne parafrázuje, a kódový precedent v ní je primární
+  zadání.** Tělo issue je zkratka, ne náhrada za to, co je v Referenci; a mezi
+  precedentem a dokumentem (ADR) rozhoduje precedent — dokument jen říká, kam
+  nesahat. Platí i proti obecné `shared/issue-template.md` (viz úvod).
