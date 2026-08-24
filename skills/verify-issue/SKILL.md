@@ -89,16 +89,16 @@ ověřovat — řekni to a skonči.
 
 ### 1. Načti konfiguraci a nástroje forge
 
-Přečti `.claude/workflow.md` v kořeni projektu. Potřebuješ z něj sekce
-**Forge** (typ, `owner/repo`), **Ověřovací příkazy** (čím se kritérium doopravdy
-ověří), **Zdroje pravdy** (kde leží dokumenty citované v Reference) a **Větvení**
-(výchozí a integrační větev).
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu.
+Potřebuješ z ní podsekce **Forge** (typ, `owner/repo`), **Ověřovací příkazy**
+(čím se kritérium doopravdy ověří), **Zdroje pravdy** (kde leží dokumenty
+citované v Reference) a **Větvení** (výchozí a integrační větev).
 
-Nevíš-li, kde v konfiguraci co hledat, nebo některá sekce chybí, otevři
-`${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. Chybí-li celý soubor
-konfigurace nebo sekce, kterou potřebuješ, **nedomýšlej hodnoty**: skonči
-verdiktem `Blocked` a řekni, co chybí. Ověření proti odhadnutému příkazu není
-ověření.
+Nevíš-li, kde v konfiguraci co hledat, nebo některá podsekce chybí, otevři
+`${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. Chybí-li `CONTRIBUTING.md`,
+sekce `## Workflow (sagittaras)` celá, nebo podsekce, kterou potřebuješ,
+**nedomýšlej hodnoty**: skonči verdiktem `Blocked` a řekni, co chybí. Ověření
+proti odhadnutému příkazu není ověření.
 
 Než sáhneš na issue nebo PR, otevři `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md`
 a volání ber z jeho tabulky — neodvozuj je z hlavy.

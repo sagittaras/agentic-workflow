@@ -111,14 +111,15 @@ interaktivní větev.
 
 ### 1. Načti konfiguraci a přečti issue celé
 
-Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ sekce
-**Forge** (kterou větev receptů použít a jaké `owner/repo` předat) a
-**Jazyk issues** (v jakém jazyce psát přepsané tělo nebo komentář).
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
+projektu. Potřebuješ podsekce **Forge** (kterou větev receptů použít a jaké
+`owner/repo` předat) a **Jazyk issues** (v jakém jazyce psát přepsané tělo
+nebo komentář).
 
-- **Soubor neexistuje** → nepokračuj a nedomýšlej si hodnoty. Ohlas to podle
-  Formátu výstupu, varianta „Předčasný konec", a nabídni
+- **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
+  hodnoty. Ohlas to podle Formátu výstupu, varianta „Předčasný konec", a nabídni
   `/sagittaras:init-workflow`.
-- **Chybí některá z těch sekcí** → řekni která, stejnou variantou; sám ji
+- **Chybí některá z těch podsekcí** → řekni která, stejnou variantou; sám ji
   za pochodu nedoplňuj.
 
 Otevři `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md`, vyber sloupec podle

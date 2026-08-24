@@ -10,7 +10,8 @@
 > kontrakt kapitoly 2 — akceptační kritéria se ukotvují v kódu, ne v próze citovaného
 > dokumentu, a `review-milestone` neúplnou vlnu proti popisu milestonu nehlásí jako díru.
 > Neukotvuj nové issue podle „Reference — cesta k dokumentu § sekce" v kapitole 2; drž se
-> vize.
+> vize. Kapitola 3 je nahrazená taky — projektový kontrakt už nezakládá bespoke
+> `.claude/workflow.md`, ale pevné sekce uvnitř `CONTRIBUTING.md` (viz `shared/workflow-config.md`).
 
 Cílem je řetěz skillů, který vezme téma („uděláme UI kit"), rozepíše ho na milestone
 s issues a pak ho autonomně naimplementuje — s lidským schválením na dvou místech:

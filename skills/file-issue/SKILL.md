@@ -99,13 +99,15 @@ a skonči. Nepovedený issue někdo ručně zavírá, kdežto neodeslaný návrh
 
 ### 1. Načti projektovou konfiguraci
 
-Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
-z ní sekce **Forge** (kterou větev receptů použít a jaké `owner/repo` každému
-volání předat), **Labely** (co smíš nasadit) a **Jazyk issues**.
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
+projektu. Potřebuješ z ní podsekce **Forge** (kterou větev receptů použít
+a jaké `owner/repo` každému volání předat), **Labely** (co smíš nasadit)
+a **Jazyk issues**.
 
-- **Soubor neexistuje** → nepokračuj a nedomýšlej si hodnoty. Řekni uživateli, že
-  projekt nemá workflow konfiguraci, a nabídni `/sagittaras:init-workflow`.
-- **Chybí sekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji za
+- **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
+  hodnoty. Řekni uživateli, že projekt nemá workflow konfiguraci, a nabídni
+  `/sagittaras:init-workflow`.
+- **Chybí podsekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji za
   pochodu nedoplňuj. Odhadnutý výčet oblastí vyrobí `area:*` label, který v projektu
   neexistuje, a s ním issue, jaké `run-milestone` neumí přiřadit.
 

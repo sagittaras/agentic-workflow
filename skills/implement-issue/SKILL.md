@@ -75,10 +75,11 @@ základní větev hledej i tam.
 
 ### 1. Načti konfiguraci a přečti issue celé
 
-Přečti `.claude/workflow.md` v kořeni projektu. Když soubor chybí,
-**nepokračuj a nedomýšlej si hodnoty** — bez něj neznáš výchozí větev, ověřovací
-příkazy ani forge. Ohlas to a nabídni `/sagittaras:init-workflow`. Když v něm chybí
-sekce, kterou potřebuješ, řekni která a nedoplňuj ji za pochodu.
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu.
+Chybí-li `CONTRIBUTING.md` nebo sekce, **nepokračuj a nedomýšlej si hodnoty**
+— bez ní neznáš výchozí větev, ověřovací příkazy ani forge. Ohlas to a nabídni
+`/sagittaras:init-workflow`. Když v ní chybí podsekce, kterou potřebuješ, řekni
+která a nedoplňuj ji za pochodu.
 
 Než sáhneš na tracker, vezmi volání z tabulky v receptech, ne z hlavy: sloupec podle
 sekce `Forge`, na Gitea si napřed **jedním** voláním `ToolSearch` načti odložené
