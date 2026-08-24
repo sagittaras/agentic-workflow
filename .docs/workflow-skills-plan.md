@@ -6,6 +6,11 @@
 > hned při založení, protože proti čistě lokální větvi nejde otevřít PR.
 > **Inspirace:** `mu-online/webgame` (`.claude/skills/`) — tamní sada je zapečená do jednoho
 > projektu; tenhle plán ji převádí na projektově nezávislý plugin.
+> **Nahrazeno v části:** [`workflow-vision.md`](./workflow-vision.md) § 2.1 a § 2.4 mění
+> kontrakt kapitoly 2 — akceptační kritéria se ukotvují v kódu, ne v próze citovaného
+> dokumentu, a `review-milestone` neúplnou vlnu proti popisu milestonu nehlásí jako díru.
+> Neukotvuj nové issue podle „Reference — cesta k dokumentu § sekce" v kapitole 2; drž se
+> vize.
 
 Cílem je řetěz skillů, který vezme téma („uděláme UI kit"), rozepíše ho na milestone
 s issues a pak ho autonomně naimplementuje — s lidským schválením na dvou místech:

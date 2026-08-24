@@ -191,7 +191,7 @@ přiřazený. Proto se v kroku 6 přiřazení ověřuje z odpovědi forge.
 **Milestone daného názvu nenajdeš** → nezakládej ho a zeptej se. Nový milestone
 zakládá `plan-milestone` spolu s celou sadou issues a jeho popis definuje, co pro
 něj znamená „hotovo"; prázdný milestone založený kvůli jednomu ad hoc issue tuhle
-definici nemá a `close-milestone` ho pak nemá podle čeho zavřít.
+definici nemá a `review-milestone` pak nemá proti čemu posoudit rozsah.
 
 **Poznámka zařazená do milestonu na Zadání sama nepřejde.** `run-milestone`
 ji podle `area:*` labelu dispečuje, ale bez kritérií nemá inženýr proti

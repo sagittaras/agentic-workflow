@@ -141,8 +141,9 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 | Skill | K čemu |
 | --- | --- |
 | `init-workflow` | Jednorázově nastaví projekt pro milestone workflow — forge, větvení, labely, mapu `area:*` → agent, ověřovací příkazy |
-| `plan-milestone` | Rozepíše téma na issues, ukotví akceptační kritéria ve zdrojích pravdy a po potvrzení je založí v trackeru |
-| `review-milestone` | Nezávislé review naplánovaného milestonu — kritéria, graf závislostí, díry a překryvy; report uloží do trackeru |
+| `plan-milestone` | Naplánuje milestone po vlnách — issues zakládá jen pro položky s precedentem v kódu, ostatní nechá v backlogu |
+| `triage-issue` | Povýší jeden issue bez ukotvených kritérií (Poznámku) na Zadání s precedentem nalezeným v kódu |
+| `review-milestone` | Nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, překryvy a rozpory mezi issues; report uloží do trackeru |
 | `run-milestone` | Autonomně provede milestone — dispečuje odblokovaná issues agentům v dávkách a mergeuje je do integrační větve |
 | `implement-issue` | Naimplementuje jedno issue přesně v rozsahu jeho akceptačních kritérií a otevře na něj PR |
 | `verify-issue` | Ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a kritéria opřená o regresní test mutačně otestuje |

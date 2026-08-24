@@ -94,9 +94,9 @@ na projektu.
 | **Větvení** | `run-milestone`, `implement-issue`, `open-pr`, `close-milestone` | odkud se větví, kam se mergeuje, co smí jen člověk |
 | **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat |
 | **Agenti** | `run-milestone` | komu poslat issue a kdo posoudí PR |
-| **Zdroje pravdy** | `plan-milestone`, `review-milestone`, `implement-issue`, `verify-issue`, `write-adr`, `review-adr` | kde se ukotvují a ověřují akceptační kritéria a tvrzení ADR |
+| **Zdroje pravdy** | `plan-milestone`, `implement-issue`, `verify-issue`, `write-adr`, `review-adr`, `review-milestone` (jen dohledá-li ADR citované bez cesty) | kde se ukotvují chráněná rozhodnutí a ověřují tvrzení ADR (akceptační kritéria už ukotvuje kód, ne tahle sekce) |
 | **Ověřovací příkazy** | `verify-issue`, `run-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
-| **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue` | aby milestone nebyl dvojjazyčný |
+| **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | aby milestone nebyl dvojjazyčný |
 
 **Prázdná role recenzenta (`—`) je platný stav**, ne chyba konfigurace. `run-milestone`
 v takovém případě sáhne po fallbacku popsaném ve svém postupu; nesmí to brát jako důvod
