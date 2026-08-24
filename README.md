@@ -169,7 +169,7 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 | `review-rule` | Nezávislé review rule s čistým kontextem — ověří globy proti repozitáři, vrátí verdikt a nálezy, neopravuje |
 | `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
 | `review-agent` | Nezávislé review agenta s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
-| `train-agent` | Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé paměti, co se týká jeho role |
+| `train-agent` | Po vyřešené review/retry smyčce nad issue nechá agenta zapsat si z ní do vlastní trvalé paměti zobecněný poznatek |
 
 **Rozšiřování a údržba pluginu**
 

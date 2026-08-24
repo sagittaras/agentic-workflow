@@ -1,22 +1,29 @@
 ---
 name: train-agent
 description: >-
-  Nechá agenta projektu nastudovat zadaný vstup a zapsat si z něj do vlastní
-  trvalé paměti to, co se týká jeho role. Zápis provádí sám agent spuštěný jako
+  Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé
+  paměti zobecněný poznatek, který se týká jeho role. Kanonický případ je
+  vyřešená review/retry smyčka nad issue — kolo, které našlo problém, i retry,
+  který ho opravil, ne jen finální stav. Zápis provádí sám agent spuštěný jako
   subagent, protože právo do paměti plyne z jeho `memory:` a nikomu jinému
   neplatí; skill vstup načte, určí cílové agenty a ověří, co skutečně vzniklo.
   Paměť přidává i konsoliduje — co vstup vyvrací, mizí.
 when_to_use: >-
-  Použij, když si má agent něco zapamatovat — „nauč qa-engineer tenhle ADR",
-  „ať si tech-lead zapíše nálezy z review", „aktualizuj paměť agentů podle téhle
-  specifikace" — i jako závěrečný krok jiného skillu, který vytvořil dokument
-  nebo poznatek spadající do domény některého agenta. Nepoužívej pro úpravu
-  definice agenta, na to slouží write-agent; pro pravidlo vázané na část
-  repozitáře write-rule; pro projektové instrukce, které se čtou v každé
-  session, write-claude-md; pro sepsání samotného architektonického rozhodnutí
-  write-adr — tenhle skill až rozšiřuje paměť o hotový dokument; ani pro paměť
+  Použij po vyřešené review/retry smyčce nad issue — kolo review našlo
+  problém, retry ho opravil — aby poučení nezůstalo jen v komentáři u PR, ale
+  zobecnilo se do paměti agenta, který review dělal nebo dostal retry; spustí
+  tě tak ten, kdo smyčku řídil, nebo uživatel ručně, řekne-li „ať si tech-lead
+  zapíše poučení z tamtoho review" nebo „natrénuj agenta na retry kole issue
+  #N". I jako závěrečný krok jiného skillu, který vytvořil dokument spadající
+  do domény některého agenta — „ať si agent zapíše závěry z art bible" —
+  s výjimkou architektonického rozhodnutí: ADR se do paměti agenta nezapisuje,
+  log se čte reaktivně on-demand, ne jako standing paměť, a proto ADR mezi
+  vstupy nepatří ani jako obecný dokument. Nepoužívej pro úpravu definice
+  agenta, na to slouží write-agent; pro pravidlo vázané na část repozitáře
+  write-rule; pro projektové instrukce čtené v každé session write-claude-md;
+  pro sepsání samotného architektonického rozhodnutí write-adr; ani pro paměť
   vlastní session, ta má vlastní mechanismus.
-argument-hint: "[jméno agenta] [vstup — cesta, odkaz nebo text]"
+argument-hint: "[jméno agenta] [issue/PR číslo nebo vložený záznam review; jinak cesta, odkaz či text]"
 model: sonnet
 effort: high
 # Zařazení dle matice: vlastní práce je načíst vstup, odvodit cílové agenty,
@@ -41,7 +48,11 @@ allowed-tools:
 # vstupem dál pracuje, takže výhoda mizí; disallowed-tools —
 # allowed-tools je uzavřený výčet, není co zakazovat navíc; paths — vstup
 # přichází v zadání, ne prací nad pracovním adresářem; shell — postup je čtení,
-# dispatch a ověření, ne spouštění příkazů.
+# dispatch a ověření, ne spouštění příkazů. ToolSearch, Bash a mcp__gitea__* —
+# skill záměrně nesahá na tracker sám (krok 1): kanonický vstup je smyčka, na
+# kterou volající (typicky ten, kdo ji řídil) už má vlastní přístup a předává
+# ji hotovou v zadání; duplicitní čtecí cesta by jen riskovala jiný snímek než
+# ten, ze kterého volající usoudil, že smyčka skončila úspěchem.
 ---
 
 # Train Agent
@@ -61,14 +72,26 @@ s tímto skillem má přednost on.
 
 ### 1. Načtení vstupu
 
-Vstupem je cokoli, co jde přečíst — soubor v repozitáři, issue nebo pull request,
-odkaz, výstup předchozího běhu, nebo prostý text v zadání. Rozpoznej, o který
-případ jde, a **vstup si přečti celý**, než začneš cokoli odvozovat.
+Kanonický vstup je **vyřešená review/retry smyčka nad issue**. Skill sám do
+trackeru nesahá — `allowed-tools` na to záměrně nemá nástroj (viz frontmatter) —
+takže záznam dostaneš **v zadání od toho, kdo tě spustil**, buď jako vložený
+text, nebo jako odkaz. Ať dorazí v jakékoli podobě, potřebuješ **celou smyčku**,
+ne jen poslední stav: kolo, které problém našlo, i retry, který ho opravil.
+Jediný finální komentář ukáže výsledek, ne chybu, ze které se má agent poučit —
+chybí-li ti kterákoli půlka, vrať se na volajícího a vyžádej si ji, nedomýšlej.
+
+Vstupem může být i cokoli jiného, co jde přečíst — soubor v repozitáři, odkaz,
+výstup předchozího běhu, nebo prostý text v zadání. **Nikdy ADR** — architektonické
+rozhodnutí se do paměti agenta nezapisuje (viz `when_to_use`), i kdyby ho
+zadání jmenovalo jako vstup. Rozpoznej, o který případ jde, a **vstup si
+přečti celý**, než začneš cokoli odvozovat.
 
 Rozhodni zároveň, **jestli na vstup dosáhne i trénovaný agent**. Cestu v repozitáři
-si otevře sám, ale URL nebo text, který nikde neleží, dostat nemusí — jeho
-`tools` bývají užší než tvoje. V takovém případě mu obsah vlož přímo do zadání
-(krok 3). Agent, který si vstup nemá jak přečíst, si vymyslí, co v něm asi bylo.
+si otevře sám, URL přes `WebFetch`, pokud ho má v `tools`. **Záznam review/retry
+smyčky mu vlož do zadání vždycky** (krok 3) — `mcp__gitea__*` ani `gh` skripty
+trénovaný agent v `tools` typicky nemá, takže dostat se k trackeru sám neumí.
+Totéž udělej s čímkoli, co nikde neleží nebo na co agent nemá čtecí nástroj.
+Agent, který si vstup nemá jak přečíst, si vymyslí, co v něm asi bylo.
 
 **Nejde-li vstup přečíst, ohlas to a skonči.** Trénovat z domněnky je horší než
 netrénovat: špatný záznam v paměti se tváří stejně důvěryhodně jako správný
@@ -79,16 +102,24 @@ zadání pro agenta v kroku 3.
 
 ### 2. Určení cílových agentů
 
-1. **Jméno v zadání platí.** Je-li uvedené, neodvozuj nic dalšího.
-2. **Jinak odvoď z projektu.** Projdi `.claude/agents/*.md` cílového projektu
-   **i `${CLAUDE_PLUGIN_ROOT}/agents/`** a přečti jejich `description` — agenty
-   dodává obojí a v katalogu se potkají. Plugin ukotvi proměnnou, ne relativně:
-   běžíš nad cizím repozitářem, kde by `agents/` mířilo do projektu a agenti
-   pluginu by z odvození tiše vypadli. Cílem je každý agent, do jehož domény
-   vstup spadá.
-3. **Víc agentů je normální stav**, ne chyba — vstup, který mění průřezovou
+1. **Jméno v zadání platí.** Je-li uvedené, neodvozuj nic dalšího. U kanonického
+   vstupu (review/retry smyčka) je tohle běžná cesta: volající zná agenta, který
+   review dělal, nebo agenta, který dostal retry, a jméno rovnou předá.
+2. **U review/retry smyčky bez jména v zadání** vezmi cíl **ze záznamu samotného**
+   — agenta, jehož review nález vzneslo, a agenta, který retry implementoval —
+   ne podle domény kódu, kterého se PR týkalo. Poučení z konkrétní chyby patří
+   tomu, kdo ji udělal nebo kdo ji hledal, ne celé oblasti kolem ní.
+3. **Jinak (mimo kanonický vstup) odvoď z projektu.** Projdi `.claude/agents/*.md`
+   cílového projektu **i `${CLAUDE_PLUGIN_ROOT}/agents/`** a přečti jejich
+   `description` — agenty dodává obojí a v katalogu se potkají. Plugin ukotvi
+   proměnnou, ne relativně: běžíš nad cizím repozitářem, kde by `agents/`
+   mířilo do projektu a agenti pluginu by z odvození tiše vypadli. Cílem je
+   každý agent, do jehož domény vstup spadá.
+4. **Víc agentů je normální stav**, ne chyba — vstup, který mění průřezovou
    konvenci, se týká všech, kdo podle ní pracují. Nemačkej to na jednoho.
-4. **Žádný agent** → ohlas, že vstup nespadá do domény nikoho, a skonči.
+   Nepleť si to s bodem 2: poučení z jedné konkrétní chyby jednoho agenta se
+   na celou oblast nerozesílá.
+5. **Žádný agent** → ohlas, že vstup nespadá do domény nikoho, a skonči.
    Nedispatchuj agenta „aspoň nějakého“; paměť mimo doménu je jen šum, který
    se načítá při každém jeho spuštění.
 
@@ -200,12 +231,19 @@ tvé role.
 Vstup: <cesta, odkaz, nebo celý obsah, pokud na něj trénovaný agent nedosáhne>
 
 Postupuj takto:
-1. Přečti vstup celý.
+1. Přečti vstup celý. Je-li to review/retry smyčka, najdi v ní **obojí**: co
+   review nalezlo (konkrétní chyba) a jak se to opravilo.
 2. Projdi svou stávající paměť ve složce <cesta ke složce paměti> — MEMORY.md
    i tematické soubory, kterých se téma dotýká. Neexistuje-li složka nebo
    MEMORY.md, je tohle tvůj první trénink: založ index podle konvencí.
-3. Zapiš si jen to, co se týká tvé role a co je skutečně rozhodnuté. Ne
-   převyprávění vstupu, ne otevřené otázky, ne to, co zjistíš přečtením kódu.
+3. **Zobecni, nepřepisuj.** Z konkrétního nálezu odvoď pravidlo platné pro
+   příště: co se pokazilo → podle čeho to poznat dřív → co udělat místo toho.
+   Zapiš to pravidlo, ne převyprávění kola review; doklad původu (např. „PR
+   #74, kolo 3") u něj nech, aby šlo dohledat, odkud pravidlo pochází. Zapiš
+   si jen to, co se týká tvé role — ne otevřené otázky, ne to, co zjistíš
+   přečtením kódu. Pravidlo nemusí být rozhodnutí (`decision`): stejně tak
+   může jít o návyk, který se v projektu osvědčil (`convention`), nebo past,
+   které se má agent příště vyhnout (`pitfall`).
 4. Existující záznam raději zpřesni než zdvojuj; co tenhle vstup vyvrací,
    oprav nebo smaž včetně řádku v indexu. Nemáš-li čím soubor smazat, přepiš
    ho na platný a odeber aspoň jeho řádek z indexu.

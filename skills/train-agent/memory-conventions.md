@@ -79,7 +79,7 @@ Typy záznamů:
 
 | `type` | Co nese |
 | --- | --- |
-| `decision` | Co bylo rozhodnuto a platí — typicky z ADR nebo specifikace |
+| `decision` | Co bylo rozhodnuto a platí — typicky z uzavřeného review nebo specifikace |
 | `convention` | Jak se to na tomhle projektu dělá, i když to nikde není rozhodnuté |
 | `pitfall` | Co se snadno pokazí, a jak to poznat dřív než po havárii |
 | `reference` | Kde co leží — cesty, nástroje, odkazy |
