@@ -4,11 +4,13 @@ description: >-
   Autonomně provede naplánovaný milestone: sestaví graf závislostí z issues,
   ověří v trackeru, že nad plánem proběhlo review, založí integrační větev
   a v dávkách dispečuje odblokovaná issues paralelním agentům podle labelu
-  `area:*`. Každé PR nechá zrevidovat na kvalitu kódu i na akceptační kritéria,
-  protáhne integrační bránou a mergne do integrační větve; na konci předloží
-  jedno PR do výchozí větve, a obsahoval-li prompt, kterým byl spuštěn,
-  výslovný souhlas k mergi, nechá ho i rovnou mergnout. Sám neimplementuje
-  ani nerecenzuje.
+  `area:*`. Přibude-li do milestonu za běhu další vlna z plan-milestone,
+  zaregistruje ji a pokračuje. Každé PR nechá zrevidovat dvěma přísně
+  ohraničenými rolemi — akceptační kritéria bez čehokoli navíc, kvalita kódu
+  podle rules dané cesty — protáhne integrační bránou a mergne do integrační
+  větve; na konci předloží jedno PR do výchozí větve, a obsahoval-li prompt,
+  kterým byl spuštěn, výslovný souhlas k mergi, nechá ho i rovnou mergnout.
+  Sám neimplementuje ani nerecenzuje.
 when_to_use: >-
   Použij, když je milestone naplánovaný a zrevidovaný a má se začít
   implementovat — „spusť milestone", „proveď ten milestone", „nech to
@@ -28,6 +30,11 @@ effort: xhigh
 # je právě to delegování: udržet graf závislostí, poznat selhaný dispatch od
 # selhané implementace a nemergnout nic, co neprošlo. Chyba v tomhle rozhodování
 # stojí celý milestone, ne jedno kolo.
+# Krok 5 (mandát rolí A/B — role B čte rules automaticky vložené do kontextu
+# podle cesty čtených souborů) staví na principech 1.4/2.5, krok 9 (vlnový
+# růst milestonu) na principu 2.4 interního `.docs/workflow-vision.md`
+# pluginu (existuje jen v tomhle repozitáři, proto se v textu pro cizí
+# projekt necituje).
 user-invocable: true
 disable-model-invocation: false
 allowed-tools:
@@ -94,7 +101,9 @@ Závazné kontrakty (při rozporu mají přednost před tímto textem):
 ## Postup
 
 Kroky 1, 2 a 10 běží jednou. Kroky 3 až 9 tvoří smyčku, která se opakuje, dokud nejsou
-všechna issues milestonu zavřená nebo eskalovaná. Krok 11 je referenční — neběží
+všechna issues milestonu zavřená nebo eskalovaná — a „všechna issues" se v kroku 9
+před každým dalším kolem znovu ověřuje proti trackeru, ne jen proti grafu z kroku 1:
+milestone může za běhu přibrat další vlnu. Krok 11 je referenční — neběží
 v pořadí, ale platí po celou dobu.
 
 ### 1. Před startem
@@ -138,11 +147,16 @@ nebo se rozjede ve špatném pořadí.
 
 1. Vypiš PR se stavem `all` a **bez filtru na milestone**. Filtr by nepomohl: milestone
    nese jen integrační PR, protože issue PR mu ho nikdo nepřiřazuje. Nech si ty, jejichž
-   base je integrační větev. I tenhle výpis stránkuje po 30 — u PR navíc nemáš proti čemu
-   počet zkontrolovat, takže se nespoléhej na první stránku a dober zbytek.
-2. Na každý kandidát zavolej „Přečti PR". Bez toho se nedostaneš k tělu — výpis ho
-   nevrací a `Closes #N` je jediné, podle čeho jde PR spárovat s issue. **Ne podle názvu
-   větve**: název je konvence, `Closes` je kontrakt.
+   base **začíná `milestone/`** — přesný slug určí až krok 2, tady stačí prefix; PR
+   patřící jinému milestonu odpadne v dalším bodu, protože jeho `Closes #N` neodpovídá
+   žádnému issue z tohohle milestonu. I tenhle výpis stránkuje po 30 — u PR navíc nemáš
+   proti čemu počet zkontrolovat, takže se nespoléhej na první stránku a dober zbytek.
+2. Spáruj přes strukturované pole, ne přes text: GitHub vrací u PR `closingIssuesReferences`
+   a u issue `closedByPullRequestsReferences`, recepty mají řádek „Najdi PR patřící
+   k issue" pro obojí. Nedá-li forge strukturované pole, teprve pak zavolej „Přečti PR"
+   a vezmi `Closes #N` z těla. **Nikdy podle názvu větve**: název je konvence, vazba
+   forge nebo `Closes` je kontrakt. Nepáruje-li se kandidát s žádným issue z téhle sady,
+   zahoď ho — patří jinému milestonu, i když sdílí prefix větve.
 
 Každé otevřené issue pak zařaď do jednoho ze tří stavů:
 
@@ -286,28 +300,69 @@ které se ještě ani nezačalo řešit.
 ### 5. Review PR
 
 Do tohohle kroku vstupují jak PR ověřená v kroku 4, tak PR, která už byla otevřená při
-startu (krok 1). Každé nech posoudit **souběžně ze dvou stran**: kvalita kódu a soulad
-s akceptačními kritérii. Recenzenty ber ze sekce `Agenti`:
+startu (krok 1). Každé nech posoudit **souběžně dvěma přísně ohraničenými rolemi** —
+role A (akceptační kritéria) a role B (kvalita kódu). Obě mají **stejně přísný mandát**:
+nic nad rámec toho, co jim šablona v Formátu výstupu předepisuje — žádné poznámky
+navíc, žádné „když už tu jsem". **Prompt sestav doslova podle šablon** ve Formátu
+výstupu — roli A podle „Zadání pro roli A", roli B podle „Zadání pro roli B"; vlastní
+formulace mandát rozředí. Recenzenty ber ze sekce `Agenti`:
 
 - **Je-li role obsazená** — dispečuj nástrojem `Agent` s `isolation: "worktree"`
   a `run_in_background: true`; recenzent si musí checkoutnout PR větev, aniž by sáhl na
-  tvůj pracovní strom. Agentovi pro akceptační kritéria řekni, ať postupuje skillem
+  tvůj pracovní strom. Agentovi pro roli A řekni, ať postupuje skillem
   `sagittaras:verify-issue`; postup ověřování je týž bez ohledu na to, kdo ho vede. Nemá-li
   ten agent ve svých `tools` nástroj `Skill` (zjišťuje se stejně jako v kroku 3), na skill
-  nedosáhne — pak pro kritéria použij fallback níž a agenta nech jen na kvalitu kódu.
-- **Je-li v konfiguraci `—`** — sáhni po fallbacku: kritéria ověř skillem
-  `sagittaras:verify-issue` (nástroj `Skill`; ten skill si forkuje kontext sám), kvalitu
-  kódu nech posoudit subagentem `general-purpose`. Prázdná role je platný stav konfigurace,
-  ne důvod běh odmítnout. Generického subagenta pusť na pozadí **dřív**, než spustíš
-  forkovaný skill — ten běží synchronně, takže obráceným pořadím bys obě posouzení
-  serializoval.
+  nedosáhne — pak roli A **vůbec nedispečuj** a ověř ji fallbackem níž (skillem
+  `sagittaras:verify-issue`); agenta uvedeného u role **B** dispečuj beze změny,
+  agenta uvedeného u role **A** v tomhle případě vůbec nespouštěj.
+- **Je-li v konfiguraci `—`** — sáhni po fallbacku: roli A ověř skillem
+  `sagittaras:verify-issue` (nástroj `Skill`; ten skill si forkuje kontext sám), roli B
+  nech posoudit subagentem `general-purpose` (`isolation: "worktree"` a
+  `run_in_background: true` beze změny — stejný důvod jako výš, recenzent nesmí sáhnout
+  na tvůj pracovní strom). Prázdná role je platný stav konfigurace, ne důvod běh
+  odmítnout. Generického subagenta pusť na pozadí **dřív**, než spustíš forkovaný skill
+  — ten běží synchronně, takže obráceným pořadím bys obě posouzení serializoval.
+
+**Role A (akceptační kritéria) nesmí hlásit nic nad shodu nebo neshodu s kritérii
+issue** — žádné architektonické poznámky, žádné styling připomínky. To je mandát
+`verify-issue` samotného; dispatch mimo něj ho jen zopakuje v zadání.
+
+**Role B (kvalita kódu) čte jako zdroj principů pravidla, která se jí sama vloží do
+kontextu podle cesty měněných souborů** — ne obecný univerzální seznam z hlavy.
+Nezmiňuj jí konkrétní mechanismus ani umístění: agent, kterému se řekne, kde pravidla
+hledat, si je jde načíst ručně a udělá přesně ten univerzální průchod, který má mandát
+zakázat — nechá to na automatickém vstupu do kontextu. Nálezy píše jako konkrétní
+adresný pokyn („oprav tenhle řádek", „oprav tenhle blok"), bez rozepisování nad rámec
+toho, co pravidlo v kontextu skutečně říká.
+
+**Report role B musí nést oba řádky, `Přečtené soubory:` i `Pravidla v kontextu:`.**
+Pravidlo se do kontextu vloží, až když se přečte soubor, na jehož cestu je navázané
+— dokud recenzent nic nepřečetl, nemůže mít v kontextu nic, a `Pravidla v kontextu:
+žádné` bez vyplněného `Přečtené soubory:` neznamená „projekt nemá pravidla", ale
+„recenzent se na kód nepodíval". Chybí-li kterýkoli z těch dvou řádků, nebo je
+`Přečtené soubory:` prázdné, platí to jako **selhaný dispatch** (krok 4), ne jako
+blocking nález. Teprve report, který jmenuje přečtené soubory **a** `Pravidla
+v kontextu: žádné`, znamená naprázdno proběhlé review — pro dotčené cesty žádné
+pravidlo není. `Blokuje merge: ne` od role B v tomhle stavu platí; ohlas to
+v hlášení na předělech stejně jako `check=skipped` v kroku 7 (posouzeno jen to, co
+bylo v kontextu, ne úplnost) a doporuč `/sagittaras:write-rule`.
 
 **V promptu uveď číslo PR explicitně** — recenzenta nenech dohadovat PR z názvu větve.
 Recenzent, který si PR hledá sám, si ho najde jiné, nebo si o něm udělá představu z větve,
 která se mezitím posunula.
 
-**Rozhoduje řádek `Blokuje merge: ano/ne`, ne próza kolem něj.** Report bez toho řádku je
-**selhaný dispatch** (krok 4), ne blokující nález — přepošli jednou znovu.
+**Rozhoduje řádek `Blokuje merge: ano/ne`, ne próza kolem něj.** Report kteréhokoli
+recenzenta bez tohohle řádku je **selhaný dispatch** (krok 4), ne blokující nález —
+přepošli jednou znovu. U role A navíc report bez řádku `**Verdikt:**` (přesně tvar,
+kterým `verify-issue` report začíná) platí stejně jako chybějící `Blokuje merge:`.
+
+**Vrátí-li role A `**Verdikt:** Blocked`**, nejde o nález na implementaci —
+`verify-issue` ho vydává, když ověření jako celek nešlo provést (chybějící
+konfigurace, oblast bez ověřovacího příkazu, nedohledaný protějšek PR, nedostupné
+prostředí), ne když kritérium neprošlo. `Blokuje merge` u něj sice bude `ano`, ale
+**neposílej to do retry** (krok 6) — retry rozpočet je pro kvalitu implementace, ne
+pro výpadek infrastruktury. Eskaluj rovnou podle kroku 11 s tím, co `verify-issue`
+označil jako chybějící.
 
 Při neshodě mezi recenzenty **vyhrává přísnější** a neshodu pojmenuj v hlášení: dva
 protichůdné verdikty nad jedním PR jsou informace o kvalitě zadání, ne šum k zamlčení.
@@ -319,6 +374,15 @@ Do zadání dej **konkrétní nálezy obou recenzentů doslova**, ne jejich shrn
 mutační ověření podle šablony ve Formátu výstupu: dočasně vrátit chybu, potvrdit, že test
 spadne, opravit, potvrdit, že projde — a **výslovně to uvést v reportu**. Bez toho se další
 kolo review propálí na objevování testu, který neselže na ničem.
+
+**Výjimka: konflikt z integrační brány (krok 7, kód 5).** Nejde o nález na kvalitu
+kódu ani na kritéria, mutační ověření tu nemá co ověřovat — místo šablony pro retry
+zadej: vmerguj aktuální špičku integrační větve, vyřeš konflikty ve jmenovaných
+souborech, nezakládej nové PR. Po opravě jdi rovnou zpátky do kroku 7, ne do review
+(krok 5) — recenzenti už PR posoudili, brána jen ověřovala slučitelnost. **I tenhle
+retry je nejvýš jeden pokus** — nečerpá sice rozpočet vyhrazený kvalitě implementace
+(krok 8), ale bez vlastního stropu by se opakovaný konflikt mohl vracet do kroku 7
+donekonečna. Přetrvá-li kód 5 i podruhé, eskaluj podle kroku 11.
 
 Po opravě spusť review znovu (krok 5). Vyjde-li podruhé `ano`, **neopakuj**: PR nech
 otevřené, eskaluj a pokračuj v issues, která na něm nezávisí. Issue nezavírej — zavřené
@@ -335,11 +399,17 @@ když obě review dopadla čistě: review běželo nad větví, jak se odštěpi
 zelená PR se umí rozbít sémanticky — přejmenovaný parametr, změněný kontrakt, dvakrát
 zaregistrovaná služba — **bez jediného textového konfliktu**.
 
-- `merge=conflict` (kód 5) i `check=fail` (kód 6) řeš **jako selhání review**: pošli je do
-  retry smyčky (krok 6) s obsahem sekce `[output]` jako nálezem. Vyčerpaný retry rozpočet
-  → eskalace.
-- `check=skipped` znamená, že pro oblast v konfiguraci není příkaz. Ohlas to — brána
-  v takovém případě ověřila jen slučitelnost, ne funkčnost.
+- `merge=conflict` (kód 5) i `check=fail` (kód 6) pošli do retry smyčky (krok 6), ale
+  **ne se stejným rozpočtem**. Nález se bere z jiné sekce podle kódu —
+  `integration-gate.sh` je nevypisuje do stejného místa: u kódu **5** je to `conflicts=`
+  a obsah sekcí `[conflicts]`/`[merge_output]` (textový konflikt, žádný ověřovací
+  příkaz neběžel) a **retry rozpočet issue se tím nečerpá** — je to stav integrace,
+  stejné pravidlo jako u konfliktu proti posunuté špičce v kroku 8; u kódu **6** je to
+  sekce `[output]` (příkaz proběhl a selhal) a **retry rozpočet se čerpá** jako
+  u běžného nálezu review. Vyčerpaný rozpočet u kódu 6 → eskalace.
+- `check=skipped` **při kódu 0** znamená, že pro oblast v konfiguraci není příkaz. Ohlas
+  to — brána v takovém případě ověřila jen slučitelnost, ne funkčnost. U kódu 5 je
+  `skipped` jen vedlejší důsledek abortovaného merge a samostatně se nehlásí.
 - Kód **2** (chybný argument nebo větev, která neexistuje lokálně ani na remotu) a kód
   **3** (nedostupný remote) **nejsou selhání review** — je to výpadek infrastruktury,
   retry rozpočet issue nečerpá; eskaluj podle kroku 11. Propálit retry na nedostupném
@@ -348,10 +418,23 @@ zaregistrovaná služba — **bez jediného textového konfliktu**.
 
 ### 8. Merge do integrační větve
 
-Mergni strategií ze sekce `Větvení` (pro integrační větev je to squash), smaž zdrojovou
-větev a ověř, že se issue **skutečně zavřelo**. `Closes #N` na obou forge zabírá až při
-merge do **výchozí** větve, takže tady se issue samo nezavře — zavři ho explicitně.
-Otevřené issue po merge by smyčku v kroku 3 držela v přesvědčení, že práce ještě neproběhla.
+Mergni strategií ze sekce `Větvení` (pro integrační větev je to squash). **Neprošel-li
+merge** (konflikt, odmítnutí forge, nenulový kód volání) — **issue nezavírej a větev
+nemaž.** Rozliš dál:
+
+- **Konflikt proti aktuální špičce integrační větve** — brána v kroku 7 ověřovala
+  slučitelnost v okamžiku svého běhu; u dávky víc PR mergovaných po sobě je špička
+  u druhého a dalšího PR jinde. Pošli PR zpátky do kroku 7 nad aktuální špičkou; projde-li
+  brána znovu čistě, merge opakuj. Retry rozpočet issue tím nečerpáš — je to stav
+  integrace, ne kvalita implementace.
+- **Odmítnutí forge** (ochrana větve, povinný check, zastaralý stav PR) — eskaluj podle
+  kroku 11. Neobcházej ochranu ani nezkoušej force.
+
+Prošel-li merge, smaž zdrojovou větev a ověř, že se issue **skutečně zavřelo**.
+`Closes #N` na obou forge zabírá až při merge do **výchozí** větve, takže tady se issue
+samo nezavře — zavři ho explicitně. Otevřené issue po merge by smyčku v kroku 3 držela
+v přesvědčení, že práce ještě neproběhla; zavřené issue nad prací, která do integrační
+větve nedorazila, by naopak odblokovalo závislé issues nad základem, který neexistuje.
 
 **Tenhle merge je autonomní** — uživatel ho autorizoval sekcí `Větvení` v konfiguraci
 a ptát se na každé PR by z autonomního běhu udělalo ruční klikání.
@@ -371,11 +454,47 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/sync-branch.sh" <integrační-větev>
 ```
 
 `result=conflict` (kód 5) **neřeš sám** — skript merge abortuje, takže větev zůstává
-použitelná, a rozhodnutí, čí verze platí, patří uživateli. Eskaluj a čekej. Jinak se vrať
-na krok 3 s další dávkou.
+použitelná, a rozhodnutí, čí verze platí, patří uživateli. Eskaluj a čekej. Kódy
+`2`–`4` (viz `git-scripts.md`) jsou výpadek volání nebo prostředí, ne konflikt —
+eskaluj podle kroku 11, retry rozpočet issue tím nečerpáš.
 
-Zbývají-li otevřená issues, ale žádné z nich není odblokované a nic neběží, je to
-**deadlock** — eskaluj s výpisem toho, co na čem čeká.
+**Před návratem na krok 3 zkontroluj nové issues.** Milestone může za běhu přibrat
+další vlnu — `plan-milestone` do něj může přidat další Zadání, zatímco `run-milestone`
+už pracuje. Vypiš issues milestonu znovu (stejný recept jako v kroku 1, „Issues").
+Nesedí-li počet proti `open_issues` + `closed_issues`, nejde rovnou o důvod k eskalaci
+jako v kroku 1 — `plan-milestone` může zakládat issues sekvenčně, souběžně s tímhle
+během. **Běží-li ještě nějaký dispatch**, počkej na jeho notifikaci a přečti znovu
+tehdy; **neběží-li nic**, přečti znovu hned. Teprve druhá shodná neshoda je důvod
+eskalovat.
+
+Porovnej výpis se seznamem, který znáš dosud. Pro každé nové issue:
+
+1. **Ověř, že je to Zadání, ne Poznámka** — kritéria vyplněná a Reference neprázdná
+   (volnější filtr než `triage-issue` krok 2, který navíc ověřuje, že Reference cituje
+   kód, ne dokument — tuhle přesnost hlídá až brána review níž, tady jde jen o to,
+   oddělit Poznámku od Zadání). Nesplňuje-li to, **nedispečuj ho** a eskaluj podle
+   kroku 11 s odkazem na `/sagittaras:triage-issue` — Poznámka bez kritérií nemá co
+   implementovat.
+2. Zařaď ho do grafu závislostí stejně jako v kroku 1 — přečti `Závisí na`, zkontroluj
+   cykly a odkazy mimo milestone — a rozřaď podle rozpracovanosti (nová issues budou
+   typicky „bez PR").
+
+**Přibylo-li aspoň jedno nové Zadání, ověř znovu důkaz review** (krok 1, „Důkaz
+review") — přečti nejnovější komentář `## Review milestonu <název>` a porovnej jeho
+datum s datem založení nových issues. Je starší, nebo komentář vůbec není → zachovej
+se jako u chybějícího komentáře v kroku 1: nabídni jako první možnost
+`/sagittaras:review-milestone`, jako druhou pokračovat bez review. Je novější, přečti
+v něm i řádek `**Verdikt:**` a rozhodni **stejnými větvemi jako v kroku 1** — `Sound`
+pokračuje, `Needs attention` se ptá, `Not ready` novou vlnu nespouští. Novější datum
+samo o sobě nestačí: nová issues by jinak mohla vlnu rozjet i nad plánem, jehož
+poslední review skončilo `Not ready`.
+
+- **Přibylo nové Zadání, nebo něco zbývá odblokované či rozpracované** → vrať se na
+  krok 3 s doplněnou dávkou.
+- **Nepřibylo žádné nové Zadání (nová Poznámka eskalovaná v bodu 1 se nepočítá)
+  a všechna issues jsou zavřená nebo eskalovaná** → smyčka končí, pokračuj krokem 10.
+- **Nepřibylo žádné nové Zadání, něco zbývá otevřené, ale nic není odblokované
+  a nic neběží** → **deadlock** — eskaluj s výpisem toho, co na čem čeká.
 
 ### 10. Závěr
 
@@ -383,9 +502,13 @@ Zbývají-li otevřená issues, ale žádné z nich není odblokované a nic neb
 2. Sestav název a tělo integračního PR: název jako Conventional Commit shrnující celý
    milestone, tělo podle šablony ve Formátu výstupu.
 3. **PR nech založit skillem `sagittaras:open-pr`** (nástroj `Skill`) — předej mu
-   základní větev (výchozí větev z konfigurace), milestone, hotový název i tělo a —
-   obsahoval-li prompt, kterým byl aktuální `run-milestone` spuštěn, výslovný souhlas
-   k mergi — i ten, doslova. Bez týhle předávky `open-pr` souhlas nemá odkud vzít, protože
+   základní větev (výchozí větev z konfigurace), milestone, hotový název i tělo, **a
+   výslovně řekni, že jsou hotové a nemá je znovu odvozovat** — jeho vlastní krok 5 by
+   jinak název i tělo odvodil ze zapsaných commitů podle svojí šablony, protože
+   integrační PR žádné issue přímo neuzavírá. Bez tohohle pokynu se výčet zahrnutých
+   a eskalovaných issues z tvé šablony ztratí. Obsahoval-li prompt, kterým byl aktuální
+   `run-milestone` spuštěn, výslovný souhlas k mergi — i ten, doslova. Bez týhle předávky
+   `open-pr` souhlas nemá odkud vzít, protože
    neviděl prompt, kterým byl spuštěn `run-milestone`. Mechaniku PR nepiš podruhé:
    `open-pr` řeší i push nepushnuté větve, kontrolu, že z téhle větve PR ještě neexistuje,
    předání těla souborem a **druhé volání, kterým se přiřazuje milestone** — při zakládání
@@ -395,8 +518,15 @@ Zbývají-li otevřená issues, ale žádné z nich není odblokované a nic neb
    uživateli a **skonči** — merge do výchozí větve patří jemu. Provedl-li `open-pr` merge
    (souhlas byl a merge prošel), ohlas hotovo bez dalšího čekání — na mergnutou výchozí
    větev už není na co čekat.
-5. Doporuč `/sagittaras:close-milestone` — ale **až po merge** (vlastním, nebo tím, které
-   provedl `open-pr`), ne dřív.
+5. **Zeptej se, jestli přijde další vlna**, dřív než doporučíš `/sagittaras:close-milestone`
+   — vlnové plánování dovoluje milestone legitimně rozšířit i po dnešním merge. Nepřijde-li,
+   doporuč `close-milestone`, ale **až po merge** (vlastním, nebo tím, které provedl
+   `open-pr`), ne dřív. Přijde-li, řekni, že další vlna se rozjede novým během
+   `run-milestone` nad týmž milestonem — jestli si příští běh integrační větev
+   z kroku 2 najde (`created=false`), nebo založí novou (`created=true`), záleží na
+   tom, jestli dnešní PR do výchozí větve zůstalo otevřené (větev žije dál), nebo
+   bylo zmergované a smazané (`open-pr` krok 8: `pr-merge.sh --delete-branch`) —
+   v obou případech to `milestone-branch.sh` rozpozná samo, nic se tím nerozbije.
 
 ### 11. Eskalace
 
@@ -409,13 +539,21 @@ Eskaluj v těchto konkrétních situacích:
 - `area:*` label na issue chybí, nebo nástroj `Agent` dispatch odmítl — chybějící řádek
   v mapě agentů mezi tyhle důvody nepatří, na to je fallback v kroku 3;
 - graf závislostí obsahuje cyklus, nebo `Závisí na` odkazuje mimo milestone;
-- počet načtených issues nesedí s počty na milestonu;
+- počet načtených issues nesedí s počty na milestonu (v kroku 9 až při druhé shodné
+  neshodě, jinak počkej na notifikaci a přečti znovu);
+- nové issue přidané do milestonu za běhu je Poznámka, ne Zadání — chybí kritéria
+  nebo `Reference` (krok 9);
 - review report v trackeru chybí, nebo má verdikt `Needs attention` (v obou případech
-  se ptáš) či `Not ready` (běh nespouštíš);
+  se ptáš) či `Not ready` (běh nespouštíš); totéž platí, objeví-li se nová vlna Zadání
+  bez vlastního review report novějšího, než jsou tahle issues (krok 9);
 - dispatch ohlásil věcnou překážku, nebo selhal **dvakrát stejným způsobem** (krok 4);
+- role A vrátila přes `verify-issue` verdikt `Blocked` (krok 5) — výpadek infrastruktury,
+  ne nález na implementaci, retry rozpočet se nečerpá;
 - PR má i po retry `Blokuje merge: ano`, nebo po retry znovu neprojde integrační branou;
-- `milestone-branch.sh` nebo `sync-branch.sh` skončily konfliktem, nečistým stromem či
-  nedostupným remotem;
+- merge PR do integrační větve odmítlo forge (ochrana větve, povinný check, zastaralý
+  stav PR) — issue zůstává otevřené, větev nesmazaná;
+- `milestone-branch.sh` nebo `sync-branch.sh` skončily konfliktem, nečistým stromem,
+  chybným argumentem či neexistující větví (kód 2), nebo nedostupným remotem;
 - zbývají otevřená issues, ale žádné není odblokované.
 
 Eskalace **shrne stav** — co je zmergované, co běží, co blokuje — a položí **jednu
@@ -441,18 +579,38 @@ Nevzniklo-li PR, napiš `PR: žádné` a věcný důvod. Bez jednoho z těch dvo
 řádků nehlas hotovo.
 ```
 
-### Zadání pro recenzenta
+### Zadání pro roli A — akceptační kritéria
 
 ```
 Posuď pull request #<číslo PR> v repozitáři <owner/repo>
 (issue #<číslo issue>, větev <větev>).
 
-Tvoje role: <kvalita kódu | soulad s akceptačními kritérii issue>.
-<U role „kritéria": Postupuj skillem sagittaras:verify-issue.>
-Neopravuj nic — vracíš verdikt.
+Tvoje role: soulad s akceptačními kritérii issue. Postupuj skillem
+sagittaras:verify-issue — jeho vlastní Formát výstupu platí beze změny
+(řádek **Verdikt:** a report zakončený řádkem Blokuje merge: ano|ne). Tvůj
+mandát je přísně ohraničený: posuzuješ jen shodu nebo neshodu s kritérii
+issue — žádné architektonické poznámky, žádné styling připomínky, žádné
+„když už tu jsem". Neopravuj nic — vracíš verdikt.
+```
 
-Nálezy vypiš jednotlivě, každý s cestou k souboru a s tím, co konkrétně je
-špatně. Report ukonči řádkem přesně v tomhle tvaru:
+### Zadání pro roli B — kvalita kódu
+
+```
+Posuď pull request #<číslo PR> v repozitáři <owner/repo>
+(issue #<číslo issue>, větev <větev>, základní větev <integrační větev>).
+
+Fetchni a vycheckoutuj větev <větev> ve svém worktree. Zjisti soubory, které
+PR mění: git diff --name-only origin/<integrační větev>...<větev>. Přečti
+tyhle soubory — pravidla, podle kterých je posoudíš, se ti do kontextu
+vloží samy podle jejich cesty. Sleduj je jako zdroj principů, ne univerzální
+seznam z hlavy. Neopravuj nic — vracíš verdikt.
+
+Nálezy piš jako konkrétní adresný pokyn („oprav tenhle řádek", „oprav
+tenhle blok") s cestou k souboru, bez rozepisování nad rámec toho, co
+pravidlo v kontextu skutečně říká. Report ukonči třemi řádky přesně
+v tomhle tvaru:
+Přečtené soubory: <cesty, čárkou oddělené>
+Pravidla v kontextu: <cesty, čárkou oddělené | žádné>
 Blokuje merge: ano|ne
 ```
 
@@ -492,6 +650,7 @@ Krátce, jen na skutečných předělech — ne komentář ke každému volání
 ```
 Dávka <n>: dispečováno #A, #B, #C.
 Dávka <n>: zmergováno #A, #B; #C eskalováno — <důvod>.
+Dávka <n>: #<PR> ověřeno jen částečně — <chybějící pravidla | přeskočený ověřovací příkaz>.
 Eskalace: <co se stalo, co to blokuje> — <konkrétní otázka>.
 ```
 
