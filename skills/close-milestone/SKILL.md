@@ -81,13 +81,15 @@ postupem platí ony.
 
 ### 1. Načti konfiguraci a urči milestone
 
-Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
-sekci **Forge** (kterou větev receptů použít, `owner/repo`) a **Větvení**
-(výchozí větev a tvar integrační větve `milestone/<slug>`).
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
+projektu. Potřebuješ podsekci **Forge** (kterou větev receptů použít,
+`owner/repo`) a **Větvení** (výchozí větev a tvar integrační větve
+`milestone/<slug>`).
 
-- **Soubor neexistuje** → nepokračuj a nedomýšlej si hodnoty. Řekni uživateli,
-  že projekt nemá workflow konfiguraci, a nabídni `/sagittaras:init-workflow`.
-- **Chybí sekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
+- **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
+  hodnoty. Řekni uživateli, že projekt nemá workflow konfiguraci, a nabídni
+  `/sagittaras:init-workflow`.
+- **Chybí podsekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
   za pochodu nedoplňuj.
 
 Pak otevři `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` a **volání neodvozuj

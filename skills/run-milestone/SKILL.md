@@ -108,10 +108,13 @@ v pořadí, ale platí po celou dobu.
 
 ### 1. Před startem
 
-**Konfigurace.** Načti `.claude/workflow.md` v cílovém projektu. Když
-neexistuje, **nepokračuj a nedomýšlej si hodnoty** — řekni to a odkaž na
-`/sagittaras:init-workflow`. Potřebuješ z ní sekce `Forge`, `Větvení`, `Agenti`
-a `Ověřovací příkazy`; chybí-li některá, řekni která a skonči.
+**Konfigurace.** Načti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md`
+v cílovém projektu. Chybí-li `CONTRIBUTING.md` nebo sekce, **nepokračuj
+a nedomýšlej si hodnoty** — řekni to a odkaž na `/sagittaras:init-workflow`.
+Potřebuješ z ní podsekce `Forge`, `Větvení` a `Ověřovací příkazy`; chybí-li
+některá, řekni která a skonči. **Podsekce `Agenti` je nepovinná** — chybí-li
+celá, není to důvod skončit: znamená to, že projekt nemá specializované
+agenty, a krok 3 i 5 na to mají fallback.
 
 **Přístup k forge.** Podle sekce `Forge` si otevři `forge-recipes.md` a připrav si
 větev, kterou pojedeš:
@@ -256,11 +259,13 @@ a v `agents/` pluginů. **Nenajdeš-li ji, ber, že `Skill` nemá**; chybí-li p
 ne limit konfigurace, a poslat práci náhodnému specialistovi se pozná až u review, kdy
 je hotová.
 
-**Chybí-li pro oblast issue řádek v mapě `Agenti`, nebo je hodnota `—`, eskalace to
-není** — sáhni po stejném fallbacku jako u recenzentů v kroku 5: dispečuj nástrojem
-`Agent` s `subagent_type: "general-purpose"` (`isolation` a `run_in_background` beze
-změny) a do zadání ulož, ať agent postupuje skillem `sagittaras:implement-issue`.
-Prázdná nebo chybějící role je platný stav konfigurace, ne důvod issue vynechat.
+**Chybí-li pro oblast issue řádek v mapě `Agenti`, je hodnota `—`, nebo podsekce
+`Agenti` chybí v konfiguraci celá, eskalace to není** — sáhni po stejném fallbacku
+jako u recenzentů v kroku 5: dispečuj nástrojem `Agent` s
+`subagent_type: "general-purpose"` (`isolation` a `run_in_background` beze změny)
+a do zadání ulož, ať agent postupuje skillem `sagittaras:implement-issue`.
+Prázdná, chybějící nebo zcela nezaložená mapa je platný stav konfigurace, ne důvod
+issue vynechat.
 
 **Odmítne-li nástroj `Agent` dispatch** (neznámý `subagent_type`, chyba volání), issue
 neztrácej z přehledu — eskaluj ho i s chybou, kterou nástroj vrátil.
@@ -315,13 +320,14 @@ formulace mandát rozředí. Recenzenty ber ze sekce `Agenti`:
   nedosáhne — pak roli A **vůbec nedispečuj** a ověř ji fallbackem níž (skillem
   `sagittaras:verify-issue`); agenta uvedeného u role **B** dispečuj beze změny,
   agenta uvedeného u role **A** v tomhle případě vůbec nespouštěj.
-- **Je-li v konfiguraci `—`** — sáhni po fallbacku: roli A ověř skillem
-  `sagittaras:verify-issue` (nástroj `Skill`; ten skill si forkuje kontext sám), roli B
-  nech posoudit subagentem `general-purpose` (`isolation: "worktree"` a
-  `run_in_background: true` beze změny — stejný důvod jako výš, recenzent nesmí sáhnout
-  na tvůj pracovní strom). Prázdná role je platný stav konfigurace, ne důvod běh
-  odmítnout. Generického subagenta pusť na pozadí **dřív**, než spustíš forkovaný skill
-  — ten běží synchronně, takže obráceným pořadím bys obě posouzení serializoval.
+- **Je-li v konfiguraci `—`, nebo podsekce `Agenti` chybí celá** — sáhni po fallbacku:
+  roli A ověř skillem `sagittaras:verify-issue` (nástroj `Skill`; ten skill si forkuje
+  kontext sám), roli B nech posoudit subagentem `general-purpose`
+  (`isolation: "worktree"` a `run_in_background: true` beze změny — stejný důvod jako
+  výš, recenzent nesmí sáhnout na tvůj pracovní strom). Prázdná nebo chybějící role je
+  platný stav konfigurace, ne důvod běh odmítnout. Generického subagenta pusť na pozadí
+  **dřív**, než spustíš forkovaný skill — ten běží synchronně, takže obráceným pořadím
+  bys obě posouzení serializoval.
 
 **Role A (akceptační kritéria) nesmí hlásit nic nad shodu nebo neshodu s kritérii
 issue** — žádné architektonické poznámky, žádné styling připomínky. To je mandát

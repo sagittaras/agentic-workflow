@@ -96,15 +96,16 @@ report o cizím plánu.
 
 ### 1. Zjisti, kde a s čím pracuješ
 
-1. Přečti `.claude/workflow.md` v kořeni projektu. **Chybí-li,
-   nepokračuj** a nabídni `/sagittaras:init-workflow`; bez konfigurace neznáš
-   forge ani taxonomii labelů, takže bys polovinu kontrol jen předstíral. Nevíš-li, kde v konfiguraci co hledat, otevři
-   `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. **Chybí-li jen sekce,
-   kterou konkrétní kontrola v kroku 4 potřebuje** (`Labely` pro kontrolu
-   proti výčtu v 4f, `Jazyk issues` pro kontrolu jazyka v 4a) — nepředstírej
-   ji, vynech **jen tuhle jednu kontrolu** a řekni to v Shrnutí. Zbytek okruhu
-   (u 4f třeba „právě jeden `area:*` label", u 4a tvar názvu vs. typový
-   label) na té sekci nezávisí a provedeš ho dál.
+1. Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni
+   projektu. **Chybí-li `CONTRIBUTING.md` nebo sekce, nepokračuj** a nabídni
+   `/sagittaras:init-workflow`; bez konfigurace neznáš forge ani taxonomii
+   labelů, takže bys polovinu kontrol jen předstíral. Nevíš-li, kde v ní co
+   hledat, otevři `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. **Chybí-li
+   jen podsekce, kterou konkrétní kontrola v kroku 4 potřebuje** (`Labely` pro
+   kontrolu proti výčtu v 4f, `Jazyk issues` pro kontrolu jazyka v 4a) —
+   nepředstírej ji, vynech **jen tuhle jednu kontrolu** a řekni to v Shrnutí.
+   Zbytek okruhu (u 4f třeba „právě jeden `area:*` label", u 4a tvar názvu vs.
+   typový label) na té podsekci nezávisí a provedeš ho dál.
 2. Ze sekce `Forge` si vezmi typ, `owner` a `repo`. Než sáhneš na první issue,
    otevři `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` a volání ber odtud —
    z hlavy je neodvozuj, obě forge mají v detailech odlišné konvence.

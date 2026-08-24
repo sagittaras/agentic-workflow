@@ -190,8 +190,9 @@ Pro jednorázovku stačí obecný subagent.
 **Co agent přináší:**
 - **Konzistence napříč vyvoláními** — stejný scope nástrojů a stejná úroveň
   modelu pokaždé, bez ohledu na to, která session ho zrovna spouští.
-- **Routing** — `area:*` → agent mapa v `.claude/workflow.md` funguje jen
-  proto, že existuje pojmenovaný, stabilní cíl, na který se dá mířit.
+- **Routing** — `area:*` → agent mapa v sekci „Workflow (sagittaras)"
+  `CONTRIBUTING.md` (viz § 3) funguje jen proto, že existuje pojmenovaný,
+  stabilní cíl, na který se dá mířit.
 - **Nastřádaný úsudek přes paměť** — jiná osa než rules (1.4, konvence kódu)
   nebo ADR (1.5, proč rozhodnutí padlo). Agentova paměť nese, jak se role
   v tomhle projektu osvědčila v praxi.

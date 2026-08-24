@@ -91,14 +91,14 @@ otázka, je Eskalace v kroku 10.
 
 ### 1. Načti konfiguraci a zjisti stav
 
-Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ
-sekce **Forge** (kterou větev receptů použít a jaké `owner/repo` předat) a
-**Větvení** (výchozí větev, tvar integrační větve, a že do výchozí větve
-mergeuje jen člověk).
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
+projektu. Potřebuješ podsekci **Forge** (kterou větev receptů použít a jaké
+`owner/repo` předat) a **Větvení** (výchozí větev, tvar integrační větve,
+a že do výchozí větve mergeuje jen člověk).
 
-- **Soubor neexistuje** → nepokračuj a nedomýšlej si hodnoty. Řekni to
-  a nabídni `/sagittaras:init-workflow`.
-- **Chybí sekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
+- **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
+  hodnoty. Řekni to a nabídni `/sagittaras:init-workflow`.
+- **Chybí podsekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
   za pochodu nedoplňuj.
 
 Pak zjisti stav repozitáře:

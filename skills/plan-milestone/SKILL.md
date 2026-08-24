@@ -112,15 +112,17 @@ nestojí nic.
 
 ### 1. Načti projektovou konfiguraci
 
-Přečti `.claude/workflow.md` v kořeni cílového projektu. Potřebuješ z ní
-sekce **Forge** (kterou větev receptů použít), **Labely** (co smíš nasadit)
-a **Jazyk issues**. Sekci **Zdroje pravdy**, existuje-li, si drž po ruce pro
-krok 4 — ne k ukotvení kritérií (to teď dělá kód), ale kvůli chráněným
-rozhodnutím z ADR, na která si má autor Zadání dát pozor.
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
+projektu. Potřebuješ z ní podsekce **Forge** (kterou větev receptů použít),
+**Labely** (co smíš nasadit) a **Jazyk issues**. Podsekci **Zdroje pravdy**,
+existuje-li, si drž po ruce pro krok 4 — ne k ukotvení kritérií (to teď dělá
+kód), ale kvůli chráněným rozhodnutím z ADR, na která si má autor Zadání dát
+pozor.
 
-- **Soubor neexistuje** → nepokračuj a nedomýšlej si hodnoty. Řekni uživateli, že
-  projekt nemá workflow konfiguraci, a nabídni `/sagittaras:init-workflow`.
-- **Chybí sekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
+- **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
+  hodnoty. Řekni uživateli, že projekt nemá workflow konfiguraci, a nabídni
+  `/sagittaras:init-workflow`.
+- **Chybí podsekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
   za pochodu nedoplňuj. Odhadnutá taxonomie labelů rozbije routing v `run-milestone`
   a pozná se to až u review.
 
