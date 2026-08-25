@@ -263,6 +263,16 @@ otázka. To je páka na zdlouhavost a přísnost review — ne uvolnit review, a
 odebrat mu zátěž, kterou na něj tiše přenášela nedostatečně ohraničená
 issues.
 
+**Kódové ukotvení platí pro celý řetěz, ne jen pro plánování.** Sekci
+`Reference` čtou čtyři skilly a všechny ji musí číst stejně: zakládá ji
+`plan-milestone` a `triage-issue`, posuzuje `review-milestone`, staví na ní
+`implement-issue` a **ověřuje proti ní `verify-issue`**. Ověřovatel, který
+Referenci pořád hledá mezi dokumenty, nedohledá cestu vedoucí do kódu
+a kritérium spadne falešně na `Neověřitelné` — tedy `Blokuje merge: ano` na
+PR, se kterým nic není. Právě proto tvar `Reference` popisuje **sdílená
+`issue-template.md`**, ne každý skill zvlášť: lokální výjimka v jednom skillu
+je jen odložený rozpor, ne řešení.
+
 ### 2.2 Dvě roviny: Poznámka a Zadání
 
 Issue může vstupovat do cyklu ve dvou různých stavech a je důležité je
@@ -393,7 +403,7 @@ přehlédnuté — viz poznámka na konci.
 | `review-milestone` | Změna kritéria | Kontroluje „je Zadání ukotvené v existujícím precedentu v kódu", ne „je kritérium ukotvené v citované sekci dokumentu". Musí akceptovat nedopsaný, vlnově rostoucí milestone jako platný stav, ne ho hlásit jako chybu. | 2.1, 2.4 |
 | `run-milestone` | Zásadní změna | Review dispatch musí dodržet mandát rolí A/B (`qa-engineer`/`verify-issue` jen kritéria, `tech-lead` jen code review dle rules dané cesty). Orchestrace musí počítat s tím, že se milestone za běhu rozšiřuje o nová Zadání z dalších vln, ne jen dispečovat fixní graf issues založený na startu. | 1.4, 1.6, 2.4, 2.5 |
 | `implement-issue` | Menší úprava | Sekce Reference v issue teď primárně cituje kód (soubor/vzor), ne dokument — skill se jí má řídit přednostně. | 2.1 |
-| `verify-issue` | Zpřísnění mandátu | Mechanika (mutation test kritérií, neopravuje) zůstává — nově explicitní zákaz čehokoli navíc nad shodu/neshodu s kritérii. | 2.5 |
+| `verify-issue` | Zpřísnění mandátu + změna kritéria | Mechanika (mutation test kritérií, neopravuje) zůstává — nově explicitní zákaz čehokoli navíc nad shodu/neshodu s kritérii. Zároveň musí Referenci číst jako precedent v kódu (cesta vůči kořeni repozitáře), ne jako dokument pod kořeny ze Zdrojů pravdy, a porovnávat změnu proti němu; neexistenci cesty potvrzovat až ve worktree PR, protože v milestone běhu bývá precedent jen v integrační větvi. | 2.1, 2.5 |
 | `open-pr` | Beze změny | Mechanika PR se principy netýká. | — |
 | `file-issue` | Zásadní změna | Dnes vždy cílí na Zadání (sestaví akceptační kritéria hned). Nově vždy zachytává jen Poznámku — žádná rychlá cesta na Zadání, tu přebírá `triage-issue`. Jednodušší skill, žádná duplicitní logika. | 2.2, 2.3 |
 | `triage-issue` *(nový)* | Nový skill | Povyšuje Poznámku na Zadání: hledá v kódu existující precedent, buď issue přepíše do tvaru Zadání (hranice, kódový precedent, checklist), nebo nahlásí, že to potřebuje napřed spárovanou session (1.3). Volaný samostatně po `file-issue` i uvnitř `plan-milestone`'s vlnového kroku (2.4) — sdílená mechanika stejně jako `open-pr`, ne duplikovaná logika ve dvou skillech. | 1.3, 2.1, 2.3, 2.5 |
