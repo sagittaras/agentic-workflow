@@ -23,7 +23,7 @@ toho, co skill dělá — ne po jednom, každé volání je kolo navíc:
 | Jen čte a komentuje | `select:mcp__gitea__issue_read,mcp__gitea__issue_write,mcp__gitea__list_issues,mcp__gitea__milestone_read` |
 | Sahá jen na labely | `select:mcp__gitea__label_read,mcp__gitea__label_write` |
 | Pracuje s PR | `select:mcp__gitea__pull_request_read,mcp__gitea__pull_request_write,mcp__gitea__list_pull_requests,mcp__gitea__pull_request_review_write` |
-| Orchestruje celý milestone | `select:mcp__gitea__milestone_read,mcp__gitea__issue_read,mcp__gitea__issue_write,mcp__gitea__list_issues,mcp__gitea__pull_request_read,mcp__gitea__pull_request_write,mcp__gitea__list_pull_requests` |
+| Orchestruje celý milestone | `select:mcp__gitea__milestone_read,mcp__gitea__issue_read,mcp__gitea__issue_write,mcp__gitea__list_issues,mcp__gitea__pull_request_read,mcp__gitea__pull_request_write,mcp__gitea__pull_request_review_write,mcp__gitea__list_pull_requests` |
 
 Každé volání Gitea MCP potřebuje `owner` a `repo` ze sekce `Forge` konfigurace.
 

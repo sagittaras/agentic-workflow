@@ -428,27 +428,30 @@ nezískatelné větve PR strukturální omezení skillu podle kroku 4. Jinak ř�
 
 ### Kritéria
 
-| # | Kritérium | Výsledek | Důkaz |
-| --- | --- | --- | --- |
-| 1 | <doslovné znění kritéria> | <Splněno \| Nesplněno \| Neověřitelné> | <příkaz a jeho výsledek, `cesta:řádek`, nebo proč ověřit nelze> |
+<Jen kritéria s výsledkem **Nesplněno** nebo **Neověřitelné**, jedna odrážka na
+kritérium: výsledek tučně, doslovné znění kritéria, pomlčka a proč (jednou
+i více větami) — příkaz a jeho výsledek, cesta:řádek, nebo proč ověřit nelze.
 
-<Skončil-li běh verdiktem `Blocked` dřív, než jsi tabulku měl z čeho
-sestavit, zůstává prázdná; důvod nese řádek „Příčina blokace" výše.>
+Splněná kritéria se v reportu nevypisují — jejich stav nese odškrtnutí v těle
+issue (krok 7), report ho neopakuje. Jsou-li splněna všechna → „Všechna
+kritéria splněna." Skončil-li běh verdiktem `Blocked` dřív, než jsi měl co
+ověřovat, sekci vynech úplně; důvod nese řádek „Příčina blokace" výše.>
 
 ### Ověřovací příkazy
 
-| Příkaz | Výsledek |
-| --- | --- |
-| `<příkaz z konfigurace>` | <pass \| fail — a čím selhal> |
-
-<Neběžel-li žádný příkaz (blokace dřív, než jsi k němu došel) → „Nespuštěno.">
+<Neselhal-li žádný spuštěný příkaz → „Všechny ověřovací příkazy prošly."
+Selhal-li některý, odrážka na příkaz: příkaz jako inline kód, pomlčka, čím
+selhal. Neběžel-li žádný příkaz (blokace dřív, než jsi k němu došel) →
+„Nespuštěno.">
 
 ### Mutační testy
 
-<Pro každé kritérium opřené o regresní test: co jsi vrátil, jestli test spadl,
-že jsi obnovil a že po obnovení prochází. Neproběhla-li mutace u kritéria, které
-o ni stojí (revert selhal, blokace dřív) → uveď to i s důvodem, důkaz nese
-sloupec Důkaz v tabulce Kritéria. Není-li takové kritérium → „Netýká se.">
+<Proběhla-li mutace bezchybně u všech kritérií, která o ni stojí (test spadl
+po revertu, prošel po obnovení) → „Mutační testy v pořádku." Neproběhla-li
+u některého kritéria, které o ni stojí, nebo dopadla jinak, než měla (revert
+selhal, blokace dřív, test prošel i s vrácenou změnou) → odrážka na kritérium
+s důvodem — stejný důvod patří i do jeho odrážky v sekci Kritéria. Není-li
+žádné kritérium opřené o regresní test → „Netýká se.">
 
 ### Výhrady k ověření
 
@@ -499,6 +502,12 @@ v hlavičce — dva různé výroky v jednom reportu jsou horší než žádný.
   poznámky, žádné styling připomínky, žádné „když už tu jsem". Kvalitu kódu,
   styl a architekturu neposuzuješ vůbec, ani mimochodem — na to je code
   review, ne akceptace.
+- **Report je stručný.** Splněné kritérium se do reportu nerozepisuje — jeho
+  stav nese odškrtnutí v issue (krok 7), report ho neopakuje. Nemá-li sekce co
+  hlásit, mlčí, místo aby psala „vše v pořádku" na dlouho. Co reportu nesmí
+  chybět, je nesplněné nebo neověřitelné kritérium a proč — to je jediná
+  informace, na které navazující práce (`implement-issue`, `run-milestone`)
+  doopravdy stojí.
 - **Řádek `Blokuje merge:` je závazek vůči navazujícímu skillu.** Nikdy ho
   nevynech a nikdy ho nepiš v rozporu s verdiktem.
 - **Pracovní kopii po sobě ukliď** a nikdy z ní nepushuj ani necommituj.
