@@ -46,11 +46,7 @@ effort: xhigh
 Cílem je jeden issue naimplementovaný přesně v rozsahu svých akceptačních kritérií
 a otevřené PR, na které se dá odkázat číslem. Skill drží proces; doménové zázemí
 přináší agent, který ho spustil. Závazné jsou sdílené soubory pluginu a projektová
-konfigurace — při rozporu s tímhle postupem platí ony, **s jednou výjimkou:**
-sekci `Reference` čti podle kroku 3, ne podle `shared/issue-template.md`. Obecná
-šablona ji popisuje jako odkaz na dokument; tenhle skill se od ní vědomě
-odchyluje ve prospěch kódového precedentu — Reference mířící do kódu proto
-není odchylka od tvaru, kterou by šlo hlásit.
+konfigurace — při rozporu s tímhle postupem platí ony.
 
 Git mechaniku skill nepíše znovu: větev zakládá `sagittaras:create-branch`, zápis
 a PR obstará `sagittaras:open-pr` (ten uvnitř volá `sagittaras:make-commit`).
@@ -318,4 +314,4 @@ PR: žádné
 - **Reference se otevírá, ne parafrázuje, a kódový precedent v ní je primární
   zadání.** Tělo issue je zkratka, ne náhrada za to, co je v Referenci; a mezi
   precedentem a dokumentem (ADR) rozhoduje precedent — dokument jen říká, kam
-  nesahat. Platí i proti obecné `shared/issue-template.md` (viz úvod).
+  nesahat.

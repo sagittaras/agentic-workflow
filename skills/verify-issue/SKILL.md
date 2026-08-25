@@ -2,8 +2,8 @@
 name: verify-issue
 description: >-
   Nezávisle ověří, že PR splňuje akceptační kritéria svého issue — spustí
-  ověřovací příkazy, přečte skutečný kód i citované dokumenty a kritéria
-  opřená o nový regresní test mutačně otestuje. Odškrtne v těle issue jen to,
+  ověřovací příkazy, porovná změnu s precedentem citovaným v Referencích
+  a kritéria opřená o nový regresní test mutačně otestuje. Odškrtne v těle issue jen to,
   co doopravdy ověřil. Report s verdiktem a strojově čteným řádkem
   „Blokuje merge: ano/ne" uloží jako komentář k PR. Nic neopravuje.
 when_to_use: >-
@@ -91,8 +91,8 @@ ověřovat — řekni to a skonči.
 
 Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu.
 Potřebuješ z ní podsekce **Forge** (typ, `owner/repo`), **Ověřovací příkazy**
-(čím se kritérium doopravdy ověří), **Zdroje pravdy** (kde leží dokumenty
-citované v Reference) a **Větvení** (výchozí a integrační větev).
+(čím se kritérium doopravdy ověří), **Zdroje pravdy** (kde leží dokumenty,
+cituje-li je Reference vedle kódu) a **Větvení** (výchozí a integrační větev).
 
 Nevíš-li, kde v konfiguraci co hledat, nebo některá podsekce chybí, otevři
 `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. Chybí-li `CONTRIBUTING.md`,
@@ -175,13 +175,35 @@ Přečti **celé tělo issue**, ne jen checklist. Kde v těle co stojí a jak se
 akceptační kritéria píší, popisuje `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` —
 otevři ho teď, ať čteš tělo podle jeho sekcí a ne podle dojmu.
 
-Ze sekce **Reference** si otevři **skutečné dokumenty** na uvedených cestách
-(kořeny jsou v sekci Zdroje pravdy konfigurace) a přečti citované sekce. Parafráze
-v popisu PR ani v komentářích není důkaz — právě věrohodně znějící parafráze bez
-opory v dokumentu je ta chyba, kterou tenhle skill má chytit.
+Sekce **Reference** cituje **precedent v kódu** — konkrétní soubor nebo vzor,
+který issue rozšiřuje, cestou vůči kořeni repozitáře (**ne** vůči kořenům ze
+sekce Zdroje pravdy; ty platí pro dokumenty). Otevři ho a přečti; je to zdroj
+pravdy o tom, co mělo vzniknout. Parafráze v popisu PR ani v komentářích důkaz
+není — právě věrohodně znějící parafráze bez opory v kódu je ta chyba, kterou
+tenhle skill má chytit.
 
-Neexistuje-li citovaný dokument nebo sekce, je to nález na kritériu, které se
-o něj opírá: takové kritérium je `Neověřitelné`.
+Cituje-li Reference **vedle kódu i dokument** (ADR, UX spec), otevři ho na cestě
+podle sekce Zdroje pravdy a přečti citovanou sekci. Čti ho jako **doplňkové
+omezení** — co nesahat, které rozhodnutí je chráněné — ne jako popis toho, co
+mělo vzniknout; ten nese precedent.
+
+Rozliš tři stavy, ať nehlásíš nález tam, kde žádný není:
+
+- **Citovaná cesta v repozitáři neexistuje** (kód i dokument) → kritérium, které
+  se o ni opírá, je `Neověřitelné` a v Doporučeních je to nález `[issue]`.
+- **Precedent existuje a chování z kritéria v něm až do tohohle PR nebylo** →
+  **není to nález**; přesně ten přírůstek issue přináší. Ověřuj, že ho PR dodal
+  jako rozšíření precedentu, ne jako vzor postavený vedle něj.
+- **Reference nemá žádný kódový precedent, jen odkaz na dokument** → kritéria
+  opřená jen o prózu jsou `Neověřitelné` a v Doporučeních to hlas jako `[issue]`
+  s doporučením `triage-issue`. Chybějící precedent je vada zadání, ne PR:
+  nepiš to jako nález `[implement-issue]`.
+
+**Neexistenci cesty potvrď až ve worktree PR z kroku 4**, ne v pracovní kopii,
+ve které teď stojíš — ta může být na jiné větvi a precedent v ní chybět, i když
+ho PR má. V milestone běhu je to běžný stav: precedent často zakládá teprve
+issue, které doběhlo před tímhle, takže je jen v integrační větvi. Nález
+`[issue]` z prvního bodu proto zapiš, až když cesta chybí i tam.
 
 Poznamenej si `area:*` label issue — určuje, který ověřovací příkaz z konfigurace
 platí. Nemá-li issue žádný `area:*` label, nebo nemá-li jeho oblast řádek v sekci
@@ -265,11 +287,18 @@ podle jeho povahy:
 | --- | --- |
 | příkaz, build, lint nebo testy | příkaz z konfigurace **skutečně spusť** a zapiš jeho výstup |
 | existenci něčeho v kódu | otevři soubor a přečti to místo; uveď cestu a řádek |
-| sekci dokumentu | přečti tu sekci **znovu** a porovnej ji se skutečnou implementací |
+| rozšíření precedentu z Reference | otevři precedent **znovu** a porovnej ho se změnou v PR: je přírůstek psaný jeho vzorem, nebo vedle něj? Uveď `cesta:řádek` obojího |
+| sekci dokumentu (doplňkové omezení) | přečti tu sekci **znovu** a ověř, že ji implementace neporušuje |
 | nový regresní test | **mutačně otestuj** (viz níže) |
 
 Pass/fail **nikdy nedovozuj z popisu PR ani z commit messages.** Tvrzení autora
 je hypotéza, ne výsledek.
+
+Porovnání s precedentem **není code review** a tvůj mandát nerozšiřuje: ptáš se
+jen na to, jestli kritérium skutečně stojí na tom, o co se opírat mělo. Že by
+se rozšíření dalo napsat elegantněji, do reportu nepatří ani jako poznámka —
+`Nesplněno` je až tehdy, když přírůstek precedent obchází natolik, že kritérium
+o rozšíření přestává platit.
 
 **Mutační test.** Test, který nikdy nespadne, nehlídá nic — a kritérium, které
 tvrdí, že ho hlídá, pak není splněné. Ověř to tak, že vrátíš produkční změnu
@@ -433,8 +462,9 @@ Vynech, není-li žádná taková výhrada.>
 <Jen to, co z tohohle běhu ověřování vzešlo, s adresátem u každé položky:
 `[implement-issue]` nesplněné kritérium, nebo neověřitelné kritérium, jehož
 příčina je v kódu či testu, ne v zadání (kritérium po kritériu, co konkrétně
-opravit); `[issue]` vada samotného zadání — nejasná formulace, chybějící
-citovaný dokument, chybějící `area:*` label (krok 3), kritérium, které je samo
+opravit); `[issue]` vada samotného zadání — nejasná formulace, neexistující
+citovaná cesta, Reference bez kódového precedentu (obojí krok 3, s doporučením
+`triage-issue`), chybějící `area:*` label (krok 3), kritérium, které je samo
 špatně stanovené (krok 6), předem zaškrtnuté políčko (krok 7), i neověřitelné
 kritérium, jehož příčina je v samotném zadání; `[konfigurace]` chybějící sekce
 nebo řádek v konfiguraci cílového projektu, typicky oblast bez ověřovacího
@@ -460,6 +490,9 @@ v hlavičce — dva různé výroky v jednom reportu jsou horší než žádný.
 - **Důkaz, nebo `Neověřitelné`.** Nemáš-li výstup příkazu nebo přečtené místo
   v souboru, kritérium není splněné. Zaškrtnuté políčko, popis PR ani commit
   message důkaz nejsou.
+- **Reference se otevírá, ne parafrázuje, a precedent v kódu je primární zdroj
+  pravdy.** Dokument citovaný vedle něj říká, kam nesahat, ne co mělo vzniknout.
+  Kritérium opřené jen o prózu je `Neověřitelné` a vada zadání, ne PR.
 - **Nikdy se neptáš.** Běžíš bez uživatele; nejasnost je nález, ne důvod k dotazu.
 - **Mandát je přísně ohraničený: za žádnou cenu nic navíc.** Report neobsahuje
   nic nad rámec toho, co předepisuje Formát výstupu — žádné architektonické

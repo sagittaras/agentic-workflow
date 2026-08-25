@@ -77,10 +77,7 @@ proto žádnou znalost konverzace, která milestone plánovala** — všechno, o
 opíráš, si přečti z trackeru a z dokumentů v repozitáři.
 
 Závazným kontraktem jsou sdílené soubory pluginu; při rozporu s tímto textem
-mají přednost ony, **s výjimkou ukotvení Reference popsanou v okruzích 4a
-a 4b** — tam, kde `issue-template.md` popisuje dokumentové ukotvení kritérií
-(sekci `Reference`, i pravidla pro psaní kritérií „ukotveno v sekci
-dokumentu"), platí místo něj kódové ukotvení.
+mají přednost ony.
 
 ## Vstupní kontext
 
@@ -188,14 +185,8 @@ závislostí) tohle rozlišení nemá — `run-milestone` staví graf ze všech 
 bez ohledu na stav, takže se hlásí vždy, i na zavřeném issue.
 
 **a) Struktura.** Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md`
-a **měř proti němu, ne proti tomuhle výčtu** — s jednou výjimkou popsanou
-v okruhu 4b: šablona popisuje `Reference` jako odkaz na sekci dokumentu
-(sekce `Reference` i pasáž „Jak psát akceptační kritéria" o ukotvení
-v sekci dokumentu), ale platné ukotvení je dnes cesta ke kódu, protože
-kritérium ukotvené jen v próze nejde ukázat na nic ověřitelného (krok 3).
-Dokud se šablona sama nepřevede, měř tenhle bod proti kódovému ukotvení, ne
-proti jejímu znění — je to vědomý, přechodný rozpor mezi šablonou a vizí, ne
-nález. Zkontroluj:
+a **měř proti němu, ne proti tomuhle výčtu** — včetně jeho sekce „Reference
+je precedent v kódu", o kterou se opírá okruh 4b. Zkontroluj:
 
 - sadu a pořadí sekcí těla, včetně toho, kdy se `Závisí na` vynechává celá;
 - tvar názvu a jeho shodu s typovým labelem na issue;
@@ -218,8 +209,7 @@ o otevřených a zavřených issues výš):
 - **Reference cituje dokument (ADR/UX-spec sekci) místo cesty ke kódu** —
   blocking nález bez ohledu na to, jestli je kritérium samo věrohodné.
   Kritérium ukotvené jen v próze nejde ukázat na nic ověřitelného v kódu.
-  Typicky jde o issue založené před přechodem na kódové ukotvení; jako
-  doporučení k opravě uveď `/sagittaras:triage-issue` na dotčené issue
+  Jako doporučení k opravě uveď `/sagittaras:triage-issue` na dotčené issue
   (a je-li výsledkem hlášení, že precedent chybí úplně, spárovanou
   implementační session).
 - **Reference cituje cestu, která v repozitáři neexistuje** — blocking,

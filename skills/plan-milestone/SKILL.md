@@ -81,8 +81,7 @@ kritérium je pozorovatelné chování ukotvené v konkrétním souboru nebo vzo
 v kódu, který issue rozšiřuje. Milestone smí legitimně vzniknout s jen částí
 zamýšleného backlogu — položky bez precedentu čekají na příští vlnu, ne na
 kritérium vymyšlené narychlo. Závazným kontraktem jsou sdílené soubory
-pluginu — při rozporu s tímhle postupem platí ony, **s výjimkou ukotvení
-Reference popsanou v Zásadách**.
+pluginu — při rozporu s tímhle postupem platí ony.
 
 | Soubor | Kdy ho otevři |
 | --- | --- |
@@ -177,8 +176,9 @@ v příští vlně.
 ### 4. Sepiš draft Zadání pro tuhle vlnu
 
 Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` a piš přesně podle něj —
-tvar názvu, sekce těla i pravidla pro psaní kritérií — **s výjimkou Reference**
-popsanou v Zásadách. Jazyk textu určuje sekce `Jazyk issues` z konfigurace.
+tvar názvu, sekce těla i pravidla pro psaní kritérií, včetně jeho sekce
+„Reference je precedent v kódu". Jazyk textu určuje sekce `Jazyk issues`
+z konfigurace.
 
 Nad rámec šablony platí:
 
@@ -297,11 +297,9 @@ jiný repozitář nezkoušej.
 ### 8. Shrň výsledek
 
 Vypiš souhrnnou tabulku podle Formátu výstupu, backlog položek, které do téhle
-vlny nešly (a proč), řádek „Pozor v dalších krocích" o přechodném stavu
-Reference u `implement-issue`/`verify-issue`, a jako další krok doporuč
-`/sagittaras:review-milestone` — ten neúplnou vlnu ani kódovou Referenci
-jako nález nebere, takže recenzentovi stačí výčet nezaložených položek
-backlogu pro kontext, ne omluva. Plán **neposuzuješ sám**: recenzent
+vlny nešly (a proč), a jako další krok doporuč `/sagittaras:review-milestone` —
+ten neúplnou vlnu jako nález nebere, takže recenzentovi stačí výčet
+nezaložených položek backlogu pro kontext, ne omluva. Plán **neposuzuješ sám**: recenzent
 sdílející kontext s autorem si odkývá vlastní úvahu, proto review patří
 někomu, kdo tvůj kontext nevidí. Sám ho nespouštěj — rozhodnutí patří
 uživateli.
@@ -334,24 +332,15 @@ Milestone: <název> — <odkaz>
 
 Založené labely: <výčet, nebo „žádné">
 Backlog na příští vlnu: <výčet s důvodem, nebo „žádný">
-Pozor v dalších krocích: Reference míří do kódu — dokud issue-template.md
-a implement-issue/verify-issue neumí kódové ukotvení jistě, ověř ručně, že se
-s ním vypořádají (review-milestone už kódové ukotvení umí)
 Další krok: /sagittaras:review-milestone
 ```
 
 ## Zásady
 
-- **Reference vždy kód, ne próza — i proti obecné šabloně issue.** Obecná
-  `issue-template.md` popisuje Reference jako odkaz na sekci dokumentu; tenhle
-  skill se od ní vědomě odchyluje, protože kritérium ukotvené jen v próze
-  nejde ukázat na nic ověřitelného v kódu. V tomhle bodě platí tenhle postup,
-  ne obecná věta o přednosti sdíleného kontraktu níže. **Je to přechodný
-  stav** — dokud `issue-template.md` a na ni navázané `implement-issue`
-  a `verify-issue` neumí kódové ukotvení, mohou je zpracovat jinak, než
-  tenhle skill zamýšlí. `review-milestone` kódové ukotvení už umí. To skill
-  sám nemůže opravit; řekni to uživateli v souhrnu podle Formátu výstupu,
-  ať to při čtení dalších kroků nepřekvapí.
+- **Reference vždy kód, ne próza.** Kritérium ukotvené jen v próze nejde
+  ukázat na nic ověřitelného v kódu. Odkaz na ADR smíš přidat jako doplňkové
+  omezení, nikdy místo kódové reference — přesně tak to popisuje i sdílená
+  `issue-template.md` a stejně to čte `implement-issue` i `verify-issue`.
 - **Bez precedentu žádné issue, a neúplná vlna je v pořádku.** Položka bez
   precedentu se sama nezakládá (leda jako Poznámka na explicitní přání
   uživatele přes `file-issue`) a milestone i tak smí legitimně vzniknout
@@ -364,6 +353,5 @@ Další krok: /sagittaras:review-milestone
   odvozuje typ větve i commitu; rozpor je nález pro `review-milestone`.
 - **Do trackeru se zapisuje až po potvrzení draftu.** Před krokem 7 skill jen čte;
   nic nezakládá a nic nemění.
-- **Sdílený kontrakt má přednost**, mimo výjimku u Reference popsanou výš.
-  Odporuje-li tenhle postup šabloně issue jinde, konfiguraci nebo receptům,
-  platí ony.
+- **Sdílený kontrakt má přednost.** Odporuje-li tenhle postup šabloně issue,
+  konfiguraci nebo receptům, platí ony.
