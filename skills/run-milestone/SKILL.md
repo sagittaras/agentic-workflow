@@ -52,10 +52,13 @@ allowed-tools:
   - mcp__gitea__list_issues
   - mcp__gitea__pull_request_read
   - mcp__gitea__pull_request_write
+  - mcp__gitea__pull_request_review_write
   - mcp__gitea__list_pull_requests
 # Výčet `mcp__gitea__*` odpovídá řádku „Orchestruje celý milestone" ve sdílených
 # receptech; jsou to odložené nástroje, ale vyjmenovat je jde a bez toho by
-# gitea větev spadla až uprostřed běhu.
+# gitea větev spadla až uprostřed běhu. `pull_request_review_write` přibyl kvůli
+# kroku 5: report role B se na rozdíl od role A (ta si komentář ukládá sama skrz
+# `verify-issue`) nikde neukládá, dokud ho neuloží tenhle skill.
 # Chybějící Write/Edit je tady hlavní hranice, ne opomenutí: bez zapisovacích
 # nástrojů skill fyzicky nemůže začít opravovat cizí PR, což je přesně ta role,
 # do které orchestrátor sklouzává nejsnáz. Tělo integračního PR proto skládá
@@ -353,6 +356,17 @@ pravidlo není. `Blokuje merge: ne` od role B v tomhle stavu platí; ohlas to
 v hlášení na předělech stejně jako `check=skipped` v kroku 7 (posouzeno jen to, co
 bylo v kontextu, ne úplnost) a doporuč `/sagittaras:write-rule`.
 
+**Report role B ulož jako komentář k PR**, hned jak ho uznáš za platný dispatch
+(oba řádky výše i `Blokuje merge:`). Na rozdíl od role A, která si komentář
+ukládá sama skrz `verify-issue`, report role B se nikde neukládá, dokud to
+neuděláš ty. Použij recept „Komentář k PR (review)" z `forge-recipes.md`: na
+Gitea nástrojem `pull_request_review_write` se `state: "COMMENT"` a tělem
+z reportu; na GitHubu ulož report do dočasného souboru **mimo** worktree PR
+a pošli ho `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-comment.sh" -R "<owner/repo>"
+<číslo PR> --body-file "<soubor>"` (tělo nikdy jako argument — víceřádkový
+markdown se v shellu rozpadne). Selže-li uložení, review tím neztrácí
+platnost — pokračuj a zmiň to v hlášení na předělech.
+
 **V promptu uveď číslo PR explicitně** — recenzenta nenech dohadovat PR z názvu větve.
 Recenzent, který si PR hledá sám, si ho najde jiné, nebo si o něm udělá představu z větve,
 která se mezitím posunula.
@@ -613,8 +627,9 @@ seznam z hlavy. Neopravuj nic — vracíš verdikt.
 
 Nálezy piš jako konkrétní adresný pokyn („oprav tenhle řádek", „oprav
 tenhle blok") s cestou k souboru, bez rozepisování nad rámec toho, co
-pravidlo v kontextu skutečně říká. Report ukonči třemi řádky přesně
-v tomhle tvaru:
+pravidlo v kontextu skutečně říká. Report je stručný: nemáš-li nález, napiš
+„Bez nálezů." — nerozepisuj, co je v pořádku ani proč. Report ukonči třemi
+řádky přesně v tomhle tvaru:
 Přečtené soubory: <cesty, čárkou oddělené>
 Pravidla v kontextu: <cesty, čárkou oddělené | žádné>
 Blokuje merge: ano|ne
