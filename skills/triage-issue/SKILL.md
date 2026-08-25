@@ -81,8 +81,7 @@ v existujícím kódu, nebo zůstává Poznámkou s vysvětlením, proč na Zad�
 ještě nemá co stavět. Skill sám architekturu nevymýšlí — jen klasifikuje
 a přepisuje, a běží bez uživatele: nejasnost nebo chybějící vstup nejsou
 důvod k dopytu, ale k hlášení a zastavení. Závazným kontraktem jsou sdílené
-soubory pluginu; při rozporu s tímhle postupem platí ony, **s výjimkou
-ukotvení Reference popsanou v Zásadách**.
+soubory pluginu; při rozporu s tímhle postupem platí ony.
 
 | Soubor | Kdy ho otevři |
 | --- | --- |
@@ -160,7 +159,7 @@ v kroku 4.
 ### 4a. Precedent existuje → přepiš na Zadání
 
 Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` a piš podle něj,
-s výjimkou Reference popsanou v Zásadách:
+včetně jeho sekce „Reference je precedent v kódu":
 
 - **Souhrn** zachovej nebo zpřesni z původní Poznámky beze změny smyslu a
   dopiš do něj **hranice** — co práce podle nalezeného precedentu dělá,
@@ -260,11 +259,10 @@ Triage neproběhlo: <důvod — chybějící konfigurace/sekce, chybějící č�
 - **Skill nevymýšlí architekturu.** Nenajde-li precedent, nezakládá
   kritéria narychlo — to je přesně vada, kterou má tenhle skill eliminovat,
   ne reprodukovat.
-- **Reference vždy kód, ne próza — i proti obecné šabloně issue.** Obecná
-  `issue-template.md` popisuje Reference jako odkaz na sekci dokumentu;
-  tenhle skill se od ní vědomě odchyluje, protože kritérium ukotvené jen
-  v próze nejde ukázat na nic ověřitelného v kódu. V tomhle jednom bodě
-  platí tenhle postup, ne obecná věta o přednosti sdíleného kontraktu výše.
+- **Reference vždy kód, ne próza.** Kritérium ukotvené jen v próze nejde
+  ukázat na nic ověřitelného v kódu. ADR smíš přidat jen jako doplňkové
+  omezení vedle kódové reference — tak to popisuje i sdílená
+  `issue-template.md` a stejně to čte `implement-issue` i `verify-issue`.
 - **Přepisuje jen to, co je opravdu Poznámka** (krok 2), a jen tělo, nikdy
   název ani labely. Stav zaškrtávátek nemění nikdy — `- [ ]` nepřepisuje
   na `- [x]` ani naopak.
@@ -272,6 +270,5 @@ Triage neproběhlo: <důvod — chybějící konfigurace/sekce, chybějící č�
   hlášení a konec, ne dopyt — skill musí jít volat i bez přítomného člověka.
 - **Neuzavírá issue.** To je práce `verify-issue`/`close-milestone`
   po implementaci, ne tady.
-- **Sdílený kontrakt má přednost**, mimo výjimku u Reference popsanou výš.
-  Odporuje-li tenhle postup šabloně issue jinde, konfiguraci nebo receptům,
-  platí ony.
+- **Sdílený kontrakt má přednost.** Odporuje-li tenhle postup šabloně issue,
+  konfiguraci nebo receptům, platí ony.
