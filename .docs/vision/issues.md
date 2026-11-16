@@ -274,7 +274,7 @@ musí recenzent v jednom PR udržet v hlavě.
 `run-milestone` přestává dispečovat issues subagentům, kteří doběhnou
 a zmizí. Každé odblokované issue spustí v podřazené session Claude Code —
 s vlastním worktree, větví a PR. Člověk otevře PR, připomínky napíše k němu
-nebo přímo do session, a session je zapracuje.
+a session je zapracuje.
 
 **Why:**
 - **Připomínky potřebují adresáta, který si pamatuje.** Subagent po otevření
@@ -295,18 +295,23 @@ tím neomezuje počet agentů, ale kapacita člověka na review — dávka se
 dimenzuje podle toho, kolik PR člověk zvládne projít, ne kolik session jde
 spustit.
 
-**Bez podřazených session: obsah přes PR, přes orchestrátora jen signál.**
-Podřazené session jsou schopnost prostředí (desktopová aplikace Claude Code),
-ne skillu. Kde chybí (CLI), zbývají subagenti, a zvolená cesta pro předávání
-připomínek je tahle:
+**Obsah přes PR, přes orchestrátora jen signál.** Platí v obou režimech —
+s podřazenými session i bez nich. Podřazené session jsou schopnost prostředí
+(desktopová aplikace Claude Code), ne skillu; kde chybí (CLI), zbývají
+subagenti. Cesta pro předávání připomínek je v obou případech stejná:
 
 - Připomínky člověk píše do PR — tam, kam patří a kde zůstanou jako záznam.
 - Orchestrátorovi pošle jen krátký signál („#12 má připomínky", „#12
   schváleno").
-- Orchestrátor naváže na konkrétního subagenta s jeho kontextem —
+- Orchestrátor naváže na konkrétní session nebo subagenta s jeho kontextem —
   pokračováním přes jeho id, ne novým spuštěním — a předá mu jen ten signál.
-  Subagent si připomínky přečte z PR sám, zapracuje je, případně na signál
+  Ten si připomínky přečte z PR sám, zapracuje je, případně na signál
   schválení mergne, a vrátí jednořádkový výsledek.
+
+V desktopu by člověk mohl psát i přímo do podřazené session, ale pak se běh
+zastaví: aplikace orchestrátora probudí jen po kole podřazené session, které
+spustil on sám. Signál přes orchestrátora proto není jen fallback pro CLI —
+díky němu se orchestrátor po merge dozví, že má odblokovat další issue.
 
 Proti dvěma přímočarým cestám:
 
@@ -326,6 +331,21 @@ skutečného použití se upraví. Sledovat se má hlavně: jak dlouho subagent
 s kontextem vydrží (konec hlavní session, zkracování historie), jestli
 hlavní session přes signály opravdu neroste, a jestli cena za issue klesne
 k úrovni podřazených session, nebo se jen zmenší.
+
+**Upřesnění z párové session nad `run-milestone` (16. 11. 2026):**
+- **Session končí v libovolném pořadí.** Orchestrátor zpracuje tu, kterou
+  jmenuje notifikace, a na konkrétní session nečeká. Pozorovaná chyba:
+  orchestrátor, který si session zapsal jako kroky seznamu úkolů, čekal na
+  první spuštěnou, i když pozdější už skončila.
+- **Směrování podle `area:*` přechází do session.** Session při spuštění
+  agenta zvolit nejde, proto ho dostane v zadání a implementaci mu deleguje;
+  sama drží kontext pro připomínky (1.6).
+- **Orchestrátor zůstává na silném modelu.** Podřazená session dostane model
+  nejvýš stejné rodiny a effort nejvýš stejný jako orchestrátor. Levnější
+  orchestrátor by srazil i implementace, přestože sám po přestavbě spotřebuje
+  málo.
+- **Dávka se ptá člověka.** Kolik issues běží souběžně, určí na začátku běhu
+  člověk podle své kapacity na review.
 
 ## 2.9 Každé akceptační kritérium kryje test; session ho napíše, orchestrátor potvrdí
 
