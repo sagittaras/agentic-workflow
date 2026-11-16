@@ -131,8 +131,18 @@ se zadáním. Kritéria níže jsou nad jeho rámec.
 
 **Kvalita instrukcí** — tady buď přísný:
 
-- Instrukce jsou v rozkazovacím způsobu a u neobvyklých kroků **vysvětlují proč**.
-  Holý příkaz bez důvodu je nález: model dodrží lépe to, čemu rozumí.
+- Instrukce jsou v rozkazovacím způsobu a důvod nesou tam, kde ho žádá pravidlo
+  „Rozkazovací způsob; proč jen u úsudku" v `skill-conventions.md` § 3. Chybějící
+  důvod u místa úsudku je nález, stejně jako důvod u kroku nahrazeného příkazem.
+- **Tvar skillu posuzuj proti `skill-conventions.md` § 3** — pravidla ber odtud,
+  ne z tohoto seznamu. Nálezem je:
+  - krok popsaný prózou, který jde nahradit příkazem (pravidlo „Co jde příkazem,
+    je příkaz");
+  - spouštěč úvahy z tabulky „Spouštěče úvahy a jejich náhrady" — v Doporučení
+    uveď náhradu z téhož řádku tabulky;
+  - věta, která neprojde „Testem každé věty";
+  - zdůvodnění pro vývojáře v těle místo v komentáři frontmatteru nebo v `.docs/`
+    (pravidlo „Zdůvodnění pro vývojáře mimo tělo").
 - Skill přidává postup a kontext specifický pro tento projekt — nepopisuje,
   co model umí sám od sebe.
 - Triggering nekoliduje se sousedy a překryvy jsou vyřešené negativním
