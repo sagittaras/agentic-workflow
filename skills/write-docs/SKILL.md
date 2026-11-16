@@ -5,7 +5,8 @@ description: >-
   s pravidly struktury a odkaz na něj z CLAUDE.md —, nebo do existující báze
   přidá či v ní upraví stránku nebo sekci: místo najde sestupem stromem
   indexů, stránku odkáže z nadřazeného indexu a doplní odkazy na související
-  stránky. Po každém zápisu spustí kontrolu struktury a nálezy opraví.
+  stránky. Po každém zápisu spustí kontrolu struktury, nálezy opraví a nechá
+  zápis nezávisle zrevidovat subagentem s čistým kontextem.
 when_to_use: >-
   Použij, když má v projektu vzniknout dokumentace nebo se rozšířit — „založ
   dokumentaci", „udělej .docs", „zapiš to do dokumentace", „přidej stránku
@@ -26,8 +27,9 @@ effort: high
 # jestli stránku někdo najde. Nikoli opus: mechaniku struktury hlídá skript
 # docs-check.sh, ne model.
 # Přestavba nabobtnalého dokumentu na strom (princip 1.8) sem zatím nepatří,
-# přijde v další vlně; review-docs zatím neexistuje, proto skill nemá review
-# smyčku a brzdou je potvrzená osnova plus skript.
+# přijde v další vlně. Úsudkovou část (věty u odkazů, duplicita, umístění)
+# posuzuje review-docs na opus × xhigh, spuštěný stejně, jako write-rule
+# spouští review-rule.
 user-invocable: true
 allowed-tools:
   - Read
@@ -35,11 +37,12 @@ allowed-tools:
   - Write
   - Edit
   - AskUserQuestion
+  - Agent
   - "Bash(bash:*)"
 # Bash je zúžený na spouštění skriptu kontroly struktury tvarem `bash <cesta>`.
+# Agent spouští review-docs v kroku 6.
 # Vynechaná zvažovaná pole: Grep — místo se hledá sestupem stromem, ne
-# hledáním řetězce (shared/docs-tree.md); Agent — review-docs zatím není,
-# není koho spouštět; disable-model-invocation — skill má jít zřetězit za
+# hledáním řetězce (shared/docs-tree.md); disable-model-invocation — skill má jít zřetězit za
 # ohlášení „projekt nemá bázi" z jiného skillu, brzdou je potvrzená osnova;
 # context/agent/background — osnovu potvrzuje uživatel v hlavním kontextu;
 # paths — spouští se z konverzace, ne prací nad konkrétními soubory; shell —
@@ -132,21 +135,40 @@ potvrzení nezapisuj.
 
 Spusť skript kontroly struktury znovu a porovnej s výchozím stavem z kroku 1:
 
-- **`result=pass`** → hotovo, vydej report.
+- **`result=pass`** → pokračuj krokem 6.
 - **Nový nález** (není ve výchozím stavu) → oprav ho a spusť skript znovu.
   Neskonči, dokud nový nález zůstává.
 - **Nález z výchozího stavu** → neopravuj ho, je mimo zadání; uveď ho v reportu.
 
-Nedaří-li se nový nález opravit ani na třetí pokus, eskaluj podle kroku 6.
+Bez nového nálezu pokračuj krokem 6. Nedaří-li se nový nález opravit ani na
+třetí pokus, eskaluj podle kroku 7.
 
-### 6. Eskalace
+### 6. Nezávislé review
+
+1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`)
+   se zadáním podle šablony ve Formátu výstupu. Typ agenta a model vezmi
+   z frontmatteru `${CLAUDE_PLUGIN_ROOT}/skills/review-docs/SKILL.md` a předej
+   je parametry nástroje; effort parametrem předat nejde, napiš ho do zadání.
+   Všechny cesty v zadání dosaď rozvinuté a absolutní — subagent si proměnnou
+   nerozvine.
+2. **Vráceno k dopracování** → oprav blokující nálezy, doporučení zvaž, spusť
+   znovu krok 5 a pak další kolo s **novým** subagentem.
+3. **Schváleno** → vydej report.
+
+Nález, který zpochybňuje umístění nebo obsah potvrzený uživatelem v kroku 2
+nebo 3, neodmítej mlčky — uveď ho v reportu.
+
+### 7. Eskalace
 
 Přeruš postup a obrať se na uživatele, když:
 
 - na otázku po záměru báze nebo na osnovu nedorazí odpověď — nezapisuj nic;
 - téma by patřilo do dvou sekcí stejně a sestup nerozhodne — polož otázku se
   dvěma kandidáty;
-- nový nález skriptu se nedaří opravit — ocituj řádek `fail=` a co jsi zkusil.
+- nový nález skriptu se nedaří opravit — ocituj řádek `fail=` a co jsi zkusil;
+- nález review zpochybňuje umístění nebo obsah, který uživatel potvrdil;
+- stejný blokující nález review přetrvá dvě kola, nebo proběhnou tři kola bez
+  schválení — ocituj sporný nález a polož konkrétní otázku.
 
 ## Formát výstupu
 
@@ -178,6 +200,26 @@ Navigace začíná tady a vede stromem indexů.]
 - [Název sekce](sekce/index.md) — [co sekce pokrývá].
 ```
 
+### Zadání pro reviewera (krok 6)
+
+```
+Přečti si soubor `<kořen pluginu>/skills/review-docs/SKILL.md` a proveď přesně
+jeho postup. Pracuj s effortem <effort z frontmatteru review-docs>.
+
+Zadání pro tvůj běh:
+- Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>
+- Repozitář: <absolutní cesta ke kořeni cílového projektu>
+- Posuzované stránky: <nové i upravené soubory včetně indexů a CLAUDE.md>
+- Výstup docs-check.sh po zápisu: <řádky z posledního běhu kroku 5>
+- Výchozí stav docs-check.sh: <řádky z kroku 1>
+- Číslo kola: <N>
+- Nevyřešené nálezy z minulého kola: <žádné, jde o první kolo | nálezy
+  i s tím, jak jsi je řešil>
+
+Vrať verdikt přesně ve struktuře, kterou review-docs předepisuje v sekci
+„Formát výstupu".
+```
+
 ### Závěrečný report
 
 ```
@@ -185,6 +227,8 @@ Režim: [nová báze | stránka nebo sekce]
 Zapsáno: [cesty nových a upravených souborů]
 Odkázáno z: [index, případně CLAUDE.md]
 Kontrola struktury: [result=pass | nálezy z výchozího stavu, které zůstávají: …]
+Kol review: [N]
+Odmítnuté nálezy: [nález → důvod, nebo „žádné"]
 ```
 
 ## Zásady
