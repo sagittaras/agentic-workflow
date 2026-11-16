@@ -72,7 +72,8 @@ jinak.
 - Zadání od volajícího (může být prázdné): $ARGUMENTS
 
 Ze zadání vytěž, co v něm je: **základní větev**, **číslo issue**, které PR
-uzavírá, **milestone**, do kterého PR patří, a **výslovný souhlas k mergi**
+uzavírá, **milestone**, do kterého PR patří, **mapu kritérium → test**
+a **poznámku o bráně** (obojí předává `implement-issue`) a **výslovný souhlas k mergi**
 (fráze jako „a mergni", „udělej i merge", „vytvoř PR a slej to", „a rovnou
 zmerguj"). Co v zadání není, doplň postupem níže — ale nikdy nepřebíjej to,
 co volající předal.
@@ -206,6 +207,13 @@ se nerozchází. Jinak ho odvoď ze zapsaných commitů, ne ze zadání.
 **Tělo** piš podle Formátu výstupu: krátké shrnutí a `Closes #N`, jen když PR
 opravdu nějaké issue uzavírá.
 
+Předal-li volající **mapu kritérium → test**, vlož ji pod nadpis
+`## Testy kritérií` **doslova** — nezkracuj řádky, nepřečíslovávej je a nadpis
+neměň. Orchestrátor ji čte skriptem podle nadpisu a čísel v prvním sloupci;
+upravená mapa neprojde jeho branou, i když je obsahově stejná. Předal-li
+**poznámku o bráně**, dej ji hned pod mapu. Nepředal-li ani jedno, sekci
+nevkládej a nevymýšlej ji.
+
 Na GitHubu ho zapiš do dočasného souboru **mimo pracovní strom repozitáře** —
 soubor uvnitř stromu by skončil jako nesledovaná veteš v příštím commitu. Zapisuj
 heredocem s ukončovačem v uvozovkách ve stejném volání, ve kterém soubor vznikne,
@@ -337,10 +345,20 @@ uklízí někdo ručně.
 
 ## Formát výstupu
 
-**Tělo PR** (krok 5) — `Closes` řádek vynech, když PR žádné issue neuzavírá:
+**Tělo PR** (krok 5) — `Closes` řádek vynech, když PR žádné issue neuzavírá;
+sekci `Testy kritérií` a poznámku o bráně vynech, když je volající nepředal:
 
 ```markdown
 <jedna až tři věty: co PR mění a proč, bez výčtu souborů>
+
+## Testy kritérií
+
+| # | Kritérium | Test |
+| --- | --- | --- |
+| 1 | <zkrácené znění kritéria> | `cesta/k/testu` — `název testu` |
+| 2 | <zkrácené znění kritéria> | ověří člověk |
+
+<poznámka o bráně, předal-li ji volající>
 
 Closes #<n>
 ```
