@@ -27,8 +27,9 @@ Proč je báze postavená takhle, říká princip
 ## Sekce
 
 - [Vize spolupráce člověka s AI](vision/index.md) — principy, podle kterých se
-  plugin přestavuje po týdnu ostrého provozu: kód jako kotva, issues ukotvené
-  v precedentu, úzké review, navigace dokumentací; a mapa dopadu na skilly.
+  plugin přestavuje po ostrém provozu: kód jako kotva, issues ukotvené
+  v precedentu, AI implementuje a člověk přezkoumává, issues v podřazených
+  session, navigace dokumentací; a mapa dopadu na skilly.
 - [Milestone workflow](milestone-workflow/index.md) — původní plán sady skillů
   pro milestone: životní cyklus, kontrakt v trackeru, forge vrstva, skripty
   a konfigurace jednotlivých skillů. Části kontraktu nahrazuje vize; co přesně,

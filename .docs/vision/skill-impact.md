@@ -88,6 +88,32 @@ pravdy` — i její řádek v tabulce „Co která podsekce znamená" a výklad 
 v `Reference` vázat na Zdroje pravdy: dokument se cituje cestou vůči kořeni
 repozitáře, stejně jako kód.
 
+## Principy 2.6–2.8
+
+Lidské review ([2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent)),
+velikost issue podle přezkoumatelnosti PR
+([2.7](issues.md#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně))
+a orchestrace přes podřazené session
+([2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)).
+Řádky `run-milestone` a `verify-issue` v tabulce 1.1–2.5 stály na mandátu rolí
+z 2.5 — kde se s touhle tabulkou rozcházejí, platí tahle.
+
+| Skill | Stav | Co se mění | Princip |
+| --- | --- | --- | --- |
+| `run-milestone` | Zásadní změna | Odblokovaná issues spouští v podřazených session místo subagentů. Nedispečuje review role ani je nečte a sám nemerguje: review gate je lidské schválení PR, merge do integrační větve provede session na signál člověka a orchestrátor jen sleduje stav PR a odblokovává graf. Dávku dimenzuje podle kapacity člověka na review, ne podle počtu agentů. Integrační brána (mechanické ověření) zůstává. Bez podřazených session spouští subagenty a signály člověka („má připomínky", „schváleno") jim předává pokračováním přes jejich id; obsah připomínek nečte (2.8). | 2.6, 2.8 |
+| `implement-issue` | Změna konce | Běží v podřazené session (bez ní jako subagent, na kterého orchestrátor navazuje) a po otevření PR zůstává k dispozici: připomínky člověka si přečte z PR a zapracuje ve stejném kontextu, nepředává je dál. Na signál člověka PR sám mergne do cílové větve — recenzent schvaluje, realizátor merguje. PR neotevře bez zelených ověřovacích příkazů. | 2.6, 2.8 |
+| `verify-issue` | Z brány na nástroj | Přestává být povinná brána před merge; spouští ho člověk nad konkrétním PR, když chce nezávislé ověření kritérií. Mechanika i mandát role A zůstávají. | 2.6 |
+| `plan-milestone` | Nové kritérium rozpadu | Při návrhu Zadání posuzuje signály příliš velkého issue a rozpadá ho na samostatně mergovatelné kroky; nerozdělí ho na kusy, které samy nic nedělají. Žádný číselný práh (řádky, soubory) — jen signály. | 2.7 |
+| `triage-issue` | Nové kritérium | Při povýšení Poznámky hlídá velikost — Poznámku, ze které by vzniklo nereálně velké PR, navrhne rozdělit na víc Zadání. | 2.7 |
+| `review-milestone` | Nová kontrola | Issue se signály příliš velkého PR je nález. | 2.7 |
+| `train-agent` | Změna vstupu | Vstupem jsou připomínky člověka v PR a jejich zapracování, ne report agentního review. Spouštěč (vyřešená review/retry smyčka) zůstává. | 1.6, 2.6 |
+| `init-workflow` | Menší úprava | Podsekce Agenti přestává interviewovat role recenzentů (kvalita kódu, akceptační kritéria); zůstává jen mapa `area:*` → implementující agent. | 2.6 |
+
+**Sdílený kontrakt.** `shared/workflow-config.md` ztrácí v podsekci Agenti
+řádky rolí recenzentů a jejich fallback. Strojově čtený řádek „Blokuje merge"
+zůstává jen ve výstupu ručně spuštěného `verify-issue`; `run-milestone` se jím
+neřídí.
+
 ## Mimo rozsah
 
 Záměrně vynechané, protože se jich žádný princip netýká: `create-branch`,

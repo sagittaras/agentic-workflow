@@ -1,9 +1,11 @@
 # Issues a autonomní vývoj
 
-Principy 2.1–2.5: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
-je povýšení Poznámky samostatný krok, proč se plánuje po vlnách a jak úzce je
-ohraničené review. Stavějí na [principech spolupráce](principles.md) — kde text
-cituje 1.x, míří tam.
+Principy 2.1–2.8: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
+je povýšení Poznámky samostatný krok a proč se plánuje po vlnách; dál kdo
+přezkoumává výsledný kód (člověk, ne agent — 2.6 nahrazuje agentní review z 2.5),
+jak velké smí issue být, aby šlo jeho PR přezkoumat, a jak orchestrátor issues
+spouští. Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
+míří tam.
 
 ## 2.1 Co issue stanovuje
 
@@ -130,12 +132,18 @@ vestavěná součást cyklu, ne přidaný proces navíc.
 
 ## 2.5 Review Zadání: dvě úzké role, žádná nesmí přesáhnout svůj mandát
 
+> **Nahrazeno** principy [2.6](#26-review-výsledného-kódu-dělá-člověk-ne-agent)
+> a [2.8](#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)
+> (16. 11. 2026): agentní review z běžného průchodu issue vypadává, kód
+> přezkoumává člověk. Mandát role A platí dál pro `verify-issue` spuštěný ručně.
+> Zbytek zůstává jako záznam, proč úzký mandát sám nestačil — omezil, *co* agent
+> posuzuje, ale ne *jak důsledně*, ani kolik to stojí.
+
 Review se historicky dělo jako jedna ukecaná, běžně až moc přísná a
 kolikrát vyčerpávající fáze. Ve skutečnosti jde o dvě oddělené role
 s různým mandátem ([původní plán sady](../milestone-workflow/index.md) je už
-rozlišuje jako
-`qa-engineer` / kritéria a `tech-lead` / kvalita) — a obě musí zůstat přísně
-ohraničené na to, co mají dělat, nic navíc.
+rozlišuje jako `qa-engineer` / kritéria a `tech-lead` / kvalita) — a obě musí
+zůstat přísně ohraničené na to, co mají dělat, nic navíc.
 
 **Role A — ověření akceptačních kritérií** (`qa-engineer`, fallback
 `verify-issue`). Kritéria z checklistu Zadání (2.2) slouží dvakrát: jako
@@ -167,3 +175,152 @@ mandát obou rolí nebyl ohraničený, takže se do reportu vešlo cokoli navíc
 i s tím rozhodujícím řádkem. Ohraničení mandátu (tenhle princip) doplňuje
 mechanismus (existující řádek verdiktu) — samotný mechanický verdikt bez
 ohraničeného mandátu na to nestačí.
+
+## 2.6 Review výsledného kódu dělá člověk, ne agent
+
+Konkrétní práci na issue vykoná AI: implementaci, ověřovací příkazy, otevření
+PR. Výsledný kód ale přezkoumává člověk — projde PR a připomínky píše přímo
+k němu. Agentní review (obě role z 2.5) z běžného průchodu issue vypadává.
+
+**Why:**
+- **Review je nejdražší část průchodu issue — ne implementace.** Pozorování
+  z provozu (16. 11. 2026): soustavná práce přes několik session, ve kterých je
+  hlavní kontrolou člověk, se v limitech skoro neprojeví; jedno spuštění
+  `run-milestone` zvedne týdenní limit o několik procent. Rozdíl dělají review
+  procesy — dvě role nad každým PR a k tomu retry kola, každé s vlastním čtením
+  kontextu.
+- **Důslednost agentního review nejde nadirigovat.** 2.5 se snažila review
+  zúžit mandátem: jen kritéria, jen pravidla dané cesty, nic navíc. Mandát ale
+  omezí, *co* agent posuzuje, ne *s jakou mírou*. Prompt, který agentovi řekne,
+  jak moc být důsledný, napsat nejde — buď je zbytečně přísný a vrací PR kvůli
+  věcem, které nevadí, nebo pustí to, co člověk chtěl jinak. Člověk tu míru má:
+  ví, které odchylky mu vadí.
+- **Lidské review je dotek s realitou u každého issue.** Úvodní diagnóza vize:
+  týdenní drift vznikl, protože se autonomní běh nikde nedotkl člověka. 1.3 to
+  řeší pro první instanci vzoru, 2.4 pro plánování; lidské review to uzavírá
+  i pro každé další issue — odchylka je vidět po jednom PR, ne po milestonu.
+- **Přezkoumaný kód člověk zná.** Plně autonomní běh vyrábí kód, který nikdo
+  nečetl; udržovat ho pak znamená ho číst dodatečně, bez kontextu.
+
+**Co z agentní kontroly zůstává:**
+- **Mechanická brána.** Ověřovací příkazy (build, testy, linter) spouští
+  implementující agent sám a PR bez zelené brány neotevře. Je levná
+  a nesubjektivní — stejná osa jako tvrdá kotva z 1.2.
+- **`verify-issue` na vyžádání.** Nástroj, který si člověk spustí nad
+  konkrétním PR, když chce nezávislé ověření kritérií — ne povinná brána před
+  každým merge. Spuštěný ručně se drží mandátu role A z 2.5.
+
+**Posun cíle pluginu.** Původní záměr byl úplná autonomizace práce v Claude
+Code. 2.6 ho mění na kompromis: AI vykonává, člověk kontroluje. Plugin má
+zlevnit a zrychlit tu část práce, kde AI šetří čas (rozpad, implementace,
+mechanika gitu a PR), ne nahradit tu, kde je člověk levnější a přesnější.
+
+**Recenzent schvaluje, realizátor merguje.** Práce člověka v review končí
+schválením — připomínkou, nebo signálem „hotovo". Merge zařídí ten, kdo PR
+vystavil: má větev i kontext, a kdyby se integrační větev mezitím pohnula,
+vyřeší to on, ne recenzent. Je to stejný vzor, jaký projektová konfigurace už
+drží pro výchozí větev — merge jen na výslovný souhlas člověka —, jen
+zobecněný na každé PR.
+
+**Důsledek pro workflow:** review gate je lidské schválení PR, ne verdikt
+agentů, a merge do integrační větve následuje až po něm. Retry kolo vzniká
+z připomínek člověka v PR — a ty jsou zároveň nejlepší vstup pro `train-agent`
+(1.6): poznatek, který člověk musel napsat, je přesně ten, který se nemá
+opakovat.
+
+## 2.7 Issue je velké nanejvýš tak, aby jeho PR šlo přezkoumat ručně
+
+Z 2.6 plyne nové kritérium rozpadu: velikost issue neurčuje jen ohraničenost
+přírůstku (2.1), ale i to, jestli výsledné PR zvládne člověk projít. Plánování
+proto rozpadá práci tak, aby nevzniklo nereálně velké PR.
+
+**Why:**
+- **Velké PR se ručně kontroluje špatně.** Pozornost recenzenta s velikostí
+  diffu neroste. Od určité velikosti se z review stává prolétnutí — a to je
+  horší než žádné review, protože vypadá jako schválení.
+- **Rozpad patří do plánování, ne do review.** Když přijde nereálně velké PR,
+  je pozdě: vrátit ho k rozdělení znamená zahodit implementační session
+  a rozdělit hotovou práci stojí víc, než ji rozdělit předem.
+
+**Signály příliš velkého issue** — posuzuje je plánování, ne slepý počet
+řádků:
+- issue zasahuje víc vrstev najednou (rozhraní, implementace, napojení,
+  persistence) a každá z nich by šla mergovat samostatně;
+- akceptační kritéria popisují víc nezávislých chování, z nichž každé by
+  obstálo jako vlastní issue;
+- rozšíření precedentu nejde popsat jednou větou „jako `X`, jen pro `Y`".
+
+Do velikosti se nepočítá generovaný nebo mechanický obsah (migrace vygenerované
+nástrojem, lock soubory, snapshoty) — ten recenzent nečte řádek po řádku.
+
+**Vztah k 2.4:** menší issues znamenají víc hran v grafu závislostí, a s tím
+vlnové plánování počítá. Rozdělení ale nesmí vyrobit issue, které samo nic
+nedělá (rozhraní bez jediného použití) — každé PR má být samostatně
+smysluplný a mergovatelný krok.
+
+**Žádný číselný práh.** Velikost se posuzuje jen podle signálů výš, ne podle
+počtu řádků diffu nebo souborů — ani jako konfigurační hodnota projektu. Řádky
+jsou stejně neurčité měřítko jako kdysi placení programátorů za napsaný řádek:
+co se jimi měří, začne se optimalizovat, a výsledek je horší na všech stranách.
+Soudržná změna se rozseká jen proto, aby se vešla pod limit, nebo se kód
+zhustí, aby se do něj vešel — a recenzentovi to nepomůže ani v jednom případě.
+Signály se ptají na to, na čem review doopravdy stojí: kolik nezávislých věcí
+musí recenzent v jednom PR udržet v hlavě.
+
+## 2.8 Orchestrátor spouští issues v podřazených session, ne v subagentech
+
+`run-milestone` přestává dispečovat issues subagentům, kteří doběhnou
+a zmizí. Každé odblokované issue spustí v podřazené session Claude Code —
+s vlastním worktree, větví a PR. Člověk otevře PR, připomínky napíše k němu
+nebo přímo do session, a session je zapracuje.
+
+**Why:**
+- **Připomínky potřebují adresáta, který si pamatuje.** Subagent po otevření
+  PR skončí; retry pak znamená nového agenta, který si celý kontext načítá
+  znovu. Podřazená session zůstává a připomínku zapracuje ve stejném
+  kontextu, ve kterém kód napsala — levněji i přesněji.
+- **Člověk řídí každé issue zvlášť.** Session je vidět a dá se otevřít,
+  nasměrovat i zastavit na úrovni jednoho issue, bez zásahu do orchestrátoru
+  a ostatních rozběhnutých issues.
+- **Orchestrátor zůstává tenký.** Drží graf závislostí a stav PR, nečte diffy
+  ani review, takže jeho kontext neroste s počtem issues.
+
+**Důsledek pro workflow:** orchestrátor spustí session na odblokovaná issues
+a čeká, až se jejich PR zmergují — merge provede sama session na signál
+člověka (2.6: recenzent schvaluje, realizátor merguje). Pak odblokuje další
+část grafu. Orchestrátor sám nemerguje. Paralelismus
+tím neomezuje počet agentů, ale kapacita člověka na review — dávka se
+dimenzuje podle toho, kolik PR člověk zvládne projít, ne kolik session jde
+spustit.
+
+**Bez podřazených session: obsah přes PR, přes orchestrátora jen signál.**
+Podřazené session jsou schopnost prostředí (desktopová aplikace Claude Code),
+ne skillu. Kde chybí (CLI), zbývají subagenti, a zvolená cesta pro předávání
+připomínek je tahle:
+
+- Připomínky člověk píše do PR — tam, kam patří a kde zůstanou jako záznam.
+- Orchestrátorovi pošle jen krátký signál („#12 má připomínky", „#12
+  schváleno").
+- Orchestrátor naváže na konkrétního subagenta s jeho kontextem —
+  pokračováním přes jeho id, ne novým spuštěním — a předá mu jen ten signál.
+  Subagent si připomínky přečte z PR sám, zapracuje je, případně na signál
+  schválení mergne, a vrátí jednořádkový výsledek.
+
+Proti dvěma přímočarým cestám:
+
+- **Připomínky přímo přes PR, bez signálu** — běžící subagent by si musel sám
+  hlídat, jestli už přišla reakce. Takové hlídání stojí běh a obrací výhodu,
+  kterou má podřazená session: ta čeká zadarmo.
+- **Připomínky celé přes orchestrátora** — nikdo nic nehlídá, ale každé kolo
+  review plevelí historii hlavní session a zvedá její kontext, přesně to, čemu
+  má tenký orchestrátor předcházet.
+
+Zvolená cesta bere z každé to levnější: obsah teče přes PR jako v první,
+spouštěč přes orchestrátora jako ve druhé — hlavní session nese jen signál
+a jednořádkový výsledek, ne obsah review.
+
+**Ověří se v provozu, ne předem.** Je to směr, kterým se pohneme, a podle
+skutečného použití se upraví. Sledovat se má hlavně: jak dlouho subagent
+s kontextem vydrží (konec hlavní session, zkracování historie), jestli
+hlavní session přes signály opravdu neroste, a jestli cena za issue klesne
+k úrovni podřazených session, nebo se jen zmenší.

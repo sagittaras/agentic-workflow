@@ -211,6 +211,13 @@ z 1.5, která zakázala jen ADR → paměť.
 session (to dělá agent sám), ale specificky po review-driven opravě — jako
 most mezi durable záznamem v trackeru a trvalou pamětí agenta.
 
+**Po 2.6 a 2.8 (16. 11. 2026):** review dělá člověk a připomínky zapracovává
+podřazená session, která kód napsala. Mezera z tohoto principu trvá — session
+po skončení poznatek zapomene a do paměti agenta se sám nedostane —, jen
+vstupem `train-agent` jsou teď připomínky člověka v PR a jejich zapracování.
+Role recenzentů (`tech-lead`, `qa-engineer`) jako důvod pro zakládání agenta
+odpadají; routing implementace podle `area:*` zůstává.
+
 ## 1.7 Dokumentace se dohledává stromem indexů od CLAUDE.md, ne registrem cest
 
 K projektové dokumentaci vede jediná cesta: `CLAUDE.md` odkazuje na vstupní index

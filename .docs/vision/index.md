@@ -1,7 +1,8 @@
 # Vize: jak má člověk pracovat s AI okolo tohoto pluginu
 
 > **Stav:** rozepsáno, píše se průběžně po principech — od 24. 8. 2026;
-> 16. 11. 2026 přibyl princip 1.7 a vize se rozdělila na stránky.
+> 16. 11. 2026 přibyl princip 1.7, vize se rozdělila na stránky a principy
+> 2.6–2.8 posunuly cíl od úplné autonomie ke kompromisu (viz níž).
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
 > sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním
@@ -11,10 +12,20 @@
 > zůstává jako záznam toho, co bylo postaveno a proč (sdílený kontrakt, skripty,
 > forge vrstva zůstávají v platnosti bez ohledu na výsledek téhle úvahy).
 
+**Posun cíle (16. 11. 2026).** Plugin vznikal jako cesta k úplné autonomizaci
+práce v Claude Code. Provoz ukázal, že nejdražší část průchodu issue není
+implementace, ale agentní review — a že se jeho důslednost nedá spolehlivě
+nadirigovat promptem. Vize proto míří ke kompromisu: konkrétní práci vykoná AI,
+výsledný kód přezkoumává člověk, a orchestrátor spouští issues v podřazených
+session, ke kterým člověk píše připomínky podle jejich PR
+([2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent)–[2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)).
+
 Principy jsou číslované napříč stránkami. Číslo je stabilní identifikátor —
 odkazují se na něj stránky mezi sebou i komentáře ve skillech (`run-milestone`:
 „princip 2.4"), takže se při přesunu nebo rozdělení stránky nepřečíslovává. Nový
 princip dostane další volné číslo ve své skupině a řádek v přehledu níž.
+Nahrazený princip se nemaže ani nepřečíslovává — dostane hlavičku „Nahrazeno"
+s odkazem na nástupce a zůstává jako záznam, proč se směr změnil.
 
 ## Principy
 
@@ -49,14 +60,22 @@ autonomně staví:
 - [2.4](issues.md#24-plánování-je-vlnové-gatované-dostupností-vzoru--ne-jednorázová-dávka)
   Plánování je vlnové, gatované dostupností vzoru.
 - [2.5](issues.md#25-review-zadání-dvě-úzké-role-žádná-nesmí-přesáhnout-svůj-mandát)
-  Review Zadání: dvě úzké role, žádná nesmí přesáhnout svůj mandát.
+  ~~Review Zadání: dvě úzké role, žádná nesmí přesáhnout svůj mandát.~~
+  Nahrazeno 2.6 a 2.8; mandát role A platí pro ručně spuštěný `verify-issue`.
+- [2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent) Review
+  výsledného kódu dělá člověk, ne agent.
+- [2.7](issues.md#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně)
+  Issue je velké nanejvýš tak, aby jeho PR šlo přezkoumat ručně.
+- [2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)
+  Orchestrátor spouští issues v podřazených session, ne v subagentech.
 
 ## Stránky
 
 - [Principy spolupráce](principles.md) — 1.1–1.7: kostra, vzorová implementace,
   rules, ADR, agenti a navigace dokumentací.
-- [Issues a autonomní vývoj](issues.md) — 2.1–2.5: tvar issue, Poznámka
-  a Zadání, vlnové plánování, mandát review.
+- [Issues a autonomní vývoj](issues.md) — 2.1–2.8: tvar issue, Poznámka
+  a Zadání, vlnové plánování, lidské review místo agentního, velikost issue
+  podle přezkoumatelnosti PR, orchestrace přes podřazené session.
 - [Dopad na existující skilly](skill-impact.md) — který skill se kterým
   principem mění a jak; samostatná tabulka pro 1.7 a výčet skillů, kterých se
   vize netýká.
