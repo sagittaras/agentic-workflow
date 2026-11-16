@@ -1,20 +1,23 @@
 ---
 name: verify-issue
 description: >-
-  Nezávisle ověří, že PR splňuje akceptační kritéria svého issue — spustí
-  ověřovací příkazy, porovná změnu s precedentem citovaným v Referencích
-  a kritéria opřená o nový regresní test mutačně otestuje. Odškrtne v těle issue jen to,
-  co doopravdy ověřil. Report s verdiktem a strojově čteným řádkem
-  „Blokuje merge: ano/ne" uloží jako komentář k PR. Nic neopravuje.
+  Nástroj na vyžádání: nezávisle ověří, že konkrétní PR splňuje akceptační
+  kritéria svého issue — spustí ověřovací příkazy, porovná změnu s precedentem
+  citovaným v Referencích a kritéria opřená o test mutačně otestuje, tedy
+  zjistí, jestli je test kryje dobře. Odškrtne v těle issue jen to, co doopravdy
+  ověřil. Report s verdiktem a strojově čteným řádkem „Blokuje merge: ano/ne"
+  uloží jako komentář k PR. Nic neopravuje. Není to povinná brána před merge.
 when_to_use: >-
-  Použij k ověření hotového PR proti kritériím jeho issue — v milestone běhu
-  jako akceptační brána před merge, ručně když uživatel řekne „ověř, jestli to
-  PR splňuje issue", „zkontroluj akceptační kritéria" nebo „projdi PR proti
-  zadání". Nepoužívej pro posouzení plánu milestonu před implementací, na to
-  slouží review-milestone; ani pro obecné code review kvality, stylu
-  a architektury, ta tenhle skill neposuzuje; ani pro opravu nálezů, tu dělá
-  implement-issue; ani pro povýšení Poznámky na Zadání ukotvené v kódu před
-  implementací, to dělá triage-issue.
+  Použij, když si člověk nad konkrétním PR vyžádá nezávislé ověření kritérií
+  jeho issue — „ověř, jestli to PR splňuje issue", „zkontroluj akceptační
+  kritéria", „projdi PR proti zadání", „kryjí ty testy kritéria doopravdy?".
+  Nespouštěj ho sám jako krok před každým merge: v milestone běhu kritéria
+  kryjí testy potvrzené branou a kód přezkoumává člověk; tenhle skill přijde
+  na řadu, až když ho člověk chce. Nepoužívej pro posouzení plánu milestonu
+  před implementací, na to slouží review-milestone; ani pro obecné code
+  review kvality, stylu a architektury, ta tenhle skill neposuzuje; ani pro
+  opravu nálezů, tu dělá implement-issue; ani pro povýšení Poznámky na Zadání
+  ukotvené v kódu před implementací, to dělá triage-issue.
 argument-hint: "[číslo issue, nebo číslo PR / název větve]"
 # Odchylka od tabulky sloves v konvencích, kde se posuzování existujícího stavu
 # jmenuje review/check: `verify` je vědomé, protože review-* v této sadě posuzují
@@ -59,11 +62,11 @@ disallowed-tools:
 # ne zásah do repozitáře. agent — profil žádného z dostupných agentů nesedí
 # (skill potřebuje spouštět příkazy a zapisovat do trackeru), a plánovací
 # systémový prompt by běh táhl k navrhování opravy, což je přesně to, co tenhle
-# skill dělat nesmí; omezení práv nese allowed-tools. background — volající
-# čeká na verdikt, běh na pozadí by milestone smyčku rozpojil.
-# disable-model-invocation — skill musí zůstat volatelný modelem, spouští ho
-# run-milestone. paths — pracuje podle čísla v argumentu, ne nad konkrétními
-# soubory. shell — příkazy se spouští přes Bash s pracovním adresářem
+# skill dělat nesmí; omezení práv nese allowed-tools. background — člověk,
+# který si ověření vyžádal, čeká na verdikt; běh na pozadí by ho od něj odpojil.
+# disable-model-invocation — skill musí zůstat volatelný modelem: člověk si ho
+# vyžádá větou („ověř to PR"), ne jen příkazem. paths — pracuje podle čísla
+# v argumentu, ne nad konkrétními soubory. shell — příkazy se spouští přes Bash s pracovním adresářem
 # nastaveným na vlastní worktree. version, license — verzuje se celý plugin,
 # ne jednotlivý skill.
 ---
@@ -71,7 +74,9 @@ disallowed-tools:
 # Verify Issue
 
 Cílem je nezávislý **důkaz**, že PR splňuje akceptační kritéria svého issue — ne
-dojem, že je splňuje. Běžíš ve forku s čistým kontextem a je to záměr: ověřovatel,
+dojem, že je splňuje. Spouští tě člověk nad konkrétním PR, když chce ověření
+nad rámec brány, která jen potvrdí, že testy ke kritériím existují a prochází;
+nejsi povinný krok před merge. Běžíš ve forku s čistým kontextem a je to záměr: ověřovatel,
 který sdílí kontext se session, jež kód psala, si odkývá její vlastní úvahu
 a přehlédne přesně to, co přehlédla ona; o té session tedy nepředpokládej nic.
 Závazným kontraktem jsou sdílené soubory v `${CLAUDE_PLUGIN_ROOT}/shared/`; při
@@ -91,8 +96,7 @@ ověřovat — řekni to a skonči.
 
 Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu.
 Potřebuješ z ní podsekce **Forge** (typ, `owner/repo`), **Ověřovací příkazy**
-(čím se kritérium doopravdy ověří), **Zdroje pravdy** (kde leží dokumenty,
-cituje-li je Reference vedle kódu) a **Větvení** (výchozí a integrační větev).
+(čím se kritérium doopravdy ověří) a **Větvení** (výchozí a integrační větev).
 
 Nevíš-li, kde v konfiguraci co hledat, nebo některá podsekce chybí, otevři
 `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. Chybí-li `CONTRIBUTING.md`,
@@ -176,21 +180,24 @@ akceptační kritéria píší, popisuje `${CLAUDE_PLUGIN_ROOT}/shared/issue-tem
 otevři ho teď, ať čteš tělo podle jeho sekcí a ne podle dojmu.
 
 Sekce **Reference** cituje **precedent v kódu** — konkrétní soubor nebo vzor,
-který issue rozšiřuje, cestou vůči kořeni repozitáře (**ne** vůči kořenům ze
-sekce Zdroje pravdy; ty platí pro dokumenty). Otevři ho a přečti; je to zdroj
-pravdy o tom, co mělo vzniknout. Parafráze v popisu PR ani v komentářích důkaz
-není — právě věrohodně znějící parafráze bez opory v kódu je ta chyba, kterou
-tenhle skill má chytit.
+který issue rozšiřuje, cestou vůči kořeni repozitáře. Otevři ho a přečti; je to
+zdroj pravdy o tom, co mělo vzniknout. Parafráze v popisu PR ani v komentářích
+důkaz není — právě věrohodně znějící parafráze bez opory v kódu je ta chyba,
+kterou tenhle skill má chytit.
 
-Cituje-li Reference **vedle kódu i dokument** (ADR, UX spec), otevři ho na cestě
-podle sekce Zdroje pravdy a přečti citovanou sekci. Čti ho jako **doplňkové
-omezení** — co nesahat, které rozhodnutí je chráněné — ne jako popis toho, co
-mělo vzniknout; ten nese precedent.
+Cituje-li Reference **vedle kódu i dokument** (ADR, UX spec), otevři ho na
+citované cestě vůči kořeni repozitáře a přečti citovanou sekci. Nedohledáš-li ho
+tam, **sestup stromem dokumentace od `CLAUDE.md`** podle
+`${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md`: z `CLAUDE.md` na vstupní index a dál
+podle vět u odkazů, dokud nenarazíš na citovaný dokument — ne Globem ani podle
+názvu souboru. Čti ho jako **doplňkové omezení** — co nesahat, které rozhodnutí
+je chráněné — ne jako popis toho, co mělo vzniknout; ten nese precedent.
 
 Rozliš tři stavy, ať nehlásíš nález tam, kde žádný není:
 
-- **Citovaná cesta v repozitáři neexistuje** (kód i dokument) → kritérium, které
-  se o ni opírá, je `Neověřitelné` a v Doporučeních je to nález `[issue]`.
+- **Citovaná cesta v repozitáři neexistuje** (kód; dokument ani sestupem
+  stromem nenajdeš) → kritérium, které se o ni opírá, je `Neověřitelné`
+  a v Doporučeních je to nález `[issue]`.
 - **Precedent existuje a chování z kritéria v něm až do tohohle PR nebylo** →
   **není to nález**; přesně ten přírůstek issue přináší. Ověřuj, že ho PR dodal
   jako rozšíření precedentu, ne jako vzor postavený vedle něj.
@@ -237,8 +244,8 @@ jako `git -C "$wt" diff "origin/<pr-base>...origin/<pr-head>"`.
 
 **Čerstvý worktree neobsahuje ignorované artefakty** — `node_modules`, `obj/`,
 `bin/`, virtualenv, staženou cache. Ověřovací příkaz v něm spadne na prostředí,
-ne na kódu, a to je nejzrádnější falešný nález celého skillu: `run-milestone` by
-za něj spálil retry rozpočet na PR, se kterým nic není. Než pustíš první
+ne na kódu, a to je nejzrádnější falešný nález celého skillu: člověk by podle
+něj vrátil k opravě PR, se kterým nic není. Než pustíš první
 ověřovací příkaz, obnov závislosti tím, co repozitář používá (`pnpm install
 --frozen-lockfile`, `dotnet restore`, `uv sync`, …); poznáš to z lockfilu
 a manifestu. Jsou-li závislosti nainstalované v pracovní kopii, ze které jsi
@@ -265,8 +272,8 @@ výpadek nebo vinu PR.
 
 ### 5. Ověř každé kritérium zvlášť
 
-Tohle je jádro práce. **Zaškrtnuté políčko není důkaz** — kdo ho zaškrtl a proč,
-nevíš a vědět nemáš.
+Tohle je jádro práce. **Zaškrtnuté políčko není důkaz** — ani to od orchestrátoru:
+znamená jen „kryto testem, který prošel", ne že test kritérium kryje dobře.
 
 Nejdřív spusť ověřovací příkaz pro `area:*` issue, i když ho žádné kritérium
 nejmenuje. Neprojde-li build nebo testovací sada, není doopravdy ověřené žádné
@@ -363,9 +370,14 @@ Přečti tělo issue **znovu, těsně před zápisem** (zápis nahrazuje celé t
 bys jinak přepsal, co mezitím přibylo). Pak v něm změň **jen zaškrtávátka**:
 
 - kritérium `Splněno` → `- [ ]` přepiš na `- [x]`;
-- kritérium `Nesplněno` nebo `Neověřitelné` → nech `- [ ]`, a bylo-li políčko
-  zaškrtnuté, **odškrtni ho** — tracker musí ukazovat skutečný stav, a předem
-  zaškrtnuté políčko je zároveň nález do reportu (Doporučení, `[issue]`).
+- kritérium `Nesplněno` → nech `- [ ]`, a bylo-li políčko zaškrtnuté,
+  **odškrtni ho** — tracker nesmí tvrdit splnění, které jsi vyvrátil;
+- kritérium `Neověřitelné` → políčko nech, jak je: sám ho nezaškrtáváš,
+  a zaškrtnutí od orchestrátoru („kryto testem, který prošel") tvoje
+  neověřitelnost nevyvrací.
+
+Zaškrtnuté políčko samo o sobě nález není — podle `shared/issue-template.md`
+odškrtává orchestrátor kritéria, jejichž test potvrdil.
 
 Text kritérií ani ostatní sekce **nepřepisuj a nemaž**. Zápis proveď receptem
 „Uprav tělo issue" z `forge-recipes.md`: na Gitea jde celé nové tělo v parametru
@@ -385,7 +397,7 @@ by se `removed=false` do uloženého komentáře nedostalo.
 
 Report ulož jako komentář k PR (recept „Komentář k PR (review)") a **vždy** ho
 vrať i jako závěrečnou zprávu. Komentář je trvalý záznam, závěrečná zpráva je to,
-podle čeho se rozhoduje `run-milestone` — jedno druhé nenahrazuje.
+podle čeho se rozhoduje ten, kdo ověření spustil — jedno druhé nenahrazuje.
 
 Jak se tělo předává, se liší podle forge:
 
@@ -468,7 +480,7 @@ příčina je v kódu či testu, ne v zadání (kritérium po kritériu, co konk
 opravit); `[issue]` vada samotného zadání — nejasná formulace, neexistující
 citovaná cesta, Reference bez kódového precedentu (obojí krok 3, s doporučením
 `triage-issue`), chybějící `area:*` label (krok 3), kritérium, které je samo
-špatně stanovené (krok 6), předem zaškrtnuté políčko (krok 7), i neověřitelné
+špatně stanovené (krok 6), i neověřitelné
 kritérium, jehož příčina je v samotném zadání; `[konfigurace]` chybějící sekce
 nebo řádek v konfiguraci cílového projektu, typicky oblast bez ověřovacího
 příkazu; `[kontrakt]` mezera ve sdíleném kontraktu pluginu, na kterou jsi
@@ -479,10 +491,11 @@ Blokuje merge: <ano | ne>
 ````
 
 Řádkem `Blokuje merge:` report **končí** a stojí v něm **právě jednou**, na
-samostatném řádku, bez tučnění a bez čehokoli dalšího za hodnotou. `run-milestone`
-podle něj rozhoduje mezi merge a opakováním a dispečovaným recenzentům velí report
-tímhle řádkem ukončit; když ho nenajde nebo najde dvakrát, považuje celý běh za
-selhaný dispatch a tvoje práce přijde vniveč. Hodnota se musí shodovat s verdiktem
+samostatném řádku, bez tučnění a bez čehokoli dalšího za hodnotou. Je to
+verdikt pro člověka, který ověření spustil, ve strojově čitelném tvaru: podle
+něj PR schválí, nebo vrátí, a stejně ho přečte skript či jiný skill. Řádek,
+který chybí nebo stojí dvakrát, je nečitelný verdikt a tvoje práce přijde
+vniveč. Hodnota se musí shodovat s verdiktem
 v hlavičce — dva různé výroky v jednom reportu jsou horší než žádný.
 
 ## Zásady
@@ -506,8 +519,8 @@ v hlavičce — dva různé výroky v jednom reportu jsou horší než žádný.
   stav nese odškrtnutí v issue (krok 7), report ho neopakuje. Nemá-li sekce co
   hlásit, mlčí, místo aby psala „vše v pořádku" na dlouho. Co reportu nesmí
   chybět, je nesplněné nebo neověřitelné kritérium a proč — to je jediná
-  informace, na které navazující práce (`implement-issue`, `run-milestone`)
+  informace, na které navazující práce (`implement-issue`, člověk při review)
   doopravdy stojí.
-- **Řádek `Blokuje merge:` je závazek vůči navazujícímu skillu.** Nikdy ho
+- **Řádek `Blokuje merge:` je závazek vůči tomu, kdo report čte.** Nikdy ho
   nevynech a nikdy ho nepiš v rozporu s verdiktem.
 - **Pracovní kopii po sobě ukliď** a nikdy z ní nepushuj ani necommituj.
