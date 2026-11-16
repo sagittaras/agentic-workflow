@@ -27,8 +27,9 @@ rozsah](#mimo-rozsah).
 | `write-rule` | Změna frekvence volání | Mechanika beze změny — nově se ale volá po **každém** založení precedentu (kostra, každá vzorová implementace), ne jen jednou na startu projektu. | 1.2, 1.4 |
 | `write-agent` | Beze změny (potvrzeno) | Konvence zákazu odkazů na dokumenty v definici agenta už je v souladu s 1.5 — sloužila mu dokonce jako precedens. | 1.5 |
 
-**`init-workflow` bez bespoke configu.** Tenhle repozitář sám má ve svém
-`.claude/workflow.md` přesně ten příznak, na který tahle úvaha naráží:
+**`init-workflow` bez bespoke configu.** Tenhle repozitář sám měl ve svém
+`.claude/workflow.md` (do přesunu konfigurace do `CONTRIBUTING.md` 16. 11. 2026)
+přesně ten příznak, na který tahle úvaha naráží:
 
 ```
 | oblast | implementuje |
