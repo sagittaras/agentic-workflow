@@ -4,7 +4,8 @@ description: >-
   Naplánuje milestone po vlnách — vyzpovídá hrubý rozsah, pro každou položku
   backlogu ověří, jestli v repozitáři existuje precedent k rozšíření, a jen
   z takových sepíše Zadání s kritérii ukotvenými v konkrétním souboru či
-  vzoru v kódu, ne v próze dokumentu. Položky bez precedentu se v tomhle
+  vzoru v kódu, ne v próze dokumentu, rozpadlá tak, aby PR každého z nich
+  šlo přezkoumat ručně. Položky bez precedentu se v tomhle
   běhu nezakládají jako issue — zůstávají v backlogu na příští vlnu, až
   vznikne vzor, který rozšíří. Po potvrzení uživatelem založí chybějící
   labely, milestone (nebo do něj přidá další vlnu) a issues sekvenčně, aby
@@ -88,6 +89,7 @@ pluginu — při rozporu s tímhle postupem platí ony.
 | `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | V kroku 1, když projektová konfigurace chybí nebo v ní nenajdeš sekci, kterou potřebuješ |
 | `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než začneš klasifikovat backlog |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 4, dřív než napíšeš první název a první kritérium |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 4, chceš-li k Zadání citovat ADR nebo jiný doplňkový dokument |
 | `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | V kroku 2, rozšiřuješ-li existující milestone, jinak v kroku 5 — než poprvé sáhneš na tracker, včetně sekce s nástrahami |
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | Stejně jako recepty — v kroku 2 nebo v kroku 5, na GitHub projektech dřív než složíš první volání skriptu: nese povinné argumenty i význam návratových kódů |
 
@@ -113,10 +115,7 @@ nestojí nic.
 
 Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
 projektu. Potřebuješ z ní podsekce **Forge** (kterou větev receptů použít),
-**Labely** (co smíš nasadit) a **Jazyk issues**. Podsekci **Zdroje pravdy**,
-existuje-li, si drž po ruce pro krok 4 — ne k ukotvení kritérií (to teď dělá
-kód), ale kvůli chráněným rozhodnutím z ADR, na která si má autor Zadání dát
-pozor.
+**Labely** (co smíš nasadit) a **Jazyk issues**.
 
 - **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
   hodnoty. Řekni uživateli, že projekt nemá workflow konfiguraci, a nabídni
@@ -182,6 +181,23 @@ z konfigurace.
 
 Nad rámec šablony platí:
 
+- **Issue je velké nanejvýš tak, aby jeho PR šlo přezkoumat ručně.** Položku
+  rozpadni na víc Zadání, platí-li o ní kterýkoli z těchto signálů:
+  - zasahuje víc vrstev (rozhraní, implementace, napojení, persistence)
+    a každá z nich by šla mergovat samostatně;
+  - kritéria popisují víc nezávislých chování, z nichž každé by obstálo jako
+    vlastní issue;
+  - rozšíření precedentu z kroku 3 nejde popsat jednou větou „jako `X`, jen
+    pro `Y`".
+
+  Každý vzniklý kus musí jít mergovat samostatně a sám něco dělat — rozhraní
+  bez jediného použití není krok, ale polovina kroku. Kusy na sebe navazují
+  přes `Závisí na`. Velikost neposuzuj počtem řádků ani souborů: soudržná
+  změna by se rozsekala, jen aby se vešla pod limit.
+- **Kritéria piš testovatelně** podle sekce „Jak psát akceptační kritéria"
+  šablony — výsledek příkazu, návratový kód, výstup testu. Kritérium, které
+  test pokrýt nejde, zakonči doslova značkou `(ověří člověk)`; čte ji strojově
+  brána `run-milestone`.
 - **`Souhrn` nese i hranice** — co položka podle nalezeného precedentu dělá,
   a je-li to nejednoznačné, i co nedělá. Stejné pravidlo jako v kroku 4a
   `triage-issue`, ať je Zadání z plánování a Zadání z triage nerozeznatelné.
@@ -191,8 +207,9 @@ Nad rámec šablony platí:
   rozpracovaný základ.
 - **Každé kritérium ukotvi v precedentu nalezeném v kroku 3** a tu cestu
   uveď v `Reference` — soubor nebo vzor v kódu, ne sekce dokumentu. Odkaz na
-  ADR ze `Zdroje pravdy` smíš přidat jako doplňkové omezení („nesahej na X,
-  viz ADR-N"), nikdy místo kódové reference.
+  ADR smíš přidat jako doplňkové omezení („nesahej na X, viz ADR-N"), nikdy
+  místo kódové reference. ADR dohledej sestupem stromem dokumentace od
+  `CLAUDE.md` podle `docs-tree.md` a cituj ho cestou vůči kořeni repozitáře.
 - **Labely urči rovnou**, podle pravidel v Zásadách níže. Povolené hodnoty bere výčet
   ze sekce `Labely`; label mimo něj nezakládej bez potvrzení v kroku 6.
 

@@ -5,7 +5,9 @@ description: >-
   precedent, který lze rozšířit, a pokud ho najde, přepíše tělo issue do
   tvaru Zadání s hranicemi, kódovým precedentem v Reference a checklistem
   akceptačních kritérií. Nenajde-li precedent, tělo nemění a okomentuje
-  issue, že práce potřebuje napřed spárovanou implementační session. Je-li
+  issue, že práce potřebuje napřed spárovanou implementační session. Vydala-li
+  by Poznámka na PR, které nejde ručně přezkoumat, tělo nemění a v komentáři
+  navrhne rozdělení na víc Zadání. Je-li
   issue už Zadání ukotvené v kódu nebo je rozpracované, nic nemění. Výstupem
   je přepsané tělo, komentář s vysvětlením blokace, nebo hlášení, že nebylo
   co dělat.
@@ -153,8 +155,19 @@ ukotvení) — pokračuj krokem 3.
 
 Ze scope v názvu issue (`<type>(<scope>): …`) a ze Souhrnu vytěž, na jakou
 oblast kódu se práce vztahuje. Proveď test podle
-`${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md`. Výsledek určuje větev
-v kroku 4.
+`${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md`. Precedent nenajdeš → krok 4b.
+
+Najdeš-li ho, posuď, jestli by z Poznámky jako jednoho Zadání vzniklo PR,
+které nejde ručně přezkoumat. Platí-li kterýkoli signál, jdi na krok 4c,
+jinak na 4a:
+
+- práce zasahuje víc vrstev (rozhraní, implementace, napojení, persistence)
+  a každá z nich by šla mergovat samostatně;
+- kritéria by popisovala víc nezávislých chování, z nichž každé by obstálo
+  jako vlastní issue;
+- rozšíření precedentu nejde popsat jednou větou „jako `X`, jen pro `Y`".
+
+Velikost neposuzuj počtem řádků ani souborů — rozhodují jen tyhle signály.
 
 ### 4a. Precedent existuje → přepiš na Zadání
 
@@ -166,7 +179,10 @@ včetně jeho sekce „Reference je precedent v kódu":
   a je-li to nejednoznačné, i co nedělá.
 - **Akceptační kritéria** napiš jako pozorovatelné chování, s prázdnými
   zaškrtávátky. Každé kritérium musí jít ukázat na nalezený precedent — bez
-  téhle opory kritérium nepiš, radši issue ponech na kroku 4b.
+  téhle opory kritérium nepiš, radši issue ponech na kroku 4b. Piš je
+  testovatelně podle sekce „Jak psát akceptační kritéria" šablony — výsledek
+  příkazu, návratový kód, výstup testu; kritérium, které test pokrýt nejde,
+  zakonči doslova značkou `(ověří člověk)`.
 - **Reference** ukazuje na **konkrétní soubor/vzor v kódu** nalezený
   v kroku 3, ne na sekci ADR nebo UX-spec dokumentu. Odkaz na ADR smíš
   přidat jen jako doplňkové omezení („nesahej na X, viz ADR-N") vedle
@@ -212,6 +228,23 @@ do dočasného souboru mimo pracovní strom a předej ho přes `--body-file`;
 Skončí-li zápis komentáře chybou, reaguj stejně jako v kroku 4a a nepokládej
 komentář za zapsaný. Jdi na krok 5.
 
+### 4c. PR by nešlo přezkoumat → navrhni rozdělení
+
+Tělo issue **nepřepisuj** a nová issues nezakládej — rozdělení je návrh pro
+člověka. Okomentuj issue receptem „Okomentuj issue" (na GitHubu přes dočasný
+soubor jako v kroku 4b) a navrhni v něm rozdělení na víc Zadání. U každého
+navrženého Zadání uveď:
+
+- název ve tvaru `<type>(<scope>): …` podle šablony issue,
+- jednu větu „jako `X`, jen pro `Y`" s precedentem z kroku 3,
+- na kterém z ostatních navržených Zadání závisí.
+
+Každé navržené Zadání musí jít mergovat samostatně a samo něco dělat —
+rozhraní bez jediného použití není Zadání. Které signál z kroku 3 rozhodl,
+řekni v komentáři jednou větou. Issue nezavírej, název ani labely neměň.
+
+Skončí-li zápis komentáře chybou, reaguj stejně jako v kroku 4a. Jdi na krok 5.
+
 ### 5. Vypiš výsledek
 
 Podle toho, kterou větví jsi prošel, vypiš výsledek podle Formátu výstupu.
@@ -241,7 +274,16 @@ Chybí precedent pro: <stručně, co jsi hledal>
 Doporučení: spárovaná implementační session, pak nové triage.
 ```
 
-**Zápis selhal (kroky 4a/4b):**
+**Navrženo rozdělení (krok 4c):**
+
+```
+Issue #<n>: navrženo rozdělení na <počet> Zadání, okomentováno.
+Precedent: <cesta k souboru/vzoru>
+Signál: <který signál z kroku 3 rozhodl>
+Doporučení: založit navržená Zadání, každé pak povýšit samostatně.
+```
+
+**Zápis selhal (kroky 4a/4b/4c):**
 
 ```
 Issue #<n>: triage neproběhlo, zápis do trackeru selhal.
