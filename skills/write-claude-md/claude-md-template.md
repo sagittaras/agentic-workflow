@@ -37,12 +37,15 @@ platforma, runtime. Vynech, když se totéž dá přečíst z manifestu projektu
 ## Orientace ve struktuře repa
 
 [Odrážky `cesta` — k čemu je. Jen úrovně, na kterých se láme odpovědnost, ne strom
-souborů. U dokumentace odkazuj markdown odkazem a řekni, kdy ji otevřít — tím se
-z opisu stane rozcestník.]
+souborů. Dokumentaci neodkazuj po jednotlivých dokumentech: povinný je jediný
+odkaz na vstupní index znalostní báze a věta, kdy ho otevřít — odtud se naviguje
+stromem indexů a výčet dokumentů by byl jen další registr, který se se stromem
+rozejde.]
 
 - `[cesta]` — [k čemu slouží, jednou větou].
-- `[cesta/docs]` — [co obsahuje]; [kdy si to má model přečíst].
-- [ODKAZ.md] — [co v něm je].
+- [Dokumentace](.docs/index.md) — [co báze drží]; vstupní index, odtud se
+  naviguje stromem indexů. Otevři ji, [kdy — např. než změníš chování, které
+  popisuje].
 
 [Věta o tom, že se struktura bude rozšiřovat a seznam se má držet aktuální.]
 
@@ -61,8 +64,16 @@ a přitom rozbijí návrh.]
 ## Konvence práce
 
 [Jen to, co model neuhodne a co nehlídá nástroj: jazyk kódu vs. jazyk komunikace,
-odkaz na commit konvence, odkaz na branching. Formátování a styl přenech linteru.]
+odkaz na commit konvence, odkaz na branching. Formátování a styl přenech linteru.
+Pravidlo báze níž je povinné, má-li projekt bázi.]
+
+- Znalost, kterou nejde vyčíst z kódu, patří do báze, ne do tohohle souboru.
+  Novou stránku nebo sekci odkaž z nadřazeného indexu ve stejné změně, ve které
+  vzniká.
 ````
+
+Nemá-li projekt bázi, odkaz na vstupní index ani pravidlo báze si nevymýšlej
+a nezakládej ji — bázi i odkaz na ni z `CLAUDE.md` zakládá `write-docs`.
 
 ---
 
@@ -77,6 +88,7 @@ je důvod ke škrtu:
 | Inventura všech složek a souborů | Orientace znamená vybrat úrovně, kde se láme odpovědnost. Strom souborů si model vypíše sám. |
 | Vysvětlení, co je daná technologie | „Next.js je React framework" model ví. Zajímá ho, jak ji používá tenhle projekt. |
 | Opsaný obsah dokumentace | Duplicita se rozejde s originálem. Odkaz drží krok, opis ne. |
+| Znalost do hloubky — popis oblasti, cílový návrh, pravidla vrstvy | Z kódu ji vyčíst nejde, takže škrt ji ztratí. Patří do báze; nabídni přesun přes `write-docs`. |
 | Obecné rady o kvalitě | „Piš čitelný kód", „přidávej testy" neřídí nic a zabírají místo. |
 | Coding style a formátování | Hlídá linter a formatter. Když ne, patří to do jejich konfigurace, ne sem. |
 | Seznam závislostí a verzí | Je v lock souboru, aktuálnější než tady. |
@@ -93,7 +105,9 @@ na patnáct řádků obecných formulací. Rozsah se tím naplní, informace nep
 
 - [ ] Úvodní odstavec odpovídá na „co se staví a proč" — a to „proč" v repu nikde jinde není
 - [ ] Každá cesta v orientaci má uvedený důvod, proč ji model má znát
-- [ ] Hlubší dokumentace je odkázaná, ne opsaná, a u odkazu je řečeno, kdy ho otevřít
+- [ ] Orientace odkazuje na vstupní index báze, ne na jednotlivé dokumenty, a říká, kdy ho otevřít
+- [ ] Konvence práce nesou pravidlo, že znalosti patří do báze a nová stránka se odkazuje z nadřazeného indexu ve stejné změně
+- [ ] Znalost, která sem nepatří a z kódu vyčíst nejde, je nabídnutá k přesunu do báze, ne tiše škrtnutá
 - [ ] Žádný příkaz, který jde přečíst z manifestu projektu
 - [ ] Žádné vysvětlování technologií, žádné obecné rady o kvalitě kódu
 - [ ] Architektonické principy jsou invarianty, ne popis aktuální implementace
