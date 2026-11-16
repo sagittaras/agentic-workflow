@@ -2,7 +2,10 @@
 # Přečte issue včetně komentářů. Vypisuje JSON tak, jak ho vrátí gh, aby si
 # volající vytáhl, co potřebuje, bez dalšího kola.
 #
-# Použití: bash scripts/gh/issue-read.sh -R owner/repo <number>
+# Použití: bash scripts/gh/issue-read.sh -R owner/repo <number> [--body]
+#
+# S --body vypíše jen tělo issue jako prostý text, aby šlo rovnou přesměrovat
+# do souboru (třeba pro criteria-tests.sh) bez parsování JSON.
 #
 # Vrácená pole: number, title, body, state, labels, milestone, assignees,
 # author, url, createdAt, updatedAt, comments,
@@ -20,9 +23,11 @@ FIELDS="number,title,body,state,labels,milestone,assignees,author,url,createdAt,
 
 repo=""
 number=""
+body_only=false
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -R|--repo) require_value "$1" "${2:-}"; repo="$2"; shift 2 ;;
+    --body) body_only=true; shift ;;
     -*) die_usage "unknown_option" "neznámý přepínač $1" ;;
     *)
       if [ -z "$number" ]; then number="$1"; shift
@@ -35,4 +40,8 @@ require_repo "$repo"
 require_number "$number"
 gh_require
 
-gh issue view "$number" -R "$repo" --json "$FIELDS"
+if [ "$body_only" = true ]; then
+  gh issue view "$number" -R "$repo" --json body --jq .body
+else
+  gh issue view "$number" -R "$repo" --json "$FIELDS"
+fi
