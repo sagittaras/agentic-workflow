@@ -154,6 +154,7 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 
 | Skill | K čemu |
 | --- | --- |
+| `write-docs` | Založí znalostní bázi `.docs/` s odkazem z CLAUDE.md, nebo v ní přidá či upraví stránku — místo najde sestupem stromem indexů a strukturu ověří skriptem |
 | `write-adr` | Sepíše architektonické rozhodnutí (ADR) — interview, dokument podle šablony, větev a PR, nezávislé review |
 | `review-adr` | Nezávislé review ADR — konkrétnost rozhodnutí, reálné alternativy, přiznaná cena; verdikt uloží do PR |
 | `write-art-bible` | Sepíše nebo aktualizuje art bible projektu — vytěží z repozitáře, co o vzhledu platí, kontrastní poměry počítá |

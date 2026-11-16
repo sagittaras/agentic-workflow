@@ -100,7 +100,7 @@ neexistuje —, projekt bázi nemá. **Mezeru ohlas a strukturu nedomýšlej**: 
 `.docs/` ani index mimochodem, nevybírej složku podle toho, co v repozitáři vypadá jako
 dokumentace, a dokument nepřidávej mimo strom. Ohlášení řekne, co chybí (odkaz
 v `CLAUDE.md`, vstupní index) a že založení báze je samostatný krok, ne součást
-práce, kterou právě děláš.
+práce, kterou právě děláš — bázi zakládá `/sagittaras:write-docs`.
 
 Báze založená jako vedlejší produkt jiného dokumentu nese strukturu, kterou nikdo
 neposoudil, a další skill ji bude rozvíjet jako závaznou.
