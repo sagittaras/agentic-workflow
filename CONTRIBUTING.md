@@ -23,15 +23,11 @@
 - typové: feat, fix, chore, docs, refactor, test
 - oblasti: area:skills
 
-### Zdroje pravdy
-
-- — viz CLAUDE.md
-
 ### Ověřovací příkazy
 
 | oblast | příkaz |
 | --- | --- |
-| area:skills | `bash scripts/lint-skills.sh` |
+| area:skills | `bash -c 'bash scripts/lint-skills.sh && bash scripts/docs-check.sh'` |
 
 ### Jazyk issues
 

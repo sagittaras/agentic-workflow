@@ -144,15 +144,50 @@ Strukturu těla nese **[skill-template.md](skill-template.md)** — kostra k oko
 včetně frontmatteru, s pokyny v placeholderech a s tabulkou povinných a volitelných sekcí.
 Šablonu otevři vždy, než začneš psát; tato kapitola jen shrnuje principy, na kterých stojí.
 
+- **Základní linie, ne podnět k úvaze.** Skill nese postup, chování v místech rozhodnutí
+  a co nedělat — nic víc. Každá věta se načte při každém běhu a agent ji převáží, i když
+  se ho netýká.
 - **Instrukce, ne dokumentace.** Skill říká, co má Claude udělat, ne co daná technologie je.
   Vynech všechno, co model už umí sám od sebe.
-- **Rozkazovací způsob a vysvětlené proč.** „Načti konfiguraci, ověř formát“ — ne „měl bys
-  načíst“. U instrukcí, které nejsou samozřejmé, připoj důvod: instrukci s důvodem model
-  dodrží spolehlivěji než holý příkaz.
+- **Co jde příkazem, je příkaz.** Krok proveditelný příkazem se zapisuje jako příkaz se
+  skriptem (`scripts/` skillu nebo pluginu, výstup `key=value`, návratové kódy v hlavičce).
+  Skill skript jmenuje a mapuje jeho výstup na další krok; nepopisuje prózou, z čeho by si
+  agent příkaz poskládal. Vzorem je tabulka Skripty a mapování kódů v `make-commit`.
+- **Rozkazovací způsob; proč jen u úsudku.** „Načti konfiguraci, ověř formát“ — ne „měl bys
+  načíst“. Důvod připoj jen tam, kde agent dělá úsudek, který skill udělat nemůže, a stačí
+  na něj jedna věta. U kroku nahrazeného příkazem důvod do těla nepatří.
+- **Zdůvodnění pro vývojáře mimo tělo.** Proč je skill postavený takhle (zařazení v matici,
+  odchylky, historie rozhodnutí) patří do komentářů frontmatteru, obecnější úvahy do `.docs/`.
 - **Progresivní odkrývání.** Do `SKILL.md` patří postup a rozhodování, objemný materiál
   do vedlejších souborů. Každý odkaz musí říct, **kdy** se má soubor otevřít.
 - **Jedna odpovědnost.** Když se postup rozpadá na dva nesouvisející sledy kroků,
   jsou to dva skilly.
+
+### Test každé věty
+
+Věta v těle skillu musí splnit aspoň jedno:
+
+- jmenuje příkaz, který má agent spustit, nebo mapuje jeho výstup (návratový kód,
+  `key=value`) na další krok;
+- rozhoduje něco, co by agent jinak rozhodoval sám, nebo dává jednoznačné kritérium
+  rozhodnutí;
+- brání chybě, která se v provozu opravdu stala — ne hypotetické;
+- určuje tvar výstupu, který čte někdo další (jiný skill, člověk, tracker).
+
+Co neprojde, škrtni, nebo přesuň do komentáře frontmatteru či do `.docs/`. Číselný limit
+řádků není — rozhoduje test.
+
+### Spouštěče úvahy a jejich náhrady
+
+| Spouštěč | Náhrada |
+| --- | --- |
+| Krok popsaný prózou, který jde provést příkazem | Skript; skill jen jmenuje příkaz a mapuje výstup |
+| Výčet možností bez rozhodnutí („může jít o A, B, nebo C“) | Rozhodnutí, nebo jednoznačné kritérium výběru |
+| Vzácný hraniční případ rozepsaný v těle | Ošetření ve skriptu (návratový kód), nebo reference otevíraná jen v té větvi |
+| Výzva k úvaze bez kritéria, kdy přestat („zvaž“, „promysli“, „pro jistotu ověř“) | Konkrétní signál, kdy kontrolovat — nebo kontrola ve skriptu |
+| Dlouhé zdůvodnění u deterministického kroku | Jen příkaz; zdůvodnění do komentáře frontmatteru nebo do `.docs/` |
+| Zákaz chování, které se nikdy nestalo | Škrt — zákaz se zakládá až na pozorovanou chybu |
+| Zásady, které opakují postup jinými slovy | Škrt — postup říká postup |
 
 ---
 
@@ -166,7 +201,10 @@ včetně frontmatteru, s pokyny v placeholderech a s tabulkou povinných a volit
 - [ ] Ostatní parametry vědomě zvážené — hlavně `allowed-tools` a `user-invocable`
 - [ ] Tělo odpovídá [šabloně](skill-template.md): povinné sekce vyplněné, značky
       `(volitelné)` odstraněné, placeholdery nahrazené
-- [ ] Tělo v rozkazovacím způsobu, bez obecné dokumentace, u neobvyklých instrukcí
-      vysvětlené proč
+- [ ] Každá věta těla projde testem každé věty; spouštěče úvahy z tabulky nahrazené
+- [ ] Kroky proveditelné příkazem zapsané jako příkaz se skriptem a mapováním výstupu,
+      ne jako popis
+- [ ] Tělo v rozkazovacím způsobu, bez obecné dokumentace; proč jednou větou jen u míst
+      úsudku, zdůvodnění pro vývojáře v komentářích frontmatteru nebo v `.docs/`
 - [ ] Detaily odsunuté do referencí, každý odkaz říká, kdy soubor otevřít
 - [ ] Skill má jednu odpovědnost

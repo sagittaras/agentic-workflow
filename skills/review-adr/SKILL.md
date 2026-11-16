@@ -155,9 +155,11 @@ subagentovi se ti nerozvine a zůstane literálem.
 3. **Projdi ostatní ADR v logu** — aspoň nadpisy a souhrny, celá ta, kterých se
    rozhodnutí dotýká. Bez nich nemáš z čeho posoudit číslování, rozpory ani
    nepřiznané duplicity, což jsou nálezy, které nikdo jiný nenajde.
-4. Přečti zázemí, o které se dokument opírá: `<kořen projektu>/CLAUDE.md`,
-   dokumenty citované v samotném ADR a — má-li `<kořen projektu>/CONTRIBUTING.md`
-   sekci `## Workflow (sagittaras)` — její podsekci `Zdroje pravdy`.
+4. Přečti zázemí, o které se dokument opírá, **sestupem od `CLAUDE.md`** podle
+   `<kořen pluginu>/shared/docs-tree.md`: `<kořen projektu>/CLAUDE.md`, z něj
+   vstupní index a dál podle vět u odkazů do sekcí, kterých se rozhodnutí týká;
+   k tomu dokumenty citované v samotném ADR. Cestou si všimni **indexu logu** —
+   potřebuješ ho pro kontrolu odkázání v kroku 2.
    Cesty ukotvi ke kořeni projektu ze zadání, ne k pracovnímu adresáři: ten
    v izolovaném worktree nemusí být ten repozitář, o který jde.
 5. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, jestli ho nová verze
@@ -203,6 +205,13 @@ který se od svého logu odchyluje sám.
   konvence zakazují (kapitola 4) a který nikdo jiný nezachytí, protože dokument
   navenek vypadá jako předtím.
 - Jazyk a slovník stavů odpovídají logu.
+- **Index logu na ADR odkazuje** (oddíl Odkázání z indexu v kapitole 1 konvencí).
+  ADR, na který index logu neodkazuje, je **blokující** nález: je to sirotek,
+  ke kterému se navigací nikdo nedostane, a reaktivní čtení ADR stojí právě na
+  ní. Totéž platí pro zakládaný log, na který neodkazuje nadřazený index,
+  a u nahrazení pro řádek původního ADR, jehož věta nepřiznává nahrazení.
+  V projektu bez báze, kde log index nemá, kontrolu neuplatňuj a chybějící bázi
+  uveď v Shrnutí.
 
 **Obsahová kontrola** — tady buď přísný:
 

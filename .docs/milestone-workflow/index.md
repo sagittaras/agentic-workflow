@@ -16,6 +16,11 @@
 > a její bod Zdroje pravdy ruší princip
 > [1.7](../vision/principles.md#17-dokumentace-se-dohledává-stromem-indexů-od-claudemd-ne-registrem-cest)
 > — dokumenty se dohledávají stromem indexů od `CLAUDE.md`, ne registrem cest.
+> `verify-issue` už není článek pod `run-milestone` ani brána před merge (kapitoly 1, 2
+> a 5): podle principu
+> [2.6](../vision/issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent) je to
+> nástroj, který si člověk spustí nad konkrétním PR, a řádkem „Blokuje merge" se
+> `run-milestone` neřídí.
 
 Cílem je řetěz skillů, který vezme téma („uděláme UI kit"), rozepíše ho na milestone
 s issues a pak ho autonomně naimplementuje — s lidským schválením na dvou místech:

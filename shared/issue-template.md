@@ -6,8 +6,9 @@
 > **implementuješ** (`implement-issue`) nebo **ověřuješ** (`verify-issue`).
 
 Tvar není kosmetika — tři místa v těle se čtou strojově a při odchylce se řetěz rozpadne:
-sekce `Závisí na` je zdroj grafu závislostí pro `run-milestone`, zaškrtávátka
-v `Akceptační kritéria` přepisuje `verify-issue`, a sekce `Reference` je jediné, podle
+sekce `Závisí na` je zdroj grafu závislostí pro `run-milestone`, kritéria
+v `Akceptační kritéria` i jejich značku `(ověří člověk)` čte brána `run-milestone`, která
+zaškrtávátka i přepisuje, a sekce `Reference` je jediné, podle
 čeho `implement-issue` pozná, který precedent v kódu má rozšířit.
 
 ---
@@ -36,6 +37,7 @@ v `Akceptační kritéria` přepisuje `verify-issue`, a sekce `Reference` je jed
 
 - [ ] [Pozorovatelné chování — co vrátí požadavek, co dokáže test, co vypíše příkaz.]
 - [ ] [Další kritérium, každé ukázatelné na precedentu ze sekce Reference.]
+- [ ] [Kritérium, které test pokrýt nejde — třeba vizuální podoba obrazovky.] (ověří člověk)
 
 ## Reference
 
@@ -66,9 +68,8 @@ Vzdálená tematická podobnost precedent není.
 
 **Dokument (ADR, UX spec) smí `Reference` citovat vedle kódu, nikdy místo něj** —
 a čte se jako doplňkové omezení: kam nesahat, které rozhodnutí je chráněné. Tvar
-implementace určuje precedent v kódu, ne próza dokumentu. Cesty k dokumentům drží
-sekce `Zdroje pravdy` projektové konfigurace; cesta ke kódu je vůči kořeni
-repozitáře.
+implementace určuje precedent v kódu, ne próza dokumentu. Dokument se cituje
+cestou vůči kořeni repozitáře, stejně jako kód.
 
 **Reference bez kódového precedentu je vada zadání**, ne varianta tvaru: takový
 issue se neimplementuje a patří do `triage-issue` (a nenajde-li precedent ani ten,
@@ -96,5 +97,14 @@ Věrohodně znějící parafráze bez opory v kódu je nález pro `review-milest
 **Kritérium má být ověřitelné bez doptávání.** Kritérium, které jde přečíst dvěma způsoby,
 zdrží celý řetěz až u `verify-issue`, kde už stojí čas inženýra i recenzenta.
 
-**Zaškrtávátka zakládej prázdná.** Odškrtává je až `verify-issue` podle toho, co skutečně
+**Kritérium je ve výchozím stavu kryté testem.** Piš ho tak, aby ho implementující
+session dokázala pokrýt testem, který napíše nebo rozšíří — výsledek příkazu, návratový
+kód, výstup testu. Kritérium, které test pokrýt nejde, nese na konci řádku značku
+`(ověří člověk)`: typicky vizuální podoba, dokumentace nebo nastavení prostředí.
+Značka je výjimka, ne úleva — kritérium, které test pokrýt jde, ji nedostane, a v lidském
+review jsou kritéria se značkou jediná, která tam patří. Značku čte strojově brána
+`criteria-tests.sh`, proto ji piš doslova.
+
+**Zaškrtávátka zakládej prázdná.** Odškrtává je orchestrátor (`run-milestone`)
+u kritéria, jehož test potvrdil, a ručně spuštěný `verify-issue` podle toho, co sám
 ověřil — ne autor a ne implementující agent.

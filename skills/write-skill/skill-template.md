@@ -49,6 +49,18 @@ user-invocable, disable-model-invocation, context, paths, shell a další.]
 (konvence pluginu) a řekni, že má při rozporu přednost. Nepopisuj, co model
 umí sám od sebe.]
 
+## Skripty (volitelné)
+
+[Tabulka skriptů pro skill s deterministickými kroky — co jde příkazem, je
+příkaz. Cesty ukotvi k cílovému umístění skillu, volání ve tvaru `bash <cesta>`
+srovnej se zúžením v `allowed-tools`. Vzorem je `make-commit`.
+
+| Skript | Co dělá |
+| --- | --- |
+| `[cesta]/scripts/[název].sh` | [Co vrací — `key=value`, návratové kódy v hlavičce skriptu] |
+
+Sekci vynech, když skill žádný krok proveditelný příkazem nemá.]
+
 ## Vstupní kontext (volitelné)
 
 [Hodnoty, které se injektují automaticky při spuštění — zadání uživatele
@@ -62,15 +74,16 @@ Sekci vynech, když skill nemá co injektovat.]
 ## Postup
 
 [Číslované kroky v pořadí, ve kterém se provádějí. Každý krok je jedna
-soudržná fáze — ne jeden příkaz. Piš rozkazovacím způsobem a u instrukcí,
-které nejsou samozřejmé, **vysvětli proč**: instrukci s důvodem model dodrží
-spolehlivěji než holý příkaz, a rigidní příkaz bez vysvětlení je signál
-slabého návrhu.]
+soudržná fáze — ne jeden příkaz. Piš rozkazovacím způsobem. Deterministický
+krok zapiš jako příkaz ze sekce Skripty a namapuj jeho výstup na další krok.
+Důvod připoj jednou větou jen tam, kde agent dělá úsudek, který skill udělat
+nemůže. Každá věta musí projít testem z `skill-conventions.md` § 3.]
 
 ### 1. [Název kroku]
 
 [Co se v kroku děje. Kde formát výstupu není zřejmý, dej doslovnou ukázku
-nebo šablonu. Kde hrozí typická chyba, pojmenuj ji i s důsledkem.]
+nebo šablonu. Kde hrozí chyba, která se v provozu opravdu stala, pojmenuj ji
+i s důsledkem.]
 
 ### 2. [Název kroku]
 
@@ -96,8 +109,8 @@ Sekci vynech, když výstupem je jen odpověď v konverzaci.]
 
 [3–6 invariantů, které platí napříč celým postupem a nepatří do žádného
 konkrétního kroku: co má přednost při rozporu, kde jsou hranice skillu, co
-se nikdy nedělá. Ne shrnutí kroků — to, co by šlo při čtení postupu shora
-dolů přehlédnout.]
+se nikdy nedělá. Neopakuj postup jinými slovy — postup říká postup; co
+v Postupu už stojí, sem nepatří.]
 ````
 
 ---
@@ -108,11 +121,12 @@ dolů přehlédnout.]
 | --- | --- | --- | --- |
 | Frontmatter | ✅ | Konfigurace běhu + komentáře nesoucí rozhodnutí | Vynechané zvažované pole bez zdůvodnění |
 | `# Nadpis` + úvod | ✅ | Cíl skillu a závazný kontrakt, 1–3 věty | Rozepsaný úvod opakující `description` |
+| `## Skripty` | ⬜ | Skripty deterministických kroků a co vracejí | Krok popsaný prózou, který jde provést příkazem |
 | `## Vstupní kontext` | ⬜ | Automaticky injektované hodnoty | Doslovný zápis injektážní syntaxe v textu |
-| `## Postup` | ✅ | Číslované fáze v pořadí provádění | Kroky bez zdůvodnění; jeden krok = jeden příkaz |
+| `## Postup` | ✅ | Číslované fáze v pořadí provádění | Próza místo příkazu; zdůvodnění u deterministického kroku; jeden krok = jeden příkaz |
 | `### N. Eskalace` | ⬜ | Konkrétní podmínky přerušení u autonomních skillů | Mlhavé „když si nejsi jistý" |
 | `## Formát výstupu` | ⬜ | Doslovná šablona výstupu s pevným tvarem | Popis tvaru místo ukázky |
-| `## Zásady` | ✅ | Invarianty napříč postupem | Shrnutí kroků místo invariantů |
+| `## Zásady` | ✅ | Invarianty napříč postupem | Opakování postupu jinými slovy |
 
 ### Rozsah a odkazy
 
