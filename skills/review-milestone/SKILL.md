@@ -2,10 +2,11 @@
 name: review-milestone
 description: >-
   Nezávislé review naplánovaného milestonu s čistým kontextem — projde všechna
-  jeho issues a posoudí tvar těl proti šabloně, ukotvení akceptačních kritérií
-  v citovaném souboru nebo vzoru v kódu (ne v próze dokumentu), graf
-  závislostí, překryvy a vnitřní rozpory mezi existujícími issues, rozsah
-  a area labely. Neúplnou vlnu — issues chybějící proti budoucím vlnám —
+  jeho issues a posoudí tvar těl proti šabloně včetně značky „ověří člověk"
+  u netestovatelných kritérií, ukotvení akceptačních kritérií v citovaném
+  souboru nebo vzoru v kódu (ne v próze dokumentu), graf závislostí, překryvy
+  a vnitřní rozpory mezi existujícími issues, rozsah, velikost podle toho,
+  jestli PR půjde ručně přezkoumat, a area labely. Neúplnou vlnu — issues chybějící proti budoucím vlnám —
   nebere jako díru. Vrací verdikt Sound / Needs attention / Not ready
   s nálezy tříděnými podle závažnosti a report ukládá jako komentář
   do trackeru. Neopravuje.
@@ -150,11 +151,14 @@ repozitáře kritérium ukotvuje — to je dnes primární zdroj pravdy pro
 ukotvení, ne dokument. **Otevři každou citovanou cestu** (`Read`/`Glob`,
 `Grep` když jde o vzor napříč víc soubory, ne jeden konkrétní) a ověř, že
 v repozitáři skutečně existuje. Cituje-li issue vedle kódu i ADR jako
-doplňkové omezení, dohledej ho — jmenuje-li issue jen ADR bez cesty, hledej
-ho v sekci `Zdroje pravdy` konfigurace, a není-li tam, `Glob`em v obvyklém
-adresáři (`.docs/adr/` apod.). Nedohledatelné doplňkové ADR je nanejvýš
-`minor` — blocking zůstává vyhrazený kódové cestě, viz níže. ADR samo o sobě
-jako Reference nestačí (viz krok 4b).
+doplňkové omezení, otevři ho na citované cestě vůči kořeni repozitáře.
+Jmenuje-li issue jen ADR bez cesty, **sestup stromem dokumentace od
+`CLAUDE.md`** podle `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md`: z `CLAUDE.md`
+na vstupní index a dál podle vět u odkazů, dokud nenarazíš na citované ADR —
+ne Globem ani podle názvu souboru. Neodkazuje-li `CLAUDE.md` na vstupní index,
+projekt bázi nemá a ADR bez cesty je nedohledatelné. Nedohledatelné doplňkové
+ADR je nanejvýš `minor` — blocking zůstává vyhrazený kódové cestě, viz níže.
+ADR samo o sobě jako Reference nestačí (viz krok 4b).
 
 Parafráze v issue není důkaz — je to přesně to místo, kde plán selhává
 nejčastěji, protože věrohodně formulované kritérium se čte jako podložené
@@ -195,7 +199,13 @@ je precedent v kódu", o kterou se opírá okruh 4b. Zkontroluj:
   ověřil (viz obecné pravidlo o otevřených a zavřených issues výš);
 - způsob, jakým je kritérium napsané (pozorovatelné chování, jednoznačnost).
   Dvojznačné kritérium zdrží řetěz až u ověřování, kde už stojí čas inženýra
-  i recenzenta.
+  i recenzenta;
+- značku `(ověří člověk)` na konci kritéria, které test pokrýt nejde
+  (vizuální podoba, dokumentace, nastavení prostředí). Takové kritérium bez
+  značky je u otevřeného issue **blocking**: brána `criteria-tests.sh` u něj
+  bude chtít test v PR, který napsat nejde, a session issue eskaluje.
+  V doporučení uveď, jestli kritérium přepsat testovatelně, nebo doplnit
+  značku.
 
 **b) Ukotvení kritérií.** Nejdřív ověř samotnou Referenci (viz obecné pravidlo
 o otevřených a zavřených issues výš):
@@ -256,9 +266,25 @@ to, kolik dalších vln teprve přijde.
 **e) Rozsah.** U každého issue se zeptej, jestli patří sem, nebo je to práce
 na později (viz obecné pravidlo o otevřených a zavřených issues výš — u
 zavřeného už tahle otázka nemá smysl). Issue navíc není neškodné — protahuje
-běh a drží otevřený milestone. Nemá-li milestone popis, rozsah v tomhle
-okruhu neposuzuj a řekni to v Shrnutí — bez definice „hotovo" nemáš proti
-čemu poměřovat.
+běh a drží otevřený milestone. Nemá-li milestone popis, příslušnost
+k milestonu neposuzuj a řekni to v Shrnutí — bez definice „hotovo" nemáš
+proti čemu poměřovat.
+
+Pak posuď **velikost**: issue je velké nanejvýš tak, aby jeho PR šlo
+přezkoumat ručně. Platí-li o něm kterýkoli z těchto signálů, je to
+`should-fix` nález:
+
+- zasahuje víc vrstev (rozhraní, implementace, napojení, persistence)
+  a každá z nich by šla mergovat samostatně;
+- kritéria popisují víc nezávislých chování, z nichž každé by obstálo jako
+  vlastní issue;
+- rozšíření precedentu z Reference nejde popsat jednou větou „jako `X`, jen
+  pro `Y`".
+
+Velikost neposuzuj počtem řádků ani souborů — rozhodují jen tyhle signály.
+V doporučení jmenuj signál, který rozhodl, a navrhni rozdělení na kusy, které
+jdou mergovat samostatně a samy něco dělají, navázané přes `Závisí na`. Velikost na popisu
+milestonu nezávisí — posuzuj ji i tam, kde popis chybí.
 
 **f) Labely.** Ověř **právě jeden** `area:*` label na issue (viz obecné
 pravidlo o otevřených a zavřených issues výš) — chybějící i druhý je
