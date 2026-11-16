@@ -59,7 +59,7 @@ allowed-tools:
 # celý plugin, ne jednotlivý skill; Glob/Grep — po zúžení na Poznámku skill
 # už nehledá zdroj pravdy v repozitáři, jen čte soubory na známých cestách.
 # Sloveso `file` není v tabulce doporučených sloves konvencí; ponecháno vědomě —
-# je to ustálené „file an issue" a název fixuje .docs/workflow-skills-plan.md,
+# je to ustálené „file an issue" a název fixuje .docs/milestone-workflow/index.md,
 # na který se odkazují sousední skilly sady.
 ---
 

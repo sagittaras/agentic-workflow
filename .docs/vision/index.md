@@ -1,0 +1,62 @@
+# Vize: jak má člověk pracovat s AI okolo tohoto pluginu
+
+> **Stav:** rozepsáno, píše se průběžně po principech — od 24. 8. 2026;
+> 16. 11. 2026 přibyl princip 1.7 a vize se rozdělila na stránky.
+> **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
+> review-milestone → run-milestone` (popsaného v [původním plánu
+> sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním
+> horizontem výsledek ujíždí od ADR a issues, zatímco ruční práce s kódovou
+> kostrou jako kotvou byla rychlejší i přesnější. Vize se ptá od zelené louky,
+> jak by měl optimální cyklus člověk↔AI okolo pluginu vypadat — původní plán
+> zůstává jako záznam toho, co bylo postaveno a proč (sdílený kontrakt, skripty,
+> forge vrstva zůstávají v platnosti bez ohledu na výsledek téhle úvahy).
+
+Principy jsou číslované napříč stránkami. Číslo je stabilní identifikátor —
+odkazují se na něj stránky mezi sebou i komentáře ve skillech (`run-milestone`:
+„princip 2.4"), takže se při přesunu nebo rozdělení stránky nepřečíslovává. Nový
+princip dostane další volné číslo ve své skupině a řádek v přehledu níž.
+
+## Principy
+
+**[Principy spolupráce](principles.md)** — kde vzniká kotva, podle které agent
+pracuje, a co zbývá dokumentům:
+
+- [1.1](principles.md#11-kostru-projektu-staví-člověk-ne-agent) Kostru projektu
+  staví člověk, ne agent.
+- [1.2](principles.md#12-kostra-je-zdroj-pravdy--ne-dokument-vedle-ní) Kostra je
+  zdroj pravdy — ne dokument vedle ní.
+- [1.3](principles.md#13-první-klíčová-funkcionalita-vzniká-v-páru-ne-autonomně)
+  První klíčová funkcionalita vzniká v páru, ne autonomně.
+- [1.4](principles.md#14-write-rule-běží-po-každém-založení-precedentu--obecně-ne-principem-po-principu)
+  `write-rule` běží po každém založení precedentu.
+- [1.5](principles.md#15-adr-zaznamenává-proč-ne-jak--a-jen-tam-kde-hrozí-oprava-bez-kontextu)
+  ADR zaznamenává proč, ne jak — a jen tam, kde hrozí „oprava" bez kontextu.
+- [1.6](principles.md#16-agent-se-zakládá-pro-opakovaně-dispečovanou-roli-train-agent-kryje-mezeru-po-review-ne-rutinu)
+  Agent se zakládá pro opakovaně dispečovanou roli; `train-agent` kryje mezeru
+  po review.
+- [1.7](principles.md#17-dokumentace-se-dohledává-stromem-indexů-od-claudemd-ne-registrem-cest)
+  Dokumentace se dohledává stromem indexů od `CLAUDE.md`, ne registrem cest.
+
+**[Issues a autonomní vývoj](issues.md)** — co issue nese a jak se po něm
+autonomně staví:
+
+- [2.1](issues.md#21-co-issue-stanovuje) Issue stanovuje ohraničený přírůstek
+  ukotvený v kódu.
+- [2.2](issues.md#22-dvě-roviny-poznámka-a-zadání) Dvě roviny: Poznámka
+  a Zadání.
+- [2.3](issues.md#23-povýšení-poznámky-na-zadání-je-samostatný-krok) Povýšení
+  Poznámky na Zadání je samostatný krok.
+- [2.4](issues.md#24-plánování-je-vlnové-gatované-dostupností-vzoru--ne-jednorázová-dávka)
+  Plánování je vlnové, gatované dostupností vzoru.
+- [2.5](issues.md#25-review-zadání-dvě-úzké-role-žádná-nesmí-přesáhnout-svůj-mandát)
+  Review Zadání: dvě úzké role, žádná nesmí přesáhnout svůj mandát.
+
+## Stránky
+
+- [Principy spolupráce](principles.md) — 1.1–1.7: kostra, vzorová implementace,
+  rules, ADR, agenti a navigace dokumentací.
+- [Issues a autonomní vývoj](issues.md) — 2.1–2.5: tvar issue, Poznámka
+  a Zadání, vlnové plánování, mandát review.
+- [Dopad na existující skilly](skill-impact.md) — který skill se kterým
+  principem mění a jak; samostatná tabulka pro 1.7 a výčet skillů, kterých se
+  vize netýká.

@@ -32,7 +32,7 @@ effort: xhigh
 # stojí celý milestone, ne jedno kolo.
 # Krok 5 (mandát rolí A/B — role B čte rules automaticky vložené do kontextu
 # podle cesty čtených souborů) staví na principech 1.4/2.5, krok 9 (vlnový
-# růst milestonu) na principu 2.4 interního `.docs/workflow-vision.md`
+# růst milestonu) na principu 2.4 interního `.docs/vision/issues.md`
 # pluginu (existuje jen v tomhle repozitáři, proto se v textu pro cizí
 # projekt necituje).
 user-invocable: true
