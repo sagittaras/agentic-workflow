@@ -87,14 +87,6 @@ na projektu.
 | area:backend | backend-engineer |
 | area:frontend | frontend-engineer |
 
-- kvalita kódu: [tech-lead | — ]
-- akceptační kritéria: [qa-engineer | — ]
-
-### Zdroje pravdy
-
-- [cesta k dokumentaci, o kterou se opírají akceptační kritéria — nebo „— viz CLAUDE.md",
-  nese-li je už on]
-
 ### Ověřovací příkazy
 
 | oblast | příkaz |
@@ -116,29 +108,14 @@ na projektu.
 | **Forge** | všechny | výběr větve v `forge-recipes.md` — Gitea MCP, nebo `gh` skript |
 | **Větvení** | `run-milestone`, `implement-issue`, `open-pr`, `close-milestone` | odkud se větví, kam se mergeuje, co smí jen člověk |
 | **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat |
-| **Agenti** | `run-milestone` | komu poslat issue a kdo posoudí PR |
-| **Zdroje pravdy** | `plan-milestone`, `implement-issue`, `verify-issue`, `write-adr`, `review-adr`, `review-milestone` (jen dohledá-li ADR citované bez cesty) | kde se ukotvují chráněná rozhodnutí a ověřují tvrzení ADR (akceptační kritéria už ukotvuje kód, ne tahle sekce) |
+| **Agenti** | `run-milestone` | komu poslat issue k implementaci |
 | **Ověřovací příkazy** | `verify-issue`, `run-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
 | **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | aby milestone nebyl dvojjazyčný |
 
-**Prázdná role recenzenta (`—`) je platný stav**, ne chyba konfigurace. `run-milestone`
-v takovém případě sáhne po fallbacku popsaném ve svém postupu; nesmí to brát jako důvod
-běh odmítnout. **Totéž platí pro sloupec `implementuje`** v tabulce **Agenti**: chybějící
-řádek pro oblast issue nebo hodnota `—` nejsou chyba, na kterou by se mělo eskalovat —
-`run-milestone` na ně má vlastní fallback (dispatch na obecného subagenta).
-
 **Podsekce Agenti je jediná nepovinná.** `init-workflow` ji do `CONTRIBUTING.md`
-založí, právě když vznikne aspoň jeden řádek `oblast → agent` nebo aspoň jedna
-obsazená role recenzenta — jinak ji nezaloží vůbec, ani prázdnou tabulku
-s pomlčkami: to by tvrdilo rozhodnutí, které nikdo neudělal. Chybí-li podsekce
-celá, `run-milestone` to čte přesně jako by každý řádek i obě role nesly `—`:
-sáhne na fallback, neeskaluje.
-
-**Hodnota `— viz CLAUDE.md` v podsekci Zdroje pravdy** znamená, že zdroje pravdy pro
-projekt už dokumentuje `CLAUDE.md` a `CONTRIBUTING.md` je neopakuje (dvě kopie stejného
-výčtu driftují). Konzument sekce v takovém případě otevře `CLAUDE.md` místo cest
-v `CONTRIBUTING.md` — je to jen jiný zápis téhož „kam se podívat", ne zvláštní případ,
-který by potřeboval vlastní větev postupu. **Nenajdeš-li v `CLAUDE.md` žádné zdroje
-pravdy** (přejmenovaný soubor, zeštíhlený `write-claude-md`, cokoli), ber to jako
-**chybějící podsekci** — neodhaduj cesty a ohlas mezeru s odkazem na
-`/sagittaras:init-workflow`, stejně jako by podsekce v `CONTRIBUTING.md` chyběla úplně.
+založí, právě když vznikne aspoň jeden řádek `oblast → agent` — jinak ji nezaloží
+vůbec, ani prázdnou tabulku s pomlčkami: to by tvrdilo rozhodnutí, které nikdo
+neudělal. Chybějící řádek pro oblast issue, hodnota `—` ve sloupci `implementuje`
+i chybějící podsekce celá jsou platné stavy, ne chyba, na kterou by se mělo
+eskalovat — `run-milestone` na ně má vlastní fallback (dispatch na obecného
+subagenta).

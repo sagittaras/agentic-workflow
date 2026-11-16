@@ -23,10 +23,6 @@
 - typové: feat, fix, chore, docs, refactor, test
 - oblasti: area:skills
 
-### Zdroje pravdy
-
-- — viz CLAUDE.md
-
 ### Ověřovací příkazy
 
 | oblast | příkaz |

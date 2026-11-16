@@ -66,9 +66,8 @@ Vzdálená tematická podobnost precedent není.
 
 **Dokument (ADR, UX spec) smí `Reference` citovat vedle kódu, nikdy místo něj** —
 a čte se jako doplňkové omezení: kam nesahat, které rozhodnutí je chráněné. Tvar
-implementace určuje precedent v kódu, ne próza dokumentu. Cesty k dokumentům drží
-sekce `Zdroje pravdy` projektové konfigurace; cesta ke kódu je vůči kořeni
-repozitáře.
+implementace určuje precedent v kódu, ne próza dokumentu. Dokument se cituje
+cestou vůči kořeni repozitáře, stejně jako kód.
 
 **Reference bez kódového precedentu je vada zadání**, ne varianta tvaru: takový
 issue se neimplementuje a patří do `triage-issue` (a nenajde-li precedent ani ten,
