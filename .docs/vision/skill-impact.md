@@ -1,7 +1,8 @@
 # Dopad na existující skilly
 
-Mapa slouží jako most mezi principy ([spolupráce](principles.md)
-a [issues](issues.md)) a konkrétní úpravou jednotlivých `SKILL.md`. Řadí skilly
+Mapa slouží jako most mezi principy ([spolupráce](principles.md),
+[issues](issues.md) a [tvaru skillů](skill-design.md)) a konkrétní úpravou
+jednotlivých `SKILL.md`. Řadí skilly
 podle toho, jak moc se mění — od beze změny po nový. Princip, který se do skillů
 promítá samostatně a později než ostatní, má vlastní tabulku. Skilly, kterých se
 žádný princip netýká, jsou vynechané záměrně, ne přehlédnuté — viz [Mimo
@@ -142,13 +143,27 @@ výchozím stavu testovatelné a netestovatelné nese značku „ověří člov�
 zaškrtávátka odškrtává orchestrátor podle potvrzeného testu (ručně spuštěný
 `verify-issue` dál podle toho, co sám ověřil), ne výhradně `verify-issue`.
 
+## Princip 3.1
+
+Štíhlé skilly ([3.1](skill-design.md#31-skill-je-základní-linie-postupu-ne-podnět-k-úvaze-co-jde-příkazem-je-příkaz))
+se týkají každého skillu, ale nepromítají se jednorázovým přepisem. Napřed se
+mění skilly, které píšou a posuzují instrukce; ostatní se zeštíhlí, když se na
+ně sahá z jiného důvodu.
+
+| Skill | Stav | Co se mění |
+| --- | --- | --- |
+| `write-skill` | Změna konvencí | `skill-conventions.md` § 3 dostane test každé věty, pravidlo „co jde příkazem, je příkaz" a tabulku spouštěčů úvahy; „vysvětlené proč" se zužuje na místa úsudku, jednou větou. Zdůvodnění pro vývojáře patří do komentářů frontmatteru nebo do `.docs/`. Šablona: sekce Zásady nesmí opakovat postup a skill s deterministickými kroky má tabulku skriptů jako `make-commit`. Kontrolní seznam se doplní. |
+| `review-skill` | Nová kritéria | Nálezem je krok popsaný prózou, který jde nahradit příkazem; spouštěč úvahy z tabulky 3.1; věta, která neprojde testem; zdůvodnění pro vývojáře v těle místo v komentáři. Stejně přísně jako dnešní kontrola kvality instrukcí. |
+| `write-agent`, `review-agent` | Nové kritérium | Test každé věty a spouštěče úvahy platí i pro definici agenta — čte se při každém vyvolání. |
+| `write-rule`, `review-rule` | Nové kritérium | Totéž pro rules — čtou se při každém dotyku pokryté cesty, tedy nejčastěji ze všech instrukcí. |
+| Ostatní skilly | Zeštíhlení při dotyku | Audit podle testu každé věty, když se skill mění z jiného důvodu. Kroky, které jdou nahradit příkazem, dostanou skript (plugin `scripts/` nebo `scripts/` skillu, výstup `key=value`). Nejdřív nejdelší skilly, kterých se dotknou přepisy podle 1.7, 1.8 a 2.6–2.9: `run-milestone`, `verify-issue`, `write-adr`, `review-milestone`, `open-pr`. |
+
 ## Mimo rozsah
 
-Záměrně vynechané, protože se jich žádný princip netýká: `create-branch`,
-`make-commit` (git mechanika — principy se netýkají obsahu, jen ho používají),
-`write-skill`, `review-skill`, `review-agent`, `review-rule` (posuzují nebo
-píšou artefakty, jejichž tvar žádný princip nemění; `write-rule`
-a `write-agent` jsou v tabulce výš) a `update-plugin` (distribuce pluginu).
-`write-claude-md`, `write-art-bible`, `write-ux-spec` a `review-ux-spec` do
-téhle skupiny patřily až do 1.7 — strom indexů se jich týká, protože zakládají
-nebo čtou dokumenty, ke kterým se má dát dojít.
+Principy 1.x a 2.x se netýkají `create-branch`, `make-commit` (git mechanika
+— principy se netýkají obsahu, jen ho používají) a `update-plugin` (distribuce
+pluginu). Tvar jejich textu hlídá jen 3.1, a ty první dva jsou pro něj spíš
+vzorem: práci s gitem už celou drží skripty. `write-claude-md`,
+`write-art-bible`, `write-ux-spec` a `review-ux-spec` do téhle skupiny patřily
+až do 1.7, `write-skill`, `review-skill`, `review-agent` a `review-rule` až do
+3.1.

@@ -2,7 +2,8 @@
 
 > **Stav:** rozepsáno, píše se průběžně po principech — od 24. 8. 2026;
 > 16. 11. 2026 přibyly principy 1.7 a 1.8, vize se rozdělila na stránky a principy
-> 2.6–2.9 posunuly cíl od úplné autonomie ke kompromisu (viz níž).
+> 2.6–2.9 posunuly cíl od úplné autonomie ke kompromisu (viz níž); princip 3.1
+> otevřel novou skupinu o tvaru skillů samotných.
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
 > sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním
@@ -78,6 +79,13 @@ autonomně staví:
   Každé akceptační kritérium kryje test; session ho napíše, orchestrátor
   potvrdí.
 
+**[Tvar skillů](skill-design.md)** — co patří do textu, který agent čte při
+každém spuštění skillu:
+
+- [3.1](skill-design.md#31-skill-je-základní-linie-postupu-ne-podnět-k-úvaze-co-jde-příkazem-je-příkaz)
+  Skill je základní linie postupu, ne podnět k úvaze; co jde příkazem, je
+  příkaz.
+
 ## Stránky
 
 - [Principy spolupráce](principles.md) — 1.1–1.8: kostra, vzorová implementace,
@@ -87,6 +95,8 @@ autonomně staví:
   a Zadání, vlnové plánování, lidské review místo agentního, velikost issue
   podle přezkoumatelnosti PR, orchestrace přes podřazené session, testy ke
   kritériím potvrzené orchestrátorem.
+- [Tvar skillů](skill-design.md) — 3.1: skill jako základní linie postupu,
+  příkaz místo popisu, test každé věty a spouštěče úvahy, kterým se vyhnout.
 - [Dopad na existující skilly](skill-impact.md) — který skill se kterým
   principem mění a jak; samostatná tabulka pro 1.7 a výčet skillů, kterých se
   vize netýká.
