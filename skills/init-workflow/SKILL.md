@@ -5,8 +5,7 @@ description: >-
   forge a repozitář, z agentů a souborů projektu odvodí mapu oblastí
   a ověřovací příkazy, na zbytek se doptá a založí sekci „Workflow (sagittaras)"
   v `CONTRIBUTING.md`. Mapu agentů interviewuje jen tam, kde se projektu
-  skutečně hodí, a zdroje pravdy, které už nese CLAUDE.md, znovu nezapisuje.
-  Chybějící labely doplní v trackeru až po potvrzení. Existující konfiguraci
+  skutečně hodí. Chybějící labely doplní v trackeru až po potvrzení. Existující konfiguraci
   nikdy nepřepíše tiše — nabídne aktualizaci po podsekcích.
 when_to_use: >-
   Použij, když se má v projektu rozjet milestone workflow a chybí mu
@@ -122,6 +121,9 @@ a pozná se to až u review hotového PR.
      do výsledku **doslova** — včetně poznámek, které si projekt dopsal sám.
      Zbytek `CONTRIBUTING.md` mimo tuhle sekci nečti kvůli konfiguraci vůbec —
      není to tvůj obsah.
+   - **Sekce nese, co kontrakt už nezná** — podsekci `Zdroje pravdy`, nebo
+     v podsekci Agenti řádky `kvalita kódu` a `akceptační kritéria` → nabídni
+     je odstranit. Bez potvrzení je přenes doslova.
    - **Sekce neexistuje** (ať `CONTRIBUTING.md` existuje, nebo ne) → podívej se
      na starší umístění, kam tenhle plugin dřív zapisoval konfiguraci:
      `.claude/workflow.md`, a ještě starší `.claude/sagittaras/workflow.md`.
@@ -174,15 +176,12 @@ Ověřovací příkazy (krok 4) a Labely (krok 6), obě povinné.
    patří **hodnota `name`** přesně tak, jak stojí ve frontmatteru —
    `run-milestone` ji předá nástroji Agent a neexistující název znamená
    selhaný dispatch, ne chybu, kterou by šlo dohledat.
-4. Role recenzentů (kvalita kódu, akceptační kritéria) urči **podle
-   `description`, ne podle názvu**. Projekt může mít `principal-engineer`
-   místo `tech-lead`; hledáš roli, která posuzuje, ne konkrétní slovo.
-5. Návrh mapy nech potvrdit a doplnit. Oblast, kterou žádný agent nepokrývá,
+4. Návrh mapy nech potvrdit a doplnit. Oblast, kterou žádný agent nepokrývá,
    je legitimní zjištění — buď ji z výčtu vypusť, nebo ji nech s poznámkou,
    že agent chybí.
 
-**Podsekce `Agenti` vzniká, právě když z bodů 3–5 vzejde aspoň jeden řádek
-`oblast → agent`, nebo aspoň jedna obsazená role recenzenta — jinak ji do
+**Podsekce `Agenti` vzniká, právě když z bodů 3–4 vzejde aspoň jeden řádek
+`oblast → agent` — jinak ji do
 `CONTRIBUTING.md` vůbec nezakládej**, ani prázdnou tabulku, ani placeholder
 pomlčky. Tohle je jediné kritérium; žádné jiné (třeba „má projekt víc než
 jednoho agenta") vedle něj neplatí. Nevznikne-li podsekce, řekni uživateli,
@@ -218,26 +217,11 @@ závislosti; potvrzení od uživatele je levnější a spolehlivější. Nenajde
 oporu v žádném souboru, příkaz **nevymýšlej** a zeptej se — vymyšlený příkaz
 projde konfigurací i review a selže až u integrační brány.
 
-### 5. Zdroje pravdy a jazyk issues
+### 5. Jazyk issues
 
-- **Zdroje pravdy** — dokumenty, o které se opírají akceptační kritéria (ADR,
-  specifikace, konvence). Nejdřív přečti `CLAUDE.md` cílového projektu (existuje-li):
-  nese-li už **konkrétní cesty** k takovým dokumentům (ne jen zmínku, že
-  dokumentace „někde je"), **do `CONTRIBUTING.md` je znovu nevypisuj** — zapiš
-  jedinou odrážku `— viz CLAUDE.md`. Dvě kopie stejného výčtu driftují, přesně
-  jako u zásad 1.5 tohohle pluginu. Nenese-li `CLAUDE.md` konkrétní cesty,
-  zjisti to dotazem — z repozitáře to
-  spolehlivě neplyne. Jako možnosti nabídni, co jsi v repozitáři našel (`docs/`,
-  `adr/`, existující `CONTRIBUTING.md`), ale výběr nech na uživateli: existence
-  složky s dokumentací neříká, že jsou v ní kritéria ukotvitelná. Bez tohoto
-  vstupu nemá `plan-milestone` co citovat, takže prázdný seznam pojmenuj jako
-  mezeru, ne jako platnou odpověď. Trvá-li uživatel na prázdnu, zapiš do
-  podsekce jedinou odrážku `—` a **podsekci nevynechávej**: chybějící podsekce
-  pro ostatní skilly znamená rozbitou konfiguraci k doplnění, kdežto pomlčka
-  znamená vědomé rozhodnutí, se kterým se dá pracovat.
-- **Jazyk issues** — čeština, nebo angličtina, jedna hodnota pro celý projekt.
-  Jako vodítko můžeš uvést jazyk existujících issues nebo `README.md`, ale
-  rozhodnutí patří uživateli.
+Čeština, nebo angličtina, jedna hodnota pro celý projekt. Jako vodítko můžeš
+uvést jazyk existujících issues nebo `README.md`, ale rozhodnutí patří
+uživateli.
 
 ### 6. Labely
 
@@ -305,8 +289,8 @@ zapsané sekce nepatří — jsou to poznámky pro tebe, ne pro projekt.
   `CONTRIBUTING.md`, který projekt nese.
 
 Hranaté závorky ze šablony jsou pokyn, co do místa patří — v hotové sekci
-žádná nesmí zůstat. Výjimkou je `—` u nevyplněné role recenzenta nebo
-zdrojů pravdy, což je platná hodnota.
+žádná nesmí zůstat. Výjimkou je `—` ve sloupci `implementuje`, což je platná
+hodnota.
 
 ### 8. Shrň a navaž
 
@@ -324,11 +308,9 @@ Konfigurace: CONTRIBUTING.md, sekce „Workflow (sagittaras)" (<založena |
 Forge: <typ> · <host> · <owner/repo> · výchozí větev <branch>
 Oblasti: <area:*, po řádcích — s přiřazeným agentem, je-li podsekce Agenti
   založená; jinak jen výčet oblastí>
-Recenzenti: <kvalita <role | —> · kritéria <role | —>, je-li podsekce Agenti
-  založená; jinak „netýká se, bez podsekce Agenti">
 Ověřovací příkazy: <oblast → příkaz, po řádcích>
-Zdroje pravdy: <výčet | „— viz CLAUDE.md" | „nezadány — plan-milestone nebude mít co citovat">
 Jazyk issues: <hodnota>
+Odstraněno: <Zdroje pravdy, role recenzentů — co uživatel potvrdil; vynech, není-li co>
 Labely: <založené názvy | „žádné, všechny už existovaly" | „nezaloženy —
   <důvod>, k ručnímu založení: <názvy a barvy>">
 
@@ -348,12 +330,9 @@ Navazuje: /sagittaras:plan-milestone
   chyby vypadají opačně, ale končí stejně: konfigurací, které uživatel nevěří.
   Interview o dvaceti otázkách se navíc nedodělá, a nedodělaná konfigurace je
   horší než žádná: ostatní skilly se pak spustí proti polovičním hodnotám.
-- **Podsekce Agenti a prázdná role recenzenta jsou platné stavy, ne mezery.**
-  Nevznikne-li aspoň jeden řádek `oblast → agent` nebo jedna obsazená role,
-  podsekce se vůbec nezakládá; chybějící agenti nejsou důvod běh odmítnout
-  ani roli vymyslet.
-- **Zdroje pravdy se nezdvojují s CLAUDE.md.** Nese-li je už, `CONTRIBUTING.md`
-  na něj jen odkáže — dvě kopie téhož výčtu driftují.
+- **Chybějící podsekce Agenti je platný stav, ne mezera.** Nevznikne-li aspoň
+  jeden řádek `oblast → agent`, podsekce se vůbec nezakládá; chybějící agenti
+  nejsou důvod běh odmítnout ani agenta vymyslet.
 - **Trackeru se dotýkej jen skripty a recepty, jen kvůli labelům a jen po
   potvrzení.** Milestony, issues ani větve tenhle skill netvoří — na to jsou
   `plan-milestone` a `run-milestone`. A chybí-li skript nebo nástroj, ohlas to
