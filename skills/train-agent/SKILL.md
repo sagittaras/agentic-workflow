@@ -2,28 +2,25 @@
 name: train-agent
 description: >-
   Nechá agenta nastudovat zadaný vstup a zapsat si z něj do vlastní trvalé
-  paměti zobecněný poznatek, který se týká jeho role. Kanonický případ je
-  vyřešená review/retry smyčka nad issue — kolo, které našlo problém, i retry,
-  který ho opravil, ne jen finální stav. Zápis provádí sám agent spuštěný jako
-  subagent, protože právo do paměti plyne z jeho `memory:` a nikomu jinému
-  neplatí; skill vstup načte, určí cílové agenty a ověří, co skutečně vzniklo.
-  Paměť přidává i konsoliduje — co vstup vyvrací, mizí.
+  paměti zobecněný poznatek k jeho roli. Kanonický případ je vyřešená
+  review/retry smyčka nad PR — připomínky člověka, které našly problém,
+  i commity, které je zapracovaly, ne jen finální stav. Zapisuje sám agent
+  spuštěný jako subagent, protože právo do paměti plyne z jeho `memory:`;
+  skill vstup načte, určí cílové agenty a ověří, co vzniklo. Paměť přidává
+  i konsoliduje — co vstup vyvrací, mizí.
 when_to_use: >-
-  Použij po vyřešené review/retry smyčce nad issue — kolo review našlo
-  problém, retry ho opravil — aby poučení nezůstalo jen v komentáři u PR, ale
-  zobecnilo se do paměti agenta, který review dělal nebo dostal retry; spustí
-  tě tak ten, kdo smyčku řídil, nebo uživatel ručně, řekne-li „ať si tech-lead
-  zapíše poučení z tamtoho review" nebo „natrénuj agenta na retry kole issue
-  #N". I jako závěrečný krok jiného skillu, který vytvořil dokument spadající
-  do domény některého agenta — „ať si agent zapíše závěry z art bible" —
-  s výjimkou architektonického rozhodnutí: ADR se do paměti agenta nezapisuje,
-  log se čte reaktivně on-demand, ne jako standing paměť, a proto ADR mezi
-  vstupy nepatří ani jako obecný dokument. Nepoužívej pro úpravu definice
-  agenta, na to slouží write-agent; pro pravidlo vázané na část repozitáře
-  write-rule; pro projektové instrukce čtené v každé session write-claude-md;
-  pro sepsání samotného architektonického rozhodnutí write-adr; ani pro paměť
-  vlastní session, ta má vlastní mechanismus.
-argument-hint: "[jméno agenta] [issue/PR číslo nebo vložený záznam review; jinak cesta, odkaz či text]"
+  Použij po vyřešené review/retry smyčce nad PR — člověk připomínkoval,
+  session připomínky zapracovala — aby poučení nezůstalo jen v komentáři
+  u PR, ale přešlo do paměti agenta, který kód napsal; spustí tě ten, kdo
+  smyčku řídil, nebo uživatel: „natrénuj agenta na připomínkách v PR #N".
+  I jako závěrečný krok skillu, který vytvořil dokument v doméně agenta —
+  „ať si agent zapíše závěry z art bible" — kromě ADR: ten se do paměti
+  nezapisuje, log se čte on-demand, ne jako standing paměť. Nepoužívej pro
+  úpravu definice agenta, na to slouží write-agent; pro pravidlo vázané na
+  část repozitáře write-rule; pro projektové instrukce write-claude-md; pro
+  sepsání architektonického rozhodnutí write-adr; ani pro paměť vlastní
+  session, ta má vlastní mechanismus.
+argument-hint: "[jméno agenta] [PR číslo nebo vložené připomínky z PR a jejich zapracování; jinak cesta, odkaz či text]"
 model: sonnet
 effort: high
 # Zařazení dle matice: vlastní práce je načíst vstup, odvodit cílové agenty,
@@ -72,13 +69,19 @@ s tímto skillem má přednost on.
 
 ### 1. Načtení vstupu
 
-Kanonický vstup je **vyřešená review/retry smyčka nad issue**. Skill sám do
-trackeru nesahá — `allowed-tools` na to záměrně nemá nástroj (viz frontmatter) —
-takže záznam dostaneš **v zadání od toho, kdo tě spustil**, buď jako vložený
-text, nebo jako odkaz. Ať dorazí v jakékoli podobě, potřebuješ **celou smyčku**,
-ne jen poslední stav: kolo, které problém našlo, i retry, který ho opravil.
-Jediný finální komentář ukáže výsledek, ne chybu, ze které se má agent poučit —
-chybí-li ti kterákoli půlka, vrať se na volajícího a vyžádej si ji, nedomýšlej.
+Kanonický vstup je **vyřešená review/retry smyčka nad PR**: review dělá člověk
+a připomínky zapracovává session, která kód napsala. Skill sám do trackeru
+nesahá — `allowed-tools` na to záměrně nemá nástroj (viz frontmatter) — takže
+záznam dostaneš **v zadání od toho, kdo tě spustil**, buď jako vložený text,
+nebo jako odkaz. Smyčku sestav ze dvou částí:
+
+- **připomínky v PR** — komentáře review člověka i odpovědi na ně; nesou, co
+  bylo špatně;
+- **commity, které je zapracovaly** — zprávy i diff; nesou, jak se to opravilo.
+
+Finální stav PR ukáže výsledek, ne chybu, ze které se má agent poučit —
+chybí-li ti kterákoli část, vrať se na volajícího a vyžádej si ji, nedomýšlej.
+Report agentního review (`verify-issue`) kanonickým vstupem není.
 
 Vstupem může být i cokoli jiného, co jde přečíst — soubor v repozitáři, odkaz,
 výstup předchozího běhu, nebo prostý text v zadání. **Nikdy ADR** — architektonické
@@ -104,11 +107,11 @@ zadání pro agenta v kroku 3.
 
 1. **Jméno v zadání platí.** Je-li uvedené, neodvozuj nic dalšího. U kanonického
    vstupu (review/retry smyčka) je tohle běžná cesta: volající zná agenta, který
-   review dělal, nebo agenta, který dostal retry, a jméno rovnou předá.
+   připomínky zapracoval, a jméno rovnou předá.
 2. **U review/retry smyčky bez jména v zadání** vezmi cíl **ze záznamu samotného**
-   — agenta, jehož review nález vzneslo, a agenta, který retry implementoval —
-   ne podle domény kódu, kterého se PR týkalo. Poučení z konkrétní chyby patří
-   tomu, kdo ji udělal nebo kdo ji hledal, ne celé oblasti kolem ní.
+   — agenta, který kód napsal a připomínky zapracoval — ne podle domény kódu,
+   kterého se PR týkalo. Poučení z konkrétní chyby patří tomu, kdo ji udělal,
+   ne celé oblasti kolem ní.
 3. **Jinak (mimo kanonický vstup) odvoď z projektu.** Projdi `.claude/agents/*.md`
    cílového projektu **i `${CLAUDE_PLUGIN_ROOT}/agents/`** a přečti jejich
    `description` — agenty dodává obojí a v katalogu se potkají. Plugin ukotvi
@@ -231,17 +234,17 @@ tvé role.
 Vstup: <cesta, odkaz, nebo celý obsah, pokud na něj trénovaný agent nedosáhne>
 
 Postupuj takto:
-1. Přečti vstup celý. Je-li to review/retry smyčka, najdi v ní **obojí**: co
-   review nalezlo (konkrétní chyba) a jak se to opravilo.
+1. Přečti vstup celý. Jsou-li to připomínky z PR, najdi v nich **obojí**: co
+   připomínka vytkla (konkrétní chyba) a jak ji commit zapracoval.
 2. Projdi svou stávající paměť ve složce <cesta ke složce paměti> — MEMORY.md
    i tematické soubory, kterých se téma dotýká. Neexistuje-li složka nebo
    MEMORY.md, je tohle tvůj první trénink: založ index podle konvencí.
 3. **Zobecni, nepřepisuj.** Z konkrétního nálezu odvoď pravidlo platné pro
    příště: co se pokazilo → podle čeho to poznat dřív → co udělat místo toho.
-   Zapiš to pravidlo, ne převyprávění kola review; doklad původu (např. „PR
-   #74, kolo 3") u něj nech, aby šlo dohledat, odkud pravidlo pochází. Zapiš
-   si jen to, co se týká tvé role — ne otevřené otázky, ne to, co zjistíš
-   přečtením kódu. Pravidlo nemusí být rozhodnutí (`decision`): stejně tak
+   Zapiš to pravidlo, ne převyprávění připomínek; doklad původu (např. „PR
+   #74, připomínka k parseru") u něj nech, aby šlo dohledat, odkud pravidlo
+   pochází. Zapiš si jen to, co se týká tvé role — ne otevřené otázky, ne to,
+   co zjistíš přečtením kódu. Pravidlo nemusí být rozhodnutí (`decision`): stejně tak
    může jít o návyk, který se v projektu osvědčil (`convention`), nebo past,
    které se má agent příště vyhnout (`pitfall`).
 4. Existující záznam raději zpřesni než zdvojuj; co tenhle vstup vyvrací,
