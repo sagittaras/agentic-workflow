@@ -2,7 +2,7 @@
 
 > **Stav:** rozepsáno, píše se průběžně po principech — od 24. 8. 2026;
 > 16. 11. 2026 přibyl princip 1.7, vize se rozdělila na stránky a principy
-> 2.6–2.8 posunuly cíl od úplné autonomie ke kompromisu (viz níž).
+> 2.6–2.9 posunuly cíl od úplné autonomie ke kompromisu (viz níž).
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
 > sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním
@@ -19,6 +19,9 @@ nadirigovat promptem. Vize proto míří ke kompromisu: konkrétní práci vykon
 výsledný kód přezkoumává člověk, a orchestrátor spouští issues v podřazených
 session, ke kterým člověk píše připomínky podle jejich PR
 ([2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent)–[2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)).
+Než PR člověk uvidí, musí mít každé kritérium test a orchestrátor potvrdit,
+že testy prochází
+([2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)).
 
 Principy jsou číslované napříč stránkami. Číslo je stabilní identifikátor —
 odkazují se na něj stránky mezi sebou i komentáře ve skillech (`run-milestone`:
@@ -68,14 +71,18 @@ autonomně staví:
   Issue je velké nanejvýš tak, aby jeho PR šlo přezkoumat ručně.
 - [2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)
   Orchestrátor spouští issues v podřazených session, ne v subagentech.
+- [2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)
+  Každé akceptační kritérium kryje test; session ho napíše, orchestrátor
+  potvrdí.
 
 ## Stránky
 
 - [Principy spolupráce](principles.md) — 1.1–1.7: kostra, vzorová implementace,
   rules, ADR, agenti a navigace dokumentací.
-- [Issues a autonomní vývoj](issues.md) — 2.1–2.8: tvar issue, Poznámka
+- [Issues a autonomní vývoj](issues.md) — 2.1–2.9: tvar issue, Poznámka
   a Zadání, vlnové plánování, lidské review místo agentního, velikost issue
-  podle přezkoumatelnosti PR, orchestrace přes podřazené session.
+  podle přezkoumatelnosti PR, orchestrace přes podřazené session, testy ke
+  kritériím potvrzené orchestrátorem.
 - [Dopad na existující skilly](skill-impact.md) — který skill se kterým
   principem mění a jak; samostatná tabulka pro 1.7 a výčet skillů, kterých se
   vize netýká.

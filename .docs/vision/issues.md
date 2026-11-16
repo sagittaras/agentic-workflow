@@ -1,10 +1,10 @@
 # Issues a autonomní vývoj
 
-Principy 2.1–2.8: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
+Principy 2.1–2.9: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
 je povýšení Poznámky samostatný krok a proč se plánuje po vlnách; dál kdo
 přezkoumává výsledný kód (člověk, ne agent — 2.6 nahrazuje agentní review z 2.5),
-jak velké smí issue být, aby šlo jeho PR přezkoumat, a jak orchestrátor issues
-spouští. Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
+jak velké smí issue být, aby šlo jeho PR přezkoumat, jak orchestrátor issues
+spouští a jaké pevné kritérium musí PR splnit, než ho člověk uvidí. Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
 míří tam.
 
 ## 2.1 Co issue stanovuje
@@ -203,9 +203,11 @@ k němu. Agentní review (obě role z 2.5) z běžného průchodu issue vypadáv
   nečetl; udržovat ho pak znamená ho číst dodatečně, bez kontextu.
 
 **Co z agentní kontroly zůstává:**
-- **Mechanická brána.** Ověřovací příkazy (build, testy, linter) spouští
-  implementující agent sám a PR bez zelené brány neotevře. Je levná
-  a nesubjektivní — stejná osa jako tvrdá kotva z 1.2.
+- **Mechanická brána.** Každé kritérium kryje test, implementující session
+  bez zelených testů PR neotevře a orchestrátor zelenou bránu potvrdí dřív,
+  než PR uvidí člověk — podrobně
+  [2.9](#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí).
+  Je levná a nesubjektivní — stejná osa jako tvrdá kotva z 1.2.
 - **`verify-issue` na vyžádání.** Nástroj, který si člověk spustí nad
   konkrétním PR, když chce nezávislé ověření kritérií — ne povinná brána před
   každým merge. Spuštěný ručně se drží mandátu role A z 2.5.
@@ -324,3 +326,56 @@ skutečného použití se upraví. Sledovat se má hlavně: jak dlouho subagent
 s kontextem vydrží (konec hlavní session, zkracování historie), jestli
 hlavní session přes signály opravdu neroste, a jestli cena za issue klesne
 k úrovni podřazených session, nebo se jen zmenší.
+
+## 2.9 Každé akceptační kritérium kryje test; session ho napíše, orchestrátor potvrdí
+
+Než session pošle práci na PR, musí splnit pevné kritérium: každé akceptační
+kritérium issue je pokryté testem, který napsala nebo rozšířila, a testy
+prochází. Session si to ale nehlídá jen sama — orchestrátor její tvrzení
+potvrdí: spustí ověřovací příkazy nad větví PR a teprve se zelenou bránou jde
+PR člověku k review.
+
+**Why:**
+- **Lidské review nemá ověřovat, jestli to funguje.** 2.6 vrací review
+  člověku kvůli úsudku, který agent neumí dávkovat — návrh, záměr, odchylky od
+  toho, co člověk chtěl. Jestli kód dělá, co říkají kritéria, je otázka
+  s binární odpovědí a patří stroji. Pozornost spotřebovaná na PR, které ani
+  neprojde testy, je přesně ta drahá věc, kterou 2.6 šetří.
+- **Tvrzení session je self-report.** „Testy prochází" od session je totéž co
+  odškrtnutý box, kterému už 2.5 zakázala věřit (role A: spustit, ne věřit).
+  Nezávislé spuštění chytí testy, které nikdo nespustil, běh nad zastaralým
+  stavem i rozdíl mezi worktree session a integrační větví.
+- **Je to levné.** Spuštění testů na rozdíl od agentního review skoro nestojí
+  tokeny — skript vrátí výsledek a výpis selhání, orchestrátor nečte diff ani
+  nesoudí kvalitu. Tenký orchestrátor z 2.8 tím zůstává tenký.
+- **Test zůstává jako tvrdá kotva.** Kritérium kryté testem hlídá i každé
+  další issue, stejně jako typy a kompilace v 1.2. Kritérium ověřené jen
+  přečtením kódu po merge už nic nehlídá.
+
+**Co orchestrátor potvrzuje — a co ne:**
+- **Potvrzuje:** session v PR ke každému kritériu uvedla test, který ho kryje
+  (kritérium → test); uvedené testy ve změně opravdu jsou; a ověřovací
+  příkazy oblasti prochází nad větví PR sloučenou s integrační větví
+  (integrační brána).
+- **Nepotvrzuje,** jestli test kritérium kryje *dobře*. To je úsudek: udělá
+  ho člověk při review, nebo si ho vyžádá ručním `verify-issue`, který
+  kritéria opřená o test mutačně testuje.
+
+**Kritérium, které test pokrýt nejde** (vizuální podoba, dokumentace,
+nastavení prostředí), je výjimka, ne mezera: plánování ho tak označí už
+v issue („ověří člověk") a v lidském review je to jediné kritérium, které
+tam patří. Výchozí požadavek ale je, aby plánování kritéria psalo
+testovatelně — šablona issue to dnes jen naznačuje („co dokáže test").
+
+**Bez orchestrátoru** (`implement-issue` spuštěný samostatně) platí pevné
+kritérium session beze změny; potvrzení přebírá CI projektu, má-li ho. Nemá-li,
+session v PR přizná, že bránu spustila jen sama.
+
+**Důsledek pro workflow:** integrační brána se v `run-milestone` přesouvá
+z konce (po review, těsně před merge) před lidské review. Červená brána jde
+zpátky session stejnou cestou jako připomínky (2.8, signál) a člověk ji
+nevidí. Před merge na signál schválení (realizátor merguje, 2.6) zopakuje
+bránu session, pohnula-li se mezitím integrační větev. A protože
+`verify-issue` přestal být povinnou bránou, zaškrtávátka v těle issue by
+nikdo neodškrtal: odškrtne je orchestrátor u kritérií, jejichž test potvrdil
+— znamená to „kryto testem, který prošel", nic víc.

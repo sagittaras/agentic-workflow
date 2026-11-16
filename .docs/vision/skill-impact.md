@@ -88,31 +88,37 @@ pravdy` — i její řádek v tabulce „Co která podsekce znamená" a výklad 
 v `Reference` vázat na Zdroje pravdy: dokument se cituje cestou vůči kořeni
 repozitáře, stejně jako kód.
 
-## Principy 2.6–2.8
+## Principy 2.6–2.9
 
 Lidské review ([2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent)),
 velikost issue podle přezkoumatelnosti PR
-([2.7](issues.md#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně))
-a orchestrace přes podřazené session
-([2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)).
+([2.7](issues.md#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně)),
+orchestrace přes podřazené session
+([2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech))
+a testy ke kritériím potvrzené orchestrátorem
+([2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)).
 Řádky `run-milestone` a `verify-issue` v tabulce 1.1–2.5 stály na mandátu rolí
 z 2.5 — kde se s touhle tabulkou rozcházejí, platí tahle.
 
 | Skill | Stav | Co se mění | Princip |
 | --- | --- | --- | --- |
-| `run-milestone` | Zásadní změna | Odblokovaná issues spouští v podřazených session místo subagentů. Nedispečuje review role ani je nečte a sám nemerguje: review gate je lidské schválení PR, merge do integrační větve provede session na signál člověka a orchestrátor jen sleduje stav PR a odblokovává graf. Dávku dimenzuje podle kapacity člověka na review, ne podle počtu agentů. Integrační brána (mechanické ověření) zůstává. Bez podřazených session spouští subagenty a signály člověka („má připomínky", „schváleno") jim předává pokračováním přes jejich id; obsah připomínek nečte (2.8). | 2.6, 2.8 |
-| `implement-issue` | Změna konce | Běží v podřazené session (bez ní jako subagent, na kterého orchestrátor navazuje) a po otevření PR zůstává k dispozici: připomínky člověka si přečte z PR a zapracuje ve stejném kontextu, nepředává je dál. Na signál člověka PR sám mergne do cílové větve — recenzent schvaluje, realizátor merguje. PR neotevře bez zelených ověřovacích příkazů. | 2.6, 2.8 |
-| `verify-issue` | Z brány na nástroj | Přestává být povinná brána před merge; spouští ho člověk nad konkrétním PR, když chce nezávislé ověření kritérií. Mechanika i mandát role A zůstávají. | 2.6 |
-| `plan-milestone` | Nové kritérium rozpadu | Při návrhu Zadání posuzuje signály příliš velkého issue a rozpadá ho na samostatně mergovatelné kroky; nerozdělí ho na kusy, které samy nic nedělají. Žádný číselný práh (řádky, soubory) — jen signály. | 2.7 |
-| `triage-issue` | Nové kritérium | Při povýšení Poznámky hlídá velikost — Poznámku, ze které by vzniklo nereálně velké PR, navrhne rozdělit na víc Zadání. | 2.7 |
-| `review-milestone` | Nová kontrola | Issue se signály příliš velkého PR je nález. | 2.7 |
+| `run-milestone` | Zásadní změna | Odblokovaná issues spouští v podřazených session místo subagentů. Nedispečuje review role ani je nečte a sám nemerguje: review gate je lidské schválení PR, merge do integrační větve provede session na signál člověka a orchestrátor jen sleduje stav PR a odblokovává graf. Integrační bránu přesouvá z konce před lidské review: potvrdí, že PR mapuje každé kritérium na test, že ty testy ve změně jsou a že ověřovací příkazy prochází; červenou vrací session signálem a potvrzená kritéria v issue odškrtne. Dávku dimenzuje podle kapacity člověka na review, ne podle počtu agentů. Bez podřazených session spouští subagenty a signály člověka („má připomínky", „schváleno") jim předává pokračováním přes jejich id; obsah připomínek nečte (2.8). | 2.6, 2.8, 2.9 |
+| `implement-issue` | Změna konce | Ke každému testovatelnému kritériu napíše nebo rozšíří test — „přečíst v kódu" v kroku 7 přestává pro takové kritérium stačit — a PR bez zelených testů neotevře; mapu kritérium → test předá do těla PR. Běží v podřazené session (bez ní jako subagent, na kterého orchestrátor navazuje) a po otevření PR zůstává k dispozici: připomínky člověka i červenou bránu od orchestrátoru zapracuje ve stejném kontextu. Na signál člověka PR sám mergne do cílové větve — recenzent schvaluje, realizátor merguje —, a pohnula-li se mezitím integrační větev, zopakuje před tím bránu. Spuštěný samostatně, bez orchestrátoru a bez CI, v PR přizná, že bránu spustil jen sám. | 2.6, 2.8, 2.9 |
+| `open-pr` | Menší úprava | Tělo PR nese mapu kritérium → test, kterou mu předá `implement-issue`. | 2.9 |
+| `verify-issue` | Z brány na nástroj | Přestává být povinná brána před merge; spouští ho člověk nad konkrétním PR, když chce nezávislé ověření kritérií — mutační test je jediná kontrola, jestli test kritérium kryje *dobře*. Mechanika i mandát role A zůstávají. | 2.6, 2.9 |
+| `plan-milestone` | Nové kritérium rozpadu | Při návrhu Zadání posuzuje signály příliš velkého issue a rozpadá ho na samostatně mergovatelné kroky; nerozdělí ho na kusy, které samy nic nedělají. Žádný číselný práh (řádky, soubory) — jen signály. Kritéria píše testovatelně; které test pokrýt nejde, označí „ověří člověk". | 2.7, 2.9 |
+| `triage-issue` | Nové kritérium | Při povýšení Poznámky hlídá velikost — Poznámku, ze které by vzniklo nereálně velké PR, navrhne rozdělit na víc Zadání. Kritéria píše testovatelně stejně jako `plan-milestone`. | 2.7, 2.9 |
+| `review-milestone` | Nová kontrola | Issue se signály příliš velkého PR je nález; stejně tak kritérium, které test pokrýt nejde, a přitom není označené „ověří člověk". | 2.7, 2.9 |
 | `train-agent` | Změna vstupu | Vstupem jsou připomínky člověka v PR a jejich zapracování, ne report agentního review. Spouštěč (vyřešená review/retry smyčka) zůstává. | 1.6, 2.6 |
 | `init-workflow` | Menší úprava | Podsekce Agenti přestává interviewovat role recenzentů (kvalita kódu, akceptační kritéria); zůstává jen mapa `area:*` → implementující agent. | 2.6 |
 
 **Sdílený kontrakt.** `shared/workflow-config.md` ztrácí v podsekci Agenti
 řádky rolí recenzentů a jejich fallback. Strojově čtený řádek „Blokuje merge"
 zůstává jen ve výstupu ručně spuštěného `verify-issue`; `run-milestone` se jím
-neřídí.
+neřídí. `shared/issue-template.md` mění dvě pravidla: kritérium je ve
+výchozím stavu testovatelné a netestovatelné nese značku „ověří člověk"; a
+zaškrtávátka odškrtává orchestrátor podle potvrzeného testu (ručně spuštěný
+`verify-issue` dál podle toho, co sám ověřil), ne výhradně `verify-issue`.
 
 ## Mimo rozsah
 
