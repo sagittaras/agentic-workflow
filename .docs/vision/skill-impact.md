@@ -74,7 +74,7 @@ druzí přestávají číst registr a sestupují stromem.
 | Skill | Stav | Co se mění |
 | --- | --- | --- |
 | `init-workflow` | Menší úprava | Podsekci `Zdroje pravdy` přestává interviewovat i zakládat. V už nastaveném projektu ji při aktualizaci nabídne odstranit, nepřepíše ji tiše. |
-| `write-claude-md` | Změna obsahu | Odkaz na vstupní index dokumentace se stává povinnou součástí orientace — místo výčtu jednotlivých dokumentů, s větou, kdy ho otevřít. Konvence práce nesou pravidlo, že znalosti patří do stromu, ne do `CLAUDE.md`, a že nová stránka se odkazuje z nadřazeného indexu ve stejné změně. Přirozený kandidát na založení stromu v projektu, který ho nemá (otevřená implikace 1.7). |
+| `write-claude-md` | Změna obsahu | Odkaz na vstupní index dokumentace se stává povinnou součástí orientace — místo výčtu jednotlivých dokumentů, s větou, kdy ho otevřít. Konvence práce nesou pravidlo, že znalosti patří do stromu, ne do `CLAUDE.md`, a že nová stránka se odkazuje z nadřazeného indexu ve stejné změně. Strom sám nezakládá — to dělá `write-docs` (1.8). |
 | `write-adr` | Změna umístění | Log ADR je sekce stromu: umístění odvodí z indexu, Glob kandidátních složek nanejvýš jako dočasný fallback. Nový ADR odkáže z indexu logu ve stejném PR; zakládaný log odkáže z nadřazeného indexu. Zázemí čte sestupem od `CLAUDE.md`, ne ze Zdrojů pravdy. |
 | `review-adr` | Nová kontrola | Zázemí čte sestupem od `CLAUDE.md` místo Zdrojů pravdy. ADR, na který index logu neodkazuje, je nález — dokument, který nikdo nenajde. |
 | `write-art-bible` | Změna hledání | Existující dokument o vzhledu hledá nejdřív ve stromu — index ho popíše větou, i když se nejmenuje `art-bible`. Novou art bible odkáže z nadřazeného indexu ve stejné změně. |
@@ -87,6 +87,28 @@ pravdy` — i její řádek v tabulce „Co která podsekce znamená" a výklad 
 `— viz CLAUDE.md`. `shared/issue-template.md` přestává cesty k dokumentům
 v `Reference` vázat na Zdroje pravdy: dokument se cituje cestou vůči kořeni
 repozitáře, stejně jako kód.
+
+## Princip 1.8
+
+Znalostní báze jako samostatný artefakt
+([1.8](principles.md#18-znalostní-báze-docs-je-graf-stránek-a-plugin-ji-zakládá-a-udržuje-vlastními-skilly))
+přidává dva skilly a sdílený kontrakt, a mění skilly, které do báze dnes
+píšou po svém.
+
+| Skill | Stav | Co se mění |
+| --- | --- | --- |
+| `write-docs` *(nový)* | Nový skill | Založí bázi (vstupní index, odkaz z `CLAUDE.md`), přidá nebo upraví stránku či sekci — místo najde sestupem stromem, stránku odkáže z nadřazeného indexu, doplní odkazy na související témata — a přestaví nabobtnalý dokument na strom. Po každé změně spustí skript kontroly struktury. |
+| `review-docs` *(nový)* | Nový skill | Nezávislé review s čistým kontextem nad úsudkovou částí: věty u odkazů, duplicita s `CLAUDE.md` a mezi stránkami, umístění tématu v sekci. Mechanickou část nechává skriptu a neopravuje. |
+| `write-claude-md` | Změna rozsahu | Znalost, která do `CLAUDE.md` nepatří, nabídne přesunout do báze přes `write-docs` — dnes ji jen škrtá, nebo eskaluje, protože „co odsunout do vlastní dokumentace" není jeho volba. |
+| `write-adr`, `write-art-bible`, `write-ux-spec` | Menší úprava | Umístění a odkázání dokumentu berou ze `shared/docs-tree.md`, ne každý po svém; po zápisu spustí skript kontroly struktury. |
+| `implement-issue` | Menší úprava | Zneplatní-li změna zdokumentované chování, upraví stránku báze ve stejném PR. |
+| `init-workflow` | Menší úprava | Nabídne zařadit skript kontroly struktury mezi ověřovací příkazy, aby strukturu báze hlídala i brána nad každým PR. |
+
+**Sdílený kontrakt.** Přibývá `shared/docs-tree.md` — pravidla struktury
+z 1.7 na jednom místě, odkud je čtou `write-docs`, `review-docs`
+i specializované skilly — a skript kontroly struktury ve `scripts/` (bash,
+jako ostatní skripty pluginu): sirotci, indexy bez odkazu na vlastní stránky,
+mrtvé odkazy a kotvy, `CLAUDE.md` bez odkazu na vstupní index.
 
 ## Principy 2.6–2.9
 

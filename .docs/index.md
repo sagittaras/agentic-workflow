@@ -20,9 +20,10 @@ vypadají tak, jak vypadají.
 - Stránky na sebe odkazují relativními markdown odkazy, na konkrétní místo
   s kotvou.
 
-Proč je báze postavená takhle, říká princip
+Proč je báze postavená takhle, říkají principy
 [1.7](vision/principles.md#17-dokumentace-se-dohledává-stromem-indexů-od-claudemd-ne-registrem-cest)
-— plugin ho předepisuje cílovým projektům a drží se ho i sám.
+a [1.8](vision/principles.md#18-znalostní-báze-docs-je-graf-stránek-a-plugin-ji-zakládá-a-udržuje-vlastními-skilly)
+— plugin je předepisuje cílovým projektům a drží se jich i sám.
 
 ## Sekce
 

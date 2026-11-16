@@ -1,8 +1,9 @@
 # Principy spolupráce
 
-Principy 1.1–1.7: kde vzniká kotva, podle které agent pracuje (kostra, vzorová
-implementace, rules), co ještě zbývá ADR, kdy má smysl zakládat agenta a jak se
-v projektu dohledává dokumentace. Kontext, ze kterého vize vychází, a přehled všech
+Principy 1.1–1.8: kde vzniká kotva, podle které agent pracuje (kostra, vzorová
+implementace, rules), co ještě zbývá ADR, kdy má smysl zakládat agenta, jak se
+v projektu dohledává dokumentace a proč je znalostní báze `.docs/` samostatný
+artefakt s vlastními skilly. Kontext, ze kterého vize vychází, a přehled všech
 principů drží [index vize](index.md).
 
 ## 1.1 Kostru projektu staví člověk, ne agent
@@ -291,7 +292,76 @@ odvodí umístění z indexu a nový dokument odkážou z nadřazeného indexu v
 PR, místo aby ho registrovaly. Dopad po jednotlivých skillech drží [mapa
 dopadu](skill-impact.md#princip-17).
 
-**Otevřená implikace** (řeší se až při promítání do skillů, ne tady): projekt,
-který strom indexů nemá. Kdo ho založí — přirozeně `write-claude-md`, protože
-odkaz na vstupní index patří do `CLAUDE.md` — a jestli smí čtecí skilly do té
-doby padat zpátky na dnešní Glob, nebo mají mezeru jen ohlásit.
+**Projekt, který strom indexů nemá.** Kdo ho založí, řeší
+[1.8](#18-znalostní-báze-docs-je-graf-stránek-a-plugin-ji-zakládá-a-udržuje-vlastními-skilly):
+`write-docs`, ne `write-claude-md` — ten na vstupní index jen odkazuje. Čtecí
+skilly v projektu bez báze mezeru ohlásí s odkazem na `write-docs`; jestli do té
+doby smí padat zpátky na dnešní Glob, zůstává otázkou promítání do skillů.
+
+## 1.8 Znalostní báze `.docs/` je graf stránek a plugin ji zakládá a udržuje vlastními skilly
+
+Znalosti o projektu, které nejdou vyčíst z kódu, žijí v `.docs/` jako graf
+stránek. Strom indexů z 1.7 je jeho páteř — každá stránka je dosažitelná od
+`CLAUDE.md` —, odkazy mezi souvisejícími tématy jsou jeho hrany. Báze není
+vedlejší produkt jiných skillů, ale samostatný artefakt pluginu, stejně jako
+`CLAUDE.md`, rules nebo agenti: má vlastní skilly, které ji zakládají,
+rozšiřují a hlídají.
+
+**Why:**
+- **Navigace vede ke čtení, ne k hledání.** Agent, který potřebuje něco vědět,
+  sestoupí od `CLAUDE.md` přes index do sekce a odtud po odkazech na související
+  stránky — a každý odkaz mu větou řekne, jestli tam jeho odpověď je. Nemusí
+  grepovat ani procházet stohy textu. Grep najde řetězec, ne odpověď: trefí se do
+  nesouvisejících stránek, mine synonyma, a jestli je nález relevantní, pozná
+  agent teprve otevřením celého souboru. Každé takové otevření stojí kontext
+  a u dlouhé práce se to sčítá.
+- **Stejná navigace slouží člověku.** Wiki-style báze dává i člověku rozumný
+  pohyb mezi tématy, aniž by musel vědět, ve kterém souboru co je. Jedna
+  struktura pro oba čtenáře znamená, že ji oba drží při životě: člověk si
+  všimne mrtvého odkazu, agent ho opraví ve stejné změně.
+- **Bez vlastních skillů báze degraduje.** Dnes do `.docs/` píšou jen
+  specializované skilly (`write-adr`, `write-art-bible`, `write-ux-spec`) a každý
+  si umístění hledá po svém (1.7). Obecná znalost — popis oblasti, cílový návrh,
+  pravidla vrstvy — skill nemá vůbec, takže vzniká ad hoc, bez indexu a bez
+  odkazů, a strom se rozpadá na sirotky. Je to stejný problém, jaký plugin
+  vyřešil pro `CLAUDE.md` (`write-claude-md`) a pro agenty (`write-agent`): bez
+  ustanoveného postupu vzniká pokaždé jiný tvar.
+
+**Ověřeno v praxi:** `sagittaras/spellborn`, kde báze roste s každým
+commitem, který mění popsané chování, a dokumentace tohohle pluginu po
+přestavbě na strom ([vstupní index](../index.md)).
+
+**Pravidla struktury hlídá skript, ne úsudek.** Sirotek, index, který
+neodkazuje na svou stránku, mrtvý odkaz nebo kotva, `CLAUDE.md` bez odkazu na
+vstup — to všechno jde ověřit mechanicky, stejně jako testy v 2.9. Skilly báze
+skript spouští po každé změně a projekt ho může zařadit mezi ověřovací příkazy,
+takže strukturu hlídá i brána nad každým PR. Úsudek zbývá na to, co skript
+neumí: jestli věta u odkazu říká, co na stránce je, jestli stránka nedubluje
+`CLAUDE.md` nebo jinou stránku, a jestli téma leží ve správné sekci.
+
+**Skilly báze:**
+- **`write-docs`** — založí bázi v projektu, který ji nemá (vstupní index,
+  odkaz z `CLAUDE.md`); přidá nebo upraví stránku či sekci — místo najde
+  sestupem stromem, stránku odkáže z nadřazeného indexu a doplní odkazy na
+  související témata; a přestaví nabobtnalý dokument na strom, jako se to stalo
+  s vizí tohohle pluginu.
+- **`review-docs`** — nezávislé review s čistým kontextem nad úsudkovou částí;
+  mechanickou část nechává skriptu. Stejný tok jako u `write-skill`
+  a `write-agent`: interview → návrh → zápis → review subagentem.
+- **Sdílený kontrakt `shared/docs-tree.md`** s pravidly struktury na jednom
+  místě a **skript kontroly struktury** ve `scripts/`. Čtou a spouští je
+  i specializované skilly, když dokument zakládají — umístění a odkázání tak
+  přestává být mechanika, kterou si každý řeší po svém.
+
+Výchozí umístění je `.docs/`. Projekt, který už má vlastní dokumentační
+složku, si ji ponechá — pravidla struktury platí stejně.
+
+**Co se nemění:** 1.2 (*jak* nese kód, báze nese, co z kódu vyčíst nejde),
+1.4 (rules se vkládají samy podle cesty, báze se čte na vyžádání) a 1.5 (ADR
+log je jedna ze sekcí báze, ne její náhrada).
+
+**Důsledek pro workflow:** změna kódu, která zneplatní zdokumentované
+chování, upraví stránku ve stejném PR — `implement-issue` to dělá jako součást
+práce, ne jako další issue. Specializované skilly zůstávají, jen mechaniku
+umístění a odkázání berou ze sdíleného kontraktu. Dopad po skillech drží
+[mapa dopadu](skill-impact.md#princip-18).

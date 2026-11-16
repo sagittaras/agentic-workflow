@@ -1,7 +1,7 @@
 # Vize: jak má člověk pracovat s AI okolo tohoto pluginu
 
 > **Stav:** rozepsáno, píše se průběžně po principech — od 24. 8. 2026;
-> 16. 11. 2026 přibyl princip 1.7, vize se rozdělila na stránky a principy
+> 16. 11. 2026 přibyly principy 1.7 a 1.8, vize se rozdělila na stránky a principy
 > 2.6–2.9 posunuly cíl od úplné autonomie ke kompromisu (viz níž).
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
@@ -50,6 +50,9 @@ pracuje, a co zbývá dokumentům:
   po review.
 - [1.7](principles.md#17-dokumentace-se-dohledává-stromem-indexů-od-claudemd-ne-registrem-cest)
   Dokumentace se dohledává stromem indexů od `CLAUDE.md`, ne registrem cest.
+- [1.8](principles.md#18-znalostní-báze-docs-je-graf-stránek-a-plugin-ji-zakládá-a-udržuje-vlastními-skilly)
+  Znalostní báze `.docs/` je graf stránek a plugin ji zakládá a udržuje
+  vlastními skilly.
 
 **[Issues a autonomní vývoj](issues.md)** — co issue nese a jak se po něm
 autonomně staví:
@@ -77,8 +80,9 @@ autonomně staví:
 
 ## Stránky
 
-- [Principy spolupráce](principles.md) — 1.1–1.7: kostra, vzorová implementace,
-  rules, ADR, agenti a navigace dokumentací.
+- [Principy spolupráce](principles.md) — 1.1–1.8: kostra, vzorová implementace,
+  rules, ADR, agenti, navigace dokumentací a znalostní báze `.docs/` s vlastními
+  skilly.
 - [Issues a autonomní vývoj](issues.md) — 2.1–2.9: tvar issue, Poznámka
   a Zadání, vlnové plánování, lidské review místo agentního, velikost issue
   podle přezkoumatelnosti PR, orchestrace přes podřazené session, testy ke
