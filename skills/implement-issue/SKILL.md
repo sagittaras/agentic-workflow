@@ -3,8 +3,10 @@ name: implement-issue
 description: >-
   Naimplementuje jeden issue z trackeru a otevře na něj PR — ověří závislosti,
   otevře precedent citovaný v Referencích, založí větev, napíše kód přesně podle
-  akceptačních kritérií, sám si je projde a zápis i PR předá sdíleným skillům.
-  Výstupem je číslo a odkaz PR; merge nechává na tom, kdo skill spustil.
+  akceptačních kritérií, každé testovatelné pokryje testem a zápis i PR s mapou
+  kritérium → test předá sdíleným skillům. Bez zelených testů a ověřovacích
+  příkazů PR neotevře. Výstupem je číslo a odkaz PR; merge nechává na tom, kdo
+  skill spustil.
 when_to_use: >-
   Použij, když má být issue skutečně naimplementovaný — „udělej issue #12",
   „naimplementuj to issue", „vezmi #7 a otevři na to PR" — i když tě jako
@@ -59,6 +61,7 @@ Psát ji potřetí znamená mít tři různá chování pro jednu operaci.
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | V kroku 1 před prvním voláním skriptu ze `scripts/` nebo `scripts/gh/` — jejich argumenty a návratové kódy |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 1, když tělo issue neodpovídá očekávanému tvaru |
 | `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než posoudíš, jestli citovaná cesta je precedent k rozšíření |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 3, když Reference cituje doplňkový dokument (ADR, UX spec) — jak ho najít sestupem od `CLAUDE.md` |
 
 ## Vstupní kontext
 
@@ -123,8 +126,12 @@ citovanému precedentu **odporuje** (jiné rozhraní nebo struktura, na kterou
 nejde navázat), nebo citovaná cesta jen tematicky souvisí a rozšířit ji na
 tenhle případ nejde (test v `shared/precedent-test.md`).
 
-Cesty k doplňkovým dokumentům (ADR a další) drží sekce `Zdroje pravdy`
-v konfiguraci; cesta ke kódovému precedentu je vůči kořeni repozitáře.
+Doplňkový dokument (ADR a další) hledej **sestupem stromem dokumentace od
+`CLAUDE.md`** podle `shared/docs-tree.md`: z `CLAUDE.md` na vstupní index a dál
+podle vět u odkazů, dokud nenarazíš na dokument, který Reference cituje. Ne
+Globem ani podle názvu souboru — věta v indexu řekne, který dokument platí, i když
+se nejmenuje tak, jak čekáš. Cesta ke kódovému precedentu je vůči kořeni
+repozitáře.
 Nemá-li Reference žádný kódový precedent, jen odkaz na dokument, **neimplementuj
 a eskaluj** s doporučením `/sagittaras:triage-issue` — bez precedentu nezůstává
 primární zdroj zadání, na který by se implementace mohla opřít.
@@ -214,22 +221,53 @@ Vypadá-li kritérium při implementaci podspecifikovaně, protiřečí si s jin
 zjevně špatně, **zastav a ohlas to**. Je to signál, že se má vrátit `plan-milestone` —
 domyšlené kritérium vypadá jako hotová práce a rozdíl se najde až v produkci.
 
-### 7. Projdi si každé kritérium sám
+### 7. Pokryj každé kritérium testem a spusť bránu
 
-Než otevřeš PR, projdi kritéria jedno po druhém:
+Než otevřeš PR, projdi kritéria jedno po druhém, v pořadí, v jakém stojí v issue:
 
-- **Co jde spustit, spusť.** Ověřovací příkaz pro `area:*` label issue je v sekci
-  `Ověřovací příkazy` konfigurace.
-  - Selže-li **kvůli tvé změně**, oprav ji a spusť znovu. Nepodaří-li se to,
-    **PR neotvírej a eskaluj** — PR se známým nesplněným kritériem spotřebuje čas
-    dvou recenzentů na to, co jsi věděl už předtím.
-  - Selže-li z příčiny, která s issue nesouvisí (rozbitý build už před tvou změnou),
-    ohlas to a neopravuj — je to cizí rozsah.
-- **Co jde přečíst v kódu, přečti** a ukaž si, kde je kritérium naplněné.
+- **Kritérium bez značky `(ověří člověk)` kryje test, který jsi v téhle změně
+  napsal nebo rozšířil.** Test patří tam, kde má projekt testy (zjistil sis to
+  v kroku 6). Ověřuje-li se kritérium příkazem — „`bash scripts/lint.sh` projde",
+  „`grep …` nic nevrátí" — a projekt pro takovou kontrolu testy nemá, obal příkaz
+  testovým skriptem, který při selhání skončí nenulovým kódem. Existující test,
+  na který jsi nesáhl, kritérium nekryje: orchestrátor přijme jen test, který PR
+  mění, a pro člověka je to tvrzení bez důkazu. „Přečetl jsem to v kódu" tady
+  nestačí — po merge už nic nehlídá.
+- **Kritérium se značkou `(ověří člověk)`** test nemá. Přečti v kódu, kde je
+  naplněné, a v mapě ho tak označ.
+- **Kritérium bez značky, na které test napsat nejde**, je vada plánu, ne výjimka,
+  kterou si uděláš sám: **zastav a eskaluj** — značku přidává plánování.
 
-Nenahrazuje to nezávislé ověření `verify-issue`; znamená to jen, že nepředáváš
-zjevně rozbitou práci. **Zaškrtávátka v těle issue nech prázdná** — odškrtává je
-`verify-issue` podle toho, co skutečně ověřil.
+Zapiš si mapu kritérium → test, jeden řádek na kritérium; předáš ji v kroku 8:
+
+```markdown
+| # | Kritérium | Test |
+| --- | --- | --- |
+| 1 | <zkrácené znění kritéria> | `cesta/k/testu` — `název testu` |
+| 2 | <zkrácené znění kritéria> | ověří člověk |
+```
+
+Číslo je pořadí kritéria v issue; cesta je vůči kořeni repozitáře.
+
+Pak **spusť všechny testy z mapy a ověřovací příkaz** pro `area:*` label issue ze
+sekce `Ověřovací příkazy` konfigurace:
+
+- **Všechno prošlo** → pokračuj krokem 8.
+- **Selže kvůli tvé změně** → oprav ji a spusť znovu. Nepodaří-li se to,
+  **PR neotvírej a eskaluj** — PR s červenou bránou spotřebuje čas recenzenta na to,
+  co jsi věděl už předtím.
+- **Selže z příčiny, která s issue nesouvisí** (rozbitý build už před tvou změnou)
+  → neopravuj, je to cizí rozsah; ale ani PR neotvírej a eskaluj. Bez zelené brány
+  nejde poznat, jestli tvoje změna funguje.
+
+Zjisti taky, **kdo bránu potvrdí po tobě**. V milestone běhu je to orchestrátor
+(`run-milestone`, který tě dispečoval). Spuštěný samostatně se podívej, jestli
+projekt má CI, které na PR běží (`.github/workflows/`, `.gitea/workflows/`
+a obdobné). Nemá-li ani jedno, je tvůj běh jediné spuštění brány a PR to musí
+říct — jinak recenzent bere zelenou za nezávisle potvrzenou.
+
+**Zaškrtávátka v těle issue nech prázdná** — tvoje kontrola je self-report a do
+issue ho nezapisuješ.
 
 ### 8. Zapiš práci a otevři PR
 
@@ -239,6 +277,11 @@ Zavolej nástrojem `Skill` skill `sagittaras:open-pr` a předej mu:
 - **základní větev PR** = ta z kroku 4,
 - **`Closes #N`** do těla,
 - **milestone issue**, patří-li do nějakého, aby `close-milestone` PR dohledal,
+- **mapu kritérium → test** z kroku 7, doslova, k vložení do těla PR pod nadpis
+  `## Testy kritérií` — orchestrátor ji tam čte strojově,
+- **poznámku o bráně**, běžíš-li bez orchestrátoru a projekt nemá CI: „Bránu
+  (testy kritérií a ověřovací příkaz) spustila jen session, která PR otevřela;
+  nezávisle ji nepotvrdil orchestrátor ani CI.",
 - **výslovný souhlas k mergi**, obsahoval-li ho prompt, kterým jsi byl spuštěn —
   doslova. Bez týhle předávky `open-pr` souhlas nemá odkud vzít.
 
@@ -263,7 +306,9 @@ Přeruš postup a ohlas stav, když:
 - základní větev neexistuje ani na remotu, ani lokálně (krok 5),
 - větev nevyšla ze základního refu (krok 5),
 - kritérium je podspecifikované, sporné nebo špatné (krok 6),
-- ověřovací příkaz selhává kvůli tvé změně a nedaří se to opravit (krok 7),
+- kritérium bez značky `(ověří člověk)` nejde pokrýt testem (krok 7),
+- testy kritérií nebo ověřovací příkaz neprochází a nedaří se to opravit, nebo
+  selhávají z příčiny mimo issue (krok 7),
 - `open-pr` PR nezaložilo nebo jeho výsledek nejde ověřit (krok 8).
 
 Rozdělanou práci **nech v pracovním stromu a necommituj ji** — polovičatý PR vypadá
@@ -278,8 +323,9 @@ podle něj pozná, že dispatch skutečně něco dodal:
 ```markdown
 Issue: #<číslo> — <název>
 Větev: <type>/<popis>, základ <základní větev>
-Kritéria: <kolik> z <kolik> prošlo vlastní kontrolou
-Ověření: <příkaz> — <prošlo | selhalo, proč>
+Kritéria: <kolik> z <kolik> kryje test, <kolik> ověří člověk
+Ověření: <příkaz> a testy z mapy — prošlo
+Brána: <potvrdí orchestrátor | potvrdí CI | spustila jen session>
 Odkaz: <url PR>
 Poznámky: <co jsi vědomě neudělal a proč; vynech, není-li co dodat>
 
@@ -306,6 +352,9 @@ PR: žádné
   obsahoval výslovný souhlas k mergi — pak ho v kroku 8 provede `open-pr`, ne ty.
 - **Kritéria jsou zadání, ne inspirace.** Nic navíc, nic míň; podspecifikované
   kritérium se hlásí, nedomýšlí.
+- **Každé testovatelné kritérium kryje test z téhle změny a brána je zelená, jinak
+  PR nevzniká.** Mapa kritérium → test jde do těla PR, aby ji mohl někdo potvrdit;
+  nepotvrdí-li ji nikdo, PR to přizná.
 - **Git jen přes delegaci.** `create-branch` a `open-pr`; jedinou výjimkou jsou
   čtecí kontroly vyjmenované v kroku 5, které nic nemění.
 - **Zaškrtávátka patří `verify-issue`.** Neodškrtávej je, ani když sis kritérium
