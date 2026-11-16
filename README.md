@@ -189,6 +189,10 @@ oddělené klony téhož repozitáře. Je to záměr: vývojová kopie leží mi
 `.claude`, takže se její skilly nenačítají a rozdělaná práce neovlivňuje běžící
 session. Změny se do ostré instalace dostanou až pushem a aktualizací výše.
 
+Proč skilly vypadají, jak vypadají, a podle jakých principů se mění, popisuje
+dokumentace vývoje — vstupem je [.docs/index.md](.docs/index.md), odkud se
+pokračuje stromem indexů.
+
 `SKILL.md` v kořeni není součástí `skills/` — do pluginu ho zapojuje položka
 `"skills": ["./"]` v `.claude-plugin/plugin.json` a bez ní se nenačte. Slouží
 jako rozcestník `/sagittaras`. Přejmenovat ho podle konvence

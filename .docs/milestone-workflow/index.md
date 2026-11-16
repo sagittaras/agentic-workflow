@@ -6,12 +6,16 @@
 > hned při založení, protože proti čistě lokální větvi nejde otevřít PR.
 > **Inspirace:** `mu-online/webgame` (`.claude/skills/`) — tamní sada je zapečená do jednoho
 > projektu; tenhle plán ji převádí na projektově nezávislý plugin.
-> **Nahrazeno v části:** [`workflow-vision.md`](./workflow-vision.md) § 2.1 a § 2.4 mění
-> kontrakt kapitoly 2 — akceptační kritéria se ukotvují v kódu, ne v próze citovaného
-> dokumentu, a `review-milestone` neúplnou vlnu proti popisu milestonu nehlásí jako díru.
-> Neukotvuj nové issue podle „Reference — cesta k dokumentu § sekce" v kapitole 2; drž se
-> vize. Kapitola 3 je nahrazená taky — projektový kontrakt už nezakládá bespoke
-> `.claude/workflow.md`, ale pevné sekce uvnitř `CONTRIBUTING.md` (viz `shared/workflow-config.md`).
+> **Nahrazeno v části:** principy [2.1](../vision/issues.md#21-co-issue-stanovuje)
+> a [2.4](../vision/issues.md#24-plánování-je-vlnové-gatované-dostupností-vzoru--ne-jednorázová-dávka)
+> vize mění kontrakt kapitoly 2 — akceptační kritéria se ukotvují v kódu, ne v próze
+> citovaného dokumentu, a `review-milestone` neúplnou vlnu proti popisu milestonu nehlásí
+> jako díru. Neukotvuj nové issue podle „Reference — cesta k dokumentu § sekce" v kapitole 2;
+> drž se vize. Kapitola 3 je nahrazená taky — projektový kontrakt už nezakládá bespoke
+> `.claude/workflow.md`, ale pevné sekce uvnitř `CONTRIBUTING.md` (viz `shared/workflow-config.md`);
+> a její bod Zdroje pravdy ruší princip
+> [1.7](../vision/principles.md#17-dokumentace-se-dohledává-stromem-indexů-od-claudemd-ne-registrem-cest)
+> — dokumenty se dohledávají stromem indexů od `CLAUDE.md`, ne registrem cest.
 
 Cílem je řetěz skillů, který vezme téma („uděláme UI kit"), rozepíše ho na milestone
 s issues a pak ho autonomně naimplementuje — s lidským schválením na dvou místech:

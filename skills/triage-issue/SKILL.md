@@ -25,7 +25,7 @@ when_to_use: >-
 argument-hint: "[číslo issue]"
 # Sloveso `triage` není v tabulce doporučených sloves konvencí; ponecháno
 # vědomě — je to ustálené označení pro tenhle typ klasifikace a název fixuje
-# interní `.docs/workflow-vision.md` § 3 pluginu. § 3 tam popisuje i volání
+# interní `.docs/vision/skill-impact.md` pluginu. Mapa dopadu tam popisuje i volání
 # z plan-milestone's vlnového kroku — v realizaci odpadlo vědomě: triage
 # pracuje nad existujícím číslem issue, kdežto plan-milestone klasifikuje
 # položky dřív, než issue vznikne, takže volat tenhle skill nemá jak. Sdílení
