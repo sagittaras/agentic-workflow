@@ -45,11 +45,12 @@ allowed-tools:
 # `Bash(git:*)` používá skill sám, a jen na čtecí zjištění stavu (rezervovaná
 # čísla na remotu, čistota pracovního stromu, diff dokumentu do zadání pro
 # reviewera). Všechno, co do repozitáře zapisuje, jde přes delegované skilly.
-# `Bash(bash:*)` je tam kvůli nim: `create-branch`, `open-pr` i `make-commit`
-# stojí na skriptech pluginu volaných tvarem `bash <cesta>`, a jestli se
-# u vnořeného vyvolání uplatní práva volaného, nebo průnik s volajícím, plugin
-# nikde nefixuje. Položka je bezriziková — povoluje spouštění skriptů, ne
-# libovolný shell — a bez ní by autonomní běh mohl umřít na první delegaci.
+# `Bash(bash:*)` je tam kvůli nim a kvůli `docs-check.sh`: `create-branch`,
+# `open-pr` i `make-commit` stojí na skriptech pluginu volaných tvarem
+# `bash <cesta>`, a jestli se u vnořeného vyvolání uplatní práva volaného,
+# nebo průnik s volajícím, plugin nikde nefixuje. Položka je bezriziková —
+# povoluje spouštění skriptů, ne libovolný shell — a bez ní by autonomní běh
+# mohl umřít na první delegaci.
 # Vynechaná zvažovaná pole: disable-model-invocation — skill má jít vyvolat
 # i tím, že uživatel popíše rozhodnutí, aniž by řekl „ADR"; context/agent/
 # background — interview vyžaduje uživatele v hlavním kontextu a větev i soubor
@@ -78,6 +79,11 @@ nad cizím projektem, kde relativní cesta míří jinam.
 | --- | --- |
 | `${CLAUDE_PLUGIN_ROOT}/skills/write-adr/adr-conventions.md` | V kroku 1, dřív než hledáš log — umístění, číslování, stavy, otevřené otázky |
 | `${CLAUDE_PLUGIN_ROOT}/skills/write-adr/adr-template.md` | V kroku 1; struktura šablony určuje, na co se musíš v interview doptat |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než sestoupíš stromem k logu a k zázemí — pravidla struktury, umístění a odkázání |
+
+Strukturu báze po zápisu ověřuje `${CLAUDE_PLUGIN_ROOT}/scripts/docs-check.sh`
+(řádky `fail=<soubor> reason=<důvod>`, nebo `result=pass`; kód 1 = nález). Volej ho
+z kořene cílového projektu tvarem `bash <cesta>`.
 
 Git mechaniku skill nepíše: větev zakládá `sagittaras:create-branch`, commit
 a PR obstará `sagittaras:open-pr` (ten uvnitř volá `sagittaras:make-commit`).
@@ -94,19 +100,20 @@ rozhodnutí**. Co v zadání není, vytěž z konverzace a zbytek zjisti postupe
 
 ### 1. Příprava a orientace
 
-1. Přečti `adr-conventions.md` a `adr-template.md`.
-2. **Najdi log ADR** postupem z kapitoly 1 konvencí. Z nalezených dokumentů
+1. Přečti `adr-conventions.md`, `adr-template.md` a `docs-tree.md`. Spusť
+   `docs-check.sh` a výstup si uschovej jako výchozí stav pro krok 5.
+2. **Najdi log ADR** postupem z kapitoly 1 konvencí — z indexu, Glob jen
+   v projektu bez báze. Z nalezených dokumentů
    zjisti zároveň **jazyk logu**, **slovník stavů** a **tvar, který log drží** —
    podle kapitoly 2 má existující tvar přednost před šablonou.
-3. **Prolétni existující ADR** (stačí nadpisy a souhrny; ta, kterých se téma
+3. **Prolétni existující ADR** podle vět v indexu logu (ta, kterých se téma
    dotýká, přečti celá). Nové rozhodnutí může na některé navazovat, nahrazovat
    ho, nebo s ním být v rozporu — a všechny tři případy mění, na co se budeš ptát.
-4. **Načti zázemí projektu**: `CLAUDE.md`, `.claude/rules/`, a pokud projekt má
-   v `CONTRIBUTING.md` sekci `## Workflow (sagittaras)`, i její podsekci
-   `Zdroje pravdy` (hodnota „— viz CLAUDE.md" znamená, že jsi je už četl v `CLAUDE.md`
-   výše). Bez konfigurace workflow skill běží dál — ADR se píše i v projektu,
-   který milestone workflow nepoužívá; chybí ti pak jen ukazatel na
-   dokumentaci, kterou musíš najít sám.
+4. **Načti zázemí projektu sestupem od `CLAUDE.md`**: `CLAUDE.md`, `.claude/rules/`
+   a ze vstupního indexu dál podle vět u odkazů do sekcí, kterých se téma
+   rozhodnutí týká. Celou bázi dopředu nečti. Bez báze ti zbývá `CLAUDE.md`
+   a `.claude/rules/`; ADR se píše i v projektu, který bázi ani milestone
+   workflow nemá.
 5. **Urči režim.** Rozliší se podle toho, co se s rozhodnutím děje — hranici
    popisuje kapitola 5 konvencí:
 
@@ -239,7 +246,16 @@ se tehdy věřilo.
 Piš jen to, co uživatel řekl nebo potvrdil. Prázdná sekce je lepší než vymyšlený
 obsah; v dokumentu o rozhodování je smyšlenka nejdražší možná chyba.
 
+**Odkaž dokument z indexu** ve stejné změně podle oddílu Odkázání z indexu
+v kapitole 1 konvencí: nový ADR z indexu logu, zakládaný log z nadřazeného
+indexu, u nahrazení uprav i řádek původního ADR. Dořešení řádek v indexu nemění,
+ledaže dořešená odpověď zneplatní jeho větu.
+
 ### 5. Vlastní kontrola
+
+Spusť `docs-check.sh` znovu a porovnej s výchozím stavem z kroku 1. **Nový
+nález** oprav a spusť znovu; nález z výchozího stavu je mimo zadání, neopravuj
+ho a uveď ho v reportu.
 
 Projdi hotový dokument proti kontrolnímu seznamu v závěru `adr-conventions.md`,
 bod po bodu. Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady,
@@ -444,6 +460,7 @@ nebo nahrazení:
 ADR-<NNNN>: <název> (<cesta k souboru>)
 Režim: <nový | dořešení | nahrazení ADR-NNNN>
 Stav: <Navrženo | Přijato — u dořešení beze změny>
+Kontrola struktury: <result=pass | nálezy z výchozího stavu, které zůstávají>
 PR: nevzniklo — čeká na pokyn k vypravení
 
 Další krok: potvrď vypravení jako větev a PR s nezávislým review — v týhle
@@ -488,6 +505,7 @@ PR: <„#<číslo> — <url>" | „nevzniklo — chybí konfigurace workflow, AD
     v pracovním stromu">
 Kol review: <N>
 Otevřené otázky: <počet ponechaných, nebo „žádné">
+Kontrola struktury: <result=pass | nálezy z výchozího stavu, které zůstávají>
 Odmítnuté nálezy: <nález → důvod odmítnutí, nebo „žádné">
 
 Další krok: merge PR — patří člověku.

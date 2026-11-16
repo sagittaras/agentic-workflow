@@ -13,19 +13,55 @@ Všechna pravidla níže slouží tomuhle jedinému účelu.
 
 ## 1. Kde ADR leží
 
-Plugin cestu nekonfiguruje a **odvozuje ji z repozitáře** — aby ADR šlo psát i v projektu,
-který milestone workflow nepoužívá a sekci `## Workflow (sagittaras)`
-v `CONTRIBUTING.md` nemá. Postup:
+Log ADR je **sekce stromu dokumentace** — složka s vlastním `index.md`, který odkazuje
+na každý ADR v ní. Pravidla stromu drží `shared/docs-tree.md` v kořeni pluginu; plugin
+cestu nekonfiguruje ani neregistruje, umístění **odvozuje z indexu**.
 
-1. Najdi soubory ve tvaru `NNNN-*.md` (glob `**/[0-9][0-9][0-9][0-9]-*.md`, mimo
-   `node_modules/`, `vendor/` a `.git/`). Složka, kde jich leží nejvíc, je log projektu.
-2. Nenajdeš-li žádný, hledej prázdnou kandidátní složku v tomhle pořadí: `.docs/adr/`,
+**Projekt s bází** (`CLAUDE.md` odkazuje na existující vstupní index):
+
+1. Sestup stromem od `CLAUDE.md` podle § Jak najít místo pro nový dokument
+   v `docs-tree.md`. Log je sekce, jejíž věta u odkazu říká, že nese architektonická
+   rozhodnutí — i když se složka nejmenuje `adr/`.
+2. Nenajdeš-li ji, prověř Globem `**/[0-9][0-9][0-9][0-9]-*.md` (mimo `node_modules/`,
+   `vendor/` a `.git/`), jestli neleží log mimo strom. Leží-li, je to sirotek: nový
+   log vedle něj nezakládej, ohlas ho a **zeptej se**, jestli ho v téže změně odkázat
+   z indexu sekce, pod kterou věcně patří.
+3. Neleží-li nikde, log **založ jako novou sekci** podle `docs-tree.md`: složku
+   s `index.md` uvnitř sekce, pod kterou architektonická rozhodnutí věcně spadají,
+   a řádek v jejím indexu. Umístění předlož a nech si ho potvrdit.
+
+**Projekt bez báze** (`CLAUDE.md` na vstupní index neodkazuje, nebo index neexistuje)
+— jen tady platí fallback Globem:
+
+1. Najdi soubory ve tvaru `NNNN-*.md` (glob výše). Složka, kde jich leží nejvíc, je log.
+2. Nenajdeš-li žádný, hledej existující prázdnou kandidátní složku v pořadí `.docs/adr/`,
    `.docs/architecture/`, `docs/adr/`, `docs/architecture/`, `doc/adr/`, `adr/`.
-3. Vyjde-li kandidátů víc nebo žádný, **zeptej se**; u zakládaného logu navrhni
-   `.docs/adr/`.
+3. Vyjde-li kandidátů víc, **zeptej se**. Nevyjde-li žádný, log nezakládej: novou
+   složku mimo strom nikdo nenajde a bázi zakládá `/sagittaras:write-docs`. Řekni to
+   a nabídni ho jako samostatný krok.
+
+V obou případech chybějící bázi ohlas podle § Projekt bez báze v `docs-tree.md`.
 
 **Druhý log vedle existujícího nikdy nezakládej.** Rozdělený log znamená, že příští
 rozhodnutí se opře o polovinu historie a druhou půlku nikdo nenajde.
+
+### Odkázání z indexu
+
+Ve stejné změně, ve které ADR vzniká:
+
+- **Nový ADR** dostane řádek v indexu logu — jednou větou, co rozhoduje:
+
+  ```markdown
+  - [ADR-NNNN: Název rozhodnutí](NNNN-kratky-nazev.md) — co se rozhodlo, jednou větou.
+  ```
+
+  Drží-li index logu vlastní tvar řádků (tabulka, jiné pořadí), drž se ho — kapitola 2.
+- **Zakládaný log** dostane řádek v nadřazeném indexu, odkazující na svůj `index.md`.
+- **Nahrazení** upraví i řádek původního ADR, aby věta řekla, že platí nahrazující
+  ADR-NNNN. Věta u odkazu je to, podle čeho čtenář pozná, který dokument platí.
+
+V projektu bez báze, kde log žádný index nemá, odkázání odpadá; index nezakládej
+mimochodem.
 
 ---
 
@@ -145,6 +181,8 @@ ho jako **závazné znění rozhodnutí**, ne jako materiál k parafrázi:
 ## 7. Kontrolní seznam před dokončením
 
 - [ ] Soubor leží v logu podle kapitoly 1, číslo navazuje a nekoliduje s rezervovaným
+- [ ] Index logu na ADR odkazuje větou o tom, co rozhoduje; zakládaný log odkazuje
+      nadřazený index
 - [ ] Název souboru, nadpis i větev `docs/adr-NNNN-slug` nesou tentýž slug
 - [ ] Tvar dokumentu odpovídá existujícímu logu, u nového logu šabloně
 - [ ] Stav sedí na režim: `Navrženo` u nového ADR, `Přijato` u dořešení otevřených
