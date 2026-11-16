@@ -95,6 +95,21 @@ worktree, takže pracovní strom volajícího zůstane netknutý.
 - Kódy `2` a `3` jsou výpadek infrastruktury, ne nález review — nečerpají retry
   rozpočet issue.
 
+### `criteria-tests.sh --issue-body F --pr-body F --base B --head H [--ticked-body F]`
+
+Ověří mapu kritérium → test v těle PR (tabulka pod `## Testy kritérií`) proti
+kritériím issue a proti souborům, které PR mění. Posuzuje úplnost mapy a cesty, ne
+kvalitu testů. Tvar tabulky popisuje hlavička skriptu.
+
+- **Výstup:** `criteria=`, `tested=`, `human=`, `changed_files=`, řádky
+  `fail=<kritérium|pr> reason=<důvod>`, `ticked_body=` (jen s `--ticked-body` a pass),
+  `result=pass|fail`.
+- **Kódy:** `0` mapa sedí · `1` nález, patří zpátky implementující session ·
+  `2` chybný argument, nečitelný soubor, neexistující větev nebo issue bez sekce
+  kritérií · `3` remote nedostupný.
+- **S `--ticked-body`** zapíše tělo issue s odškrtnutými kritérii, jejichž test
+  potvrdil. Do trackeru nezapisuje — to je další krok volajícího.
+
 ---
 
 ## GitHub operace — `scripts/gh/`
@@ -109,7 +124,7 @@ co potřebuje, bez dalšího kola.
 
 | Skript | Argumenty |
 | --- | --- |
-| `issue-read.sh` | `<number>` |
+| `issue-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
 | `issue-list.sh` | `[--milestone M] [--state open\|closed\|all]` |
 | `issue-create.sh` | `--title T --body-file F [--milestone M] [--label L]…` |
 | `issue-update.sh` | `<number> [--body-file F] [--state closed]` |
@@ -120,7 +135,7 @@ co potřebuje, bez dalšího kola.
 | `label-list.sh` | — |
 | `label-create.sh` | `--name N --color C [--description D]` |
 | `pr-create.sh` | `--base B --head H --title T --body-file F` |
-| `pr-read.sh` | `<number>` |
+| `pr-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
 | `pr-list.sh` | `[--milestone M] [--state open\|closed\|all]` |
 | `pr-set-milestone.sh` | `<number> --milestone M` |
 | `pr-comment.sh` | `<number> --body-file F` |

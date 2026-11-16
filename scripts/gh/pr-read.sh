@@ -2,7 +2,10 @@
 # Přečte pull request včetně komentářů a stavu review. Vypisuje JSON tak,
 # jak ho vrátí gh.
 #
-# Použití: bash scripts/gh/pr-read.sh -R owner/repo <number>
+# Použití: bash scripts/gh/pr-read.sh -R owner/repo <number> [--body]
+#
+# S --body vypíše jen tělo PR jako prostý text, aby šlo rovnou přesměrovat
+# do souboru (třeba pro criteria-tests.sh) bez parsování JSON.
 #
 # Vrácená pole: number, title, body, state, isDraft, mergeable,
 # mergeStateStatus, reviewDecision, headRefName, baseRefName, milestone,
@@ -22,9 +25,11 @@ FIELDS="number,title,body,state,isDraft,mergedAt,mergeCommit,mergeable,mergeStat
 
 repo=""
 number=""
+body_only=false
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -R|--repo) require_value "$1" "${2:-}"; repo="$2"; shift 2 ;;
+    --body) body_only=true; shift ;;
     -*) die_usage "unknown_option" "neznámý přepínač $1" ;;
     *)
       if [ -z "$number" ]; then number="$1"; shift
@@ -37,4 +42,8 @@ require_repo "$repo"
 require_number "$number"
 gh_require
 
-gh pr view "$number" -R "$repo" --json "$FIELDS"
+if [ "$body_only" = true ]; then
+  gh pr view "$number" -R "$repo" --json body --jq .body
+else
+  gh pr view "$number" -R "$repo" --json "$FIELDS"
+fi
