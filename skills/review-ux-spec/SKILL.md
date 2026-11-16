@@ -81,7 +81,7 @@ obsah; kritérium o shodě se zadáním v takovém případě přeskoč a uveď 
 Bez cesty k posuzovanému specu je nálezem už samo zadání — řekni to a skonči. Chybí-li
 kořen pluginu, zkus ho odvodit z cesty, po které jsi četl tento soubor; nepovede-li se
 to, posuď, co jde, a v Shrnutí uveď, že tvar nebylo proti čemu ověřit. Chybí-li cesta
-k art bible, dohledej ji v repozitáři sám a v Shrnutí to zmiň; bez ní zůstane
+k art bible, dohledej ji ve stromu dokumentace (krok 1) a v Shrnutí to zmiň; bez ní zůstane
 neověřená celá věrnost invariantům, což je zásadní mezera, ne detail. **Proměnnou
 `${CLAUDE_PLUGIN_ROOT}` nikdy nepoužívej jako cestu** — jako subagentovi se ti nerozvine
 a zůstane literálem.
@@ -98,16 +98,22 @@ vyprodukovala nesmyslné nálezy.
 2. Přečti šablonu `ux-spec-template.md` ve složce `<kořen pluginu>/skills/write-ux-spec/`,
    kde kořen pluginu bereš **ze zadání**. Čti ji odtud, ne relativně vůči specu: ten leží
    v cizím projektu, kde šablona není — a bez ní by z review vypadla celá kontrola tvaru.
-3. **Přečti art bible celou.** Je to hlavní zdroj, se kterým má spec zůstat v souladu,
+3. Přečti `<kořen pluginu>/shared/docs-tree.md` a **sestup stromem dokumentace** od
+   `CLAUDE.md` repozitáře k indexu složky se specem. Zjisti, jestli index na spec
+   odkazuje — to posoudíš v kroku 2.
+4. **Přečti art bible celou.** Je to hlavní zdroj, se kterým má spec zůstat v souladu,
    a část invariantů z ní plyne nepřímo — vyhrazený vzor, zakázaná kombinace, práh.
-4. Přečti dokumenty, které spec cituje v hlavičce (**Vychází z**) a v textu — ADR,
+   Nepředalo-li ti ji zadání, dohledej ji tímtéž sestupem podle vět u odkazů
+   (§ Jak najít místo pro nový dokument, závěr) — dokument o vzhledu projektu se
+   nemusí jmenovat `art-bible`. Glob podle názvu jen tam, kde projekt bázi nemá.
+5. Přečti dokumenty, které spec cituje v hlavičce (**Vychází z**) a v textu — ADR,
    produktovou dokumentaci, `CLAUDE.md` a rules v `.claude/rules/`. Bez nich nemáš jak
    ověřit, že spec tvrdí o cizích dokumentech pravdu.
-5. Přečti sousední specy, na které se odkazuje jako na rodiče, sourozence nebo zdroj
+6. Přečti sousední specy, na které se odkazuje jako na rodiče, sourozence nebo zdroj
    znovupoužité komponenty. **Projdi zároveň celou složku se specy**, ne jen odkazované
    sousedy — dva dokumenty o téže obrazovce se navzájem neodkazují, takže duplicitu
    jinak neuvidíš a po schválení ji rozplete jen ruční slučování.
-6. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, zda ho nová verze skutečně
+7. Od 2. kola ověř u každého nevyřešeného nálezu ze zadání, zda ho nová verze skutečně
    řeší. Autorovo tvrzení, že nález vyřešil, není důkaz — ověř to v souboru.
 
 **Chybějící soubory** neřeš tichým přeskočením:
@@ -162,6 +168,10 @@ jsou nad jeho rámec.
 - **Žádný jiný spec ve složce nepopisuje tutéž obrazovku.** Dva dokumenty o jedné
   obrazovce jsou blokující nález — od chvíle, kdy vzniknou, se rozcházejí a implementace
   neví, který platí.
+- **Index složky na spec odkazuje** větou o tom, kterou obrazovku popisuje. Spec, na
+  který index neodkazuje, je blokující nález — sirotek, ke kterému se navigací nikdo
+  nedostane (`docs-tree.md`, § Pravidla struktury). Nemá-li projekt bázi vůbec, je to
+  nález pro autora s odkazem na `/sagittaras:write-docs`.
 - Sekce jsou očíslované a odkazy uvnitř dokumentu na čísla sedí.
 - Jazyk odpovídá ostatním dokumentům projektu; identifikátory, cesty a endpointy anglicky.
 

@@ -41,14 +41,17 @@ allowed-tools:
   - Edit
   - AskUserQuestion
   - Agent
-# Vynechaná zvažovaná pole: Bash — postup je čtení dokumentace, psaní souboru
-# a volání subagenta, ne spouštění příkazů; Skill — navazující kroky (make-commit,
+  - "Bash(bash:*)"
+# Bash je zúžený na spouštění skriptu kontroly struktury tvarem `bash <cesta>`
+# (kroky 1 a 6); jiné příkazy skill nespouští.
+# Vynechaná zvažovaná pole: Skill — navazující kroky (make-commit,
 # open-pr, train-agent) spouští uživatel, viz krok 10;
 # disable-model-invocation — skill je užitečný i když si ho model vyvolá sám
 # z popisu obrazovky, kterou má někdo postavit; context/agent/background —
 # interview a schválení vyžadují uživatele v hlavním kontextu, fork ani běh na
 # pozadí nemají komu klást otázky; paths — skill se spouští z konverzace
-# o obrazovce, ne prací nad konkrétními soubory; shell — viz Bash;
+# o obrazovce, ne prací nad konkrétními soubory; shell — skript se spouští
+# explicitním `bash`;
 # disallowed-tools — allowed-tools je uzavřený výčet a skill se nespouští
 # načtením souboru, není co zakazovat navíc; version/license — verzuje se celý
 # plugin, ne jednotlivý skill.
@@ -64,6 +67,15 @@ přednost ona.
 Referenční soubory čti přes `${CLAUDE_PLUGIN_ROOT}`; plugin běží nad cizím
 projektem, kde relativní cesta `skills/…` míří někam jinam.
 
+| Soubor | Kdy ho otevři |
+| --- | --- |
+| `${CLAUDE_PLUGIN_ROOT}/skills/write-ux-spec/ux-spec-template.md` | V kroku 1 — kostra, výběr modulů, kontrolní seznam |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než hledáš místo specu a sousední dokumenty — pravidla umístění a odkázání |
+
+Strukturu báze ověřuje `${CLAUDE_PLUGIN_ROOT}/scripts/docs-check.sh` (řádky
+`fail=<soubor> reason=<důvod>`, nebo `result=pass`; kód 1 = nález). Volej ho
+z kořene cílového projektu tvarem `bash <cesta>`.
+
 ## Vstupní kontext
 
 - Zadání od uživatele (může být prázdné): $ARGUMENTS
@@ -72,13 +84,21 @@ projektem, kde relativní cesta `skills/…` míří někam jinam.
 
 ### 1. Příprava
 
-1. Přečti `${CLAUDE_PLUGIN_ROOT}/skills/write-ux-spec/ux-spec-template.md` — kostru,
-   výběr modulů a kontrolní seznam, na které se budeš celou dobu odvolávat.
-2. Najdi, kde v projektu UX specy leží, a jak se pojmenovávají. Hledej dokumentační
-   složku (`.docs/`, `docs/`) a v ní podsložku pro rozhraní; všimni si, jestli
-   projekt dokumenty čísluje (`NNNN-kebab-case.md`) a jestli má nečíslované kořenové
-   dokumenty, které do číslování nepatří — art bible je typicky jeden z nich.
-   Umístění a číslo nového dokumentu si nech potvrdit v kroku 4.
+1. Přečti šablonu a `docs-tree.md`. Spusť `docs-check.sh` a výstup si uschovej
+   jako výchozí stav pro krok 6.
+2. **Umístění specu odvoď z indexu sekce rozhraní.** Sestup stromem od `CLAUDE.md`
+   podle § Jak najít místo pro nový dokument v `docs-tree.md` k sekci, jejíž věta
+   u odkazu říká, že nese popis rozhraní (obrazovky, flow) — i když se složka
+   nejmenuje `ui/`. Z jejího indexu zjisti, jak se specy pojmenovávají, jestli je
+   projekt čísluje (`NNNN-kebab-case.md`) a které nečíslované dokumenty do číslování
+   nepatří — art bible je typicky jeden z nich. Nemá-li projekt sekci rozhraní,
+   navrhni ji jako novou sekci podle `docs-tree.md`. Umístění a číslo nového
+   dokumentu si nech potvrdit v kroku 4.
+
+   **Projekt bez báze** (`docs-check.sh` vrátí `missing_claude_md` nebo
+   `missing_entry_index_link`) → mezeru ohlas podle § Projekt bez báze
+   v `docs-tree.md` a spec nepiš: mimo strom ho nikdo nenajde. Nabídni
+   `/sagittaras:write-docs` jako samostatný krok.
 3. Podle nálezu urči **režim**:
    - **Nový spec** — obrazovka zatím dokument nemá; dostane další volné číslo.
    - **Úprava** — existující spec se rozšiřuje nebo se v něm řeší otevřená otázka.
@@ -97,7 +117,10 @@ které do specu půjdou jako citace a o kterých se v interview nediskutuje.
 | Architektonické invarianty — kdo je zdroj pravdy, co se kde nesmí počítat | ADR, `CLAUDE.md`, rules v `.claude/rules/` |
 | Data, akce, stavy a fail stavy, které obrazovka obsluhuje | Produktová nebo herní dokumentace |
 | Znovupoužitelné komponenty a vztahy rodič–sourozenec | Sousední UX specy |
-| Kam se hotový dokument registruje jako zdroj pravdy | `CONTRIBUTING.md`, podsekce Zdroje pravdy sekce „Workflow (sagittaras)" |
+
+Dokumenty hledej **sestupem stromem** podle vět u odkazů (§ Jak najít místo pro nový
+dokument v `docs-tree.md`), ne podle názvu souboru — art bible se nemusí jmenovat
+`art-bible`.
 
 **Art bible přečti celou**, ne jen prohledej — je to hlavní zdroj všeho, co spec nesmí
 přerozhodovat, a část invariantů z ní plyne nepřímo (vyhrazený vzor, zakázaná kombinace).
@@ -156,6 +179,10 @@ Piš podle šablony; sekce po výběru modulů očísluj a čísla drž, protož
 v review i v issues.
 
 - Nový spec zapiš Writem na potvrzené místo a s dalším volným číslem.
+- **Nový spec odkaž z nadřazeného indexu ve stejné změně** podle § Jak dokument
+  odkázat v `docs-tree.md` — řádek v indexu sekce rozhraní s větou o tom, kterou
+  obrazovku popisuje; zakládanou sekci rozhraní odkaž z indexu nad ní. Mění-li úprava
+  to, co věta u odkazu tvrdí, uprav i ji.
 - **Úpravu veď cílenými Edity**, ne plným přepisem — v existujícím dokumentu jsou
   rozhodnutí a odkazy sousedů, které přepis zahodí, aniž by to v diffu vypadalo jako ztráta.
 - Hodnotu převzatou z art bible nebo ADR **cituj i s místem**, neopisuj vlastními slovy.
@@ -173,6 +200,10 @@ v review i v issues.
   ne stáří textu, a posunout ho mimochodem znamená tvrdit něco, co nikdo neověřil.
 
 ### 6. Vlastní kontrola
+
+Spusť `docs-check.sh` znovu a porovnej s výchozím stavem z kroku 1. **Nový nález**
+oprav a spusť znovu; nález z výchozího stavu je mimo zadání, neopravuj ho a uveď ho
+v reportu.
 
 Projdi hotový dokument proti kontrolnímu seznamu v závěru šablony, bod po bodu. Zvlášť
 ověř, že v souboru nezůstal placeholder, značka `(modul)` ani příklad ze šablony, že
@@ -238,9 +269,9 @@ Při eskalaci shrň stav smyčky, ocituj sporný nález a polož konkrétní ot�
 Reportuj podle Formátu výstupu. Na závěr pojmenuj navazující kroky jako věci, které
 spustí uživatel — tenhle skill je nespouští:
 
-- zapsání a odeslání dokumentu (`make-commit`, případně `open-pr`);
-- registrace specu mezi **Zdroje pravdy** ve workflow konfiguraci projektu, aby se
-  o jeho akceptační kritéria mohly opřít `plan-milestone` a `verify-issue`;
+- zapsání a odeslání specu i s řádkem v indexu jako jedné změny (`make-commit`,
+  případně `open-pr`) — podle odkazu z indexu spec najdou `plan-milestone`
+  a `verify-issue`;
 - zápis do paměti agentů, kteří obrazovku budou stavět (`train-agent`).
 
 ## Formát výstupu
@@ -271,6 +302,8 @@ Vrať verdikt přesně ve struktuře, kterou review-ux-spec předepisuje v sekci
 
 ```
 UX spec: <cesta> (<nový | úprava>)
+Odkázáno z: <index, nebo „beze změny — úprava větu u odkazu nemění">
+Kontrola struktury: <result=pass | nálezy z výchozího stavu, které zůstávají>
 Moduly: <vybrané moduly — nebo „jen jádro">
 Invarianty převzaté: <kolik a odkud>
 Otevřené otázky: <počet> — <čeho se týkají>
