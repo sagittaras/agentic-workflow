@@ -40,9 +40,10 @@ allowed-tools:
   - Write
   - Edit
   - AskUserQuestion
-# Bash je tu výhradně kvůli výpočtu kontrastních poměrů (krok 6): poměr
+# Bash je tu kvůli dvěma věcem: výpočtu kontrastních poměrů (krok 6) — poměr
 # spočítaný od oka je v dokumentu, který se cituje jako zdroj pravdy, horší
-# než žádný. Nic jiného skill přes shell nedělá.
+# než žádný — a skriptu kontroly struktury báze (kroky 1 a 7). Nic jiného skill
+# přes shell nedělá.
 # Vynechaná zvažovaná pole: Agent a Skill — art bible neprochází nezávislým
 # reviewem, protože vizuální záměr vlastní uživatel a bránou je jeho odsouhlasená
 # osnova (krok 5); navazující skilly (train-agent, write-rule) spouští uživatel;
@@ -67,6 +68,15 @@ včetně tohoto skillu, má přednost ona.
 Referenční soubory čti přes `${CLAUDE_PLUGIN_ROOT}`; plugin běží nad cizím
 projektem, kde relativní cesta `skills/…` míří někam jinam.
 
+| Soubor | Kdy ho otevři |
+| --- | --- |
+| `${CLAUDE_PLUGIN_ROOT}/skills/write-art-bible/art-bible-template.md` | V kroku 1 — kostra, výběr modulů, kontrolní seznam |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než hledáš existující dokument — pravidla umístění a odkázání |
+
+Strukturu báze ověřuje `${CLAUDE_PLUGIN_ROOT}/scripts/docs-check.sh` (řádky
+`fail=<soubor> reason=<důvod>`, nebo `result=pass`; kód 1 = nález). Volej ho
+z kořene cílového projektu tvarem `bash <cesta>`.
+
 ## Vstupní kontext
 
 - Zadání od uživatele (může být prázdné): $ARGUMENTS
@@ -75,14 +85,16 @@ projektem, kde relativní cesta `skills/…` míří někam jinam.
 
 ### 1. Příprava
 
-1. Přečti `${CLAUDE_PLUGIN_ROOT}/skills/write-art-bible/art-bible-template.md` —
-   kostru, výběr modulů podle povahy projektu a kontrolní seznam, na které se
-   budeš celou dobu odvolávat.
-2. Najdi existující dokument — hledej `**/art-bible*.md` a projdi dokumentační
-   složku projektu (`.docs/`, `docs/`, `wiki/`). Dokument bývá zanořený podle
-   domény (`.docs/ui/art-bible.md`), takže samotný kořen nestačí. Hledej i pod
-   jinými názvy — `style-guide`, `design-system`, `brand`, `vizualni-styl`:
-   dokument popisující vzhled projektu je art bible, i když se tak nejmenuje.
+1. Přečti šablonu a `docs-tree.md`. Spusť `docs-check.sh` a výstup si uschovej
+   jako výchozí stav pro krok 7.
+2. **Najdi existující dokument nejdřív ve stromu.** Sestup od `CLAUDE.md` podle
+   § Jak najít místo pro nový dokument v `docs-tree.md` a hledej odkaz, jehož
+   věta říká, že dokument popisuje vzhled projektu — dokument popisující vzhled je
+   art bible, i když se jmenuje `style-guide`, `design-system` nebo `brand`.
+   **Glob podle názvu jen jako fallback**: v projektu bez báze, nebo když strom
+   nic nenajde — `**/art-bible*.md` a jiné názvy (`style-guide`, `design-system`,
+   `brand`, `vizualni-styl`). Dokument nalezený Globem mimo strom je sirotek:
+   ohlas ho a v interview nabídni odkázat ho z indexu sekce, pod kterou patří.
    Takový nález nezakládej podruhé pod novým jménem — předlož ho uživateli
    v interview a nech rozhodnout mezi jeho aktualizací a novým dokumentem
    s křížovým odkazem. Dva zdroje pravdy o vzhledu jsou horší než jeden zastaralý.
@@ -144,7 +156,9 @@ Zjisti:
   a nic nevymáhá.
 - **Rozpory z kroku 2** — která strana platí.
 - **Vlastník, stav a cesta uložení** — kdo rozhoduje o změnách a kam soubor
-  patří. Cestu navrhni podle struktury dokumentace projektu.
+  patří. Cestu navrhni sestupem stromem podle `docs-tree.md`. Nemá-li projekt
+  bázi, ohlas to podle § Projekt bez báze a nabídni `/sagittaras:write-docs`
+  jako samostatný krok — dokument mimo strom nikdo nenajde.
 - **Chybějící hodnoty povinných kapitol** — paleta, písma, škály, ale i prahy
   přístupnosti, minimální velikost písma a klikací plocha. U každé nabídni
   konkrétní návrh (u přístupnosti typicky WCAG AA, tedy 4,5 : 1 a 3 : 1)
@@ -175,7 +189,9 @@ dokumentu celé kolo.
 Piš podle šablony; sekce po výběru modulů očísluj a čísla drž, protože se na ně
 uvnitř dokumentu i v issues odkazuje.
 
-Nový dokument zapiš Writem. **Aktualizaci veď cílenými Edity**, nikdy plným
+Nový dokument zapiš Writem a **ve stejné změně ho odkaž z nadřazeného indexu**
+podle § Jak dokument odkázat v `docs-tree.md` — věta u odkazu řekne, že jde
+o závazný popis vzhledu projektu. **Aktualizaci veď cílenými Edity**, nikdy plným
 přepisem: hodnoty v existujícím dokumentu nesou provenienci a přepis zahodí to,
 co se do nové verze nepřeneslo, aniž by to v diffu bylo poznat jako ztrátu.
 
@@ -214,6 +230,10 @@ Při psaní platí:
 
 ### 7. Vlastní kontrola
 
+Spusť `docs-check.sh` znovu a porovnej s výchozím stavem z kroku 1. **Nový nález**
+oprav a spusť znovu; nález z výchozího stavu je mimo zadání, neopravuj ho a uveď ho
+v reportu.
+
 Projdi hotový dokument proti kontrolnímu seznamu v závěru šablony, bod po bodu.
 Zvlášť ověř, že:
 
@@ -238,6 +258,8 @@ třetí formulace.
 
 ```
 Art bible: <cesta> (<nová | aktualizace>)
+Odkázáno z: <index, nebo „beze změny">
+Kontrola struktury: <result=pass | nálezy z výchozího stavu, které zůstávají>
 Moduly: <vybrané moduly — nebo „jen jádro">
 Zdroj hodnot: <kolik faktů z kódu / kolik potvrzených návrhů>
 Otevřené otázky: <počet> — <čeho se týkají>
