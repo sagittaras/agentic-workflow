@@ -37,6 +37,9 @@ allowed-tools:
   - Write
   - Edit
   - AskUserQuestion
+  - Skill
+# Skill slouží jen k předání znalosti do báze přes sagittaras:write-docs
+# (krok 5) — bázi ani její stránky tenhle skill sám nezakládá.
 # Vynechaná zvažovaná pole: Grep — průzkum hledá soubory a čte manifesty, tedy
 # Glob a Read; hledat vzory uvnitř kódu skill zásadně nepotřebuje, protože kód
 # nečte (viz krok 2); Bash — průzkum stojí na Glob a Read, a plugin drží
@@ -105,9 +108,13 @@ Zajímá tě mapa, ne inventura:
 - **Tech stack** — z manifestů (`package.json`, `*.csproj`, `Cargo.toml`,
   `pyproject.toml`, `*.asmdef`, lock soubory). Verze si přečti, ale do souboru dávej
   jen ty, které mění způsob práce.
-- **Dokumentace** — najdi `.docs/`, `docs/`, ADR, `CONTRIBUTING.md`, `README.md`.
-  **Zaznamenej cesty a k čemu složka slouží; obsah nečti celý.** Cílem je vědět,
-  na co odkázat, ne co opsat — a přečtená dokumentace svádí k tomu ji shrnout.
+- **Dokumentace** — zjisti, jestli projekt má znalostní bázi: vstupní index je
+  soubor, na který odkazuje stávající `CLAUDE.md`
+  (`${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md`, § Umístění báze). Na ten index
+  nový soubor odkáže; jednotlivé dokumenty v bázi ne. **Obsah báze nečti** —
+  cílem je vědět, na co odkázat, ne co opsat. Neodkazuje-li `CLAUDE.md` na
+  vstupní index, projekt bázi nemá: index nevybírej podle tvaru složek a bázi
+  nezakládej — v osnově to ohlas a nabídni `write-docs` (krok 4).
 
 **Kód nečti.** Skill píše rozcestník; implementační detaily do něj nepatří a čtení
 kódu tě k nim jen svede.
@@ -144,6 +151,13 @@ přečetl z manifestu, jen ubere uživateli trpělivost na otázky, které smysl
 
 Sestav osnovu podle kostry v referenci otevřené na konci kroku 2.
 
+Při zeštíhlování roztřiď, co do souboru nepatří. Balast (opsané příkazy, obecné
+rady, inventura) se škrtá. **Znalost, která do `CLAUDE.md` nepatří, ale z kódu
+vyčíst nejde** — popis oblasti, cílový návrh, zdůvodnění invariantu — se neškrtá
+ani kvůli ní neeskaluješ: v osnově ji nabídni přesunout do báze přes `write-docs`
+a v souboru po ní zůstane nanejvýš odkaz přes vstupní index. Totéž platí, když
+se soubor nevejde pod strop.
+
 Osnovu předlož podle Formátu výstupu a nech si ji odsouhlasit. Vynechané položky
 vypiš **explicitně**: uživatel je jediný, kdo pozná, že jsi škrtl něco, na čem
 projektu záleží, a v osnově to opraví jednou větou místo celého kola.
@@ -153,6 +167,13 @@ obsahu, který nikdo neobhájil.
 
 ### 5. Zapiš a ověř rozsah
 
+Schválil-li uživatel přesun znalosti do báze, předej ji **nejdřív**: nástrojem
+Skill zavolej `sagittaras:write-docs` s tématem a obsahem bloku. Projekt bez báze
+ji tím teprve dostane — zakládá ji `write-docs` se svou osnovou, tenhle skill
+`.docs/` ani stránky nepíše sám. Teprve potom zapiš `CLAUDE.md`: přepsat ho dřív
+by znalost ztratilo, a nově založený vstupní index do něj patří. Odmítne-li
+uživatel v `write-docs` osnovu, blok v souboru nech a uveď ho v reportu.
+
 Zapiš soubor na místo z kroku 1. Přepisuješ-li existující, použij Write —
 zeštíhlení mění strukturu celého souboru a řetěz Editů z něj udělá slepenec.
 
@@ -160,8 +181,9 @@ Pak si hotový soubor přečti Readem: číslované řádky ti dají přesný ro
 řádků **škrtej, neřeď** — hledej sekci, kterou lze nahradit odkazem do dokumentace,
 a odstraň ji Editem; cílený škrt je jediné, na co se tu Edit používá. Rozsah snížený
 obecnějšími formulacemi je horší výsledek než ten původní, protože ubyla informace,
-ne text. Nedostaneš-li se pod strop, aniž bys o něco přišel, eskaluj podle kroku 6 —
-zapsaný soubor nad 200 řádků není hotový výsledek.
+ne text. Zbývá-li v souboru znalost, kterou jde přesunout do báze, nabídni přesun
+podle kroku 4. Nedostaneš-li se pod strop ani tak, aniž bys o něco přišel, eskaluj
+podle kroku 6 — zapsaný soubor nad 200 řádků není hotový výsledek.
 
 Sloučil-li krok 1 dvě umístění, **druhý soubor smazat neumíš** — skill nemá nástroj,
 který by to udělal. Požádej uživatele, ať ho odstraní sám, a uveď to v reportu jako
@@ -178,8 +200,8 @@ Přeruš postup a obrať se na uživatele, když:
 - na otázky z kroku 3 nedorazí odpověď — sekci „co se staví a proč" **nevymýšlej**,
   bez ní soubor ztrácí důvod existovat a zbyde z něj právě ta inventura, které se
   skill vyhýbá;
-- projekt je natolik rozsáhlý, že se ani po škrtech nevejde do 200 řádků — pak je
-  na řadě rozhodnutí, co odsunout do vlastní dokumentace, a to není tvoje volba;
+- soubor se nevejde do 200 řádků ani po škrtech a přesunu znalosti do báze, nebo
+  uživatel přesun odmítl — co v souboru obětovat, není tvoje volba;
 - existující CLAUDE.md obsahuje pokyny, kterým nerozumíš natolik, abys posoudil,
   jestli jsou pořád platné — ocituj je a zeptej se.
 
@@ -198,6 +220,8 @@ Jazyk: [jazyk] — [podle čeho určený]
 
 Vynechávám: [položka — proč; položka — proč]
 [U přepisu:] Ze stávajícího souboru přenáším: [co]. Vyhazuji: [co — proč].
+Do báze přes write-docs: [blok — téma stránky; nebo „nic"]
+[Bez báze:] Projekt nemá vstupní index — odkaz vynechávám; založit bázi umí write-docs.
 [Existují-li obě umístění:] Zůstává: [cesta]. Ruší se: [cesta] — přenáším z něj
 [co]; smazat ho budeš muset sám, skill to neumí.
 
@@ -208,7 +232,8 @@ Odhad rozsahu: ~[N] řádků.
 
 ```
 Zapsáno: [cesta] — [N] řádků (cíl ~80, strop 200)
-Odkázaná dokumentace: [cesty, na které soubor odkazuje místo opisu]
+Vstupní index: [cesta, nebo „projekt bázi nemá — doporučuji /sagittaras:write-docs"]
+Přesunuto do báze: [blok → stránka; nebo „nic"]
 [U přepisu:] Ubylo: [N] → [N] řádků.
 [Po sloučení umístění:] Zbývá na tobě: smazat [cesta] — bez toho se načítá dál.
 Ke zvážení: [co by si zasloužilo vlastní dokument, nebo „nic"]
