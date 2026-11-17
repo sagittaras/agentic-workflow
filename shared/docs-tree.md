@@ -6,9 +6,9 @@
 > Otevři ho vždy, když dokument v bázi **zakládáš nebo rozšiřuješ** (`write-docs`,
 > `write-adr`, `write-art-bible`, `write-ux-spec`), když **posuzuješ** její strukturu
 > nebo dohledatelnost dokumentu (`review-docs`, `review-adr`, `review-ux-spec`), a když
-> v ní dokument nebo odpověď **hledáš** — doplňkový dokument citovaný v `Reference`
-> (`plan-milestone`, `implement-issue`, `verify-issue`, `review-milestone`) i zázemí,
-> o které se opírá zápis nebo review.
+> v ní dokument nebo odpověď **hledáš** (`read-docs`, `verify-issue`,
+> `review-milestone` a `implement-issue` v náhradním postupu) — doplňkový dokument
+> citovaný v `Reference` i zázemí, o které se opírá zápis nebo review.
 
 Strom je jediná cesta k dokumentaci: co na něj nenavazuje, nikdo nenajde. Registr cest
 vedle dokumentů a hledání podle názvu souboru driftují, protože je změna, která

@@ -106,6 +106,7 @@ píšou po svém.
 | `write-adr`, `write-art-bible`, `write-ux-spec` | Menší úprava | Umístění a odkázání dokumentu berou ze `shared/docs-tree.md`, ne každý po svém; po zápisu spustí skript kontroly struktury. |
 | `implement-issue` | Menší úprava | Zneplatní-li změna zdokumentované chování, upraví stránku báze ve stejném PR. |
 | `init-workflow` | Menší úprava | Nabídne zařadit skript kontroly struktury mezi ověřovací příkazy, aby strukturu báze hlídala i brána nad každým PR. |
+| `implement-issue`, `plan-milestone`, `write-adr`, `write-ux-spec` | Menší úprava | Bázi čtou skillem `read-docs`: doplňkový dokument z `Reference` jako omezení, ADR a UX spec k citaci, zázemí rozhodnutí, invarianty a stavy obrazovky. Dokument, který potřebují celý (log a existující ADR, art bible, sousední specy), čtou dál přímo. `implement-issue` běžící jako subagent má náhradní postup podle kontraktu. |
 
 **Sdílený kontrakt.** Přibývá `shared/docs-tree.md` — pravidla struktury
 z 1.7 na jednom místě, odkud je čtou `write-docs`, `review-docs`
@@ -113,9 +114,12 @@ i specializované skilly — a skript kontroly struktury ve `scripts/` (bash,
 jako ostatní skripty pluginu): sirotci, indexy bez odkazu na vlastní stránky,
 mrtvé odkazy a kotvy, `CLAUDE.md` bez odkazu na vstupní index. Kontrakt nese
 i postup čtení (§ Jak najít odpověď v bázi), který stojí na skriptu
-`docs-map.sh` — mapě celého stromu s větami u odkazů. Čtecí skilly z [tabulky
-1.7](#princip-17) si dnes sestup parafrázují každý po svém; místo parafráze
-na něj odkážou, až se na ně bude sahat (3.1).
+`docs-map.sh` — mapě celého stromu s větami u odkazů. Skilly, které samy
+běží ve forku (`verify-issue`, `review-milestone`, `review-adr`,
+`review-ux-spec`), `read-docs` nevolají: úspora kontextu u nich odpadá, review
+ověřuje citace proti zdroji, ne proti odpovědi, a vnoření forku do forku není
+zdokumentované. Sestup si zatím parafrázují po svém; na kontrakt odkážou, až se
+na ně bude sahat (3.1).
 
 ## Principy 2.6–2.9
 

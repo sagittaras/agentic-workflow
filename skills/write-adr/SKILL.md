@@ -47,9 +47,9 @@ allowed-tools:
 # čísla na remotu, čistota pracovního stromu, diff dokumentu do zadání pro
 # reviewera). Všechno, co do repozitáře zapisuje, jde přes delegované skilly.
 # `Bash(bash:*)` je tam kvůli nim a kvůli `docs-check.sh`: `create-branch`,
-# `open-pr` i `make-commit` stojí na skriptech pluginu volaných tvarem
-# `bash <cesta>`, a jestli se u vnořeného vyvolání uplatní práva volaného,
-# nebo průnik s volajícím, plugin nikde nefixuje. Položka je bezriziková —
+# `open-pr`, `make-commit` i `read-docs` stojí na skriptech pluginu volaných
+# tvarem `bash <cesta>`, a jestli se u vnořeného vyvolání uplatní práva
+# volaného, nebo průnik s volajícím, plugin nikde nefixuje. Položka je bezriziková —
 # povoluje spouštění skriptů, ne libovolný shell — a bez ní by autonomní běh
 # mohl umřít na první delegaci.
 # Vynechaná zvažovaná pole: disable-model-invocation — skill má jít vyvolat
@@ -80,7 +80,7 @@ nad cizím projektem, kde relativní cesta míří jinam.
 | --- | --- |
 | `${CLAUDE_PLUGIN_ROOT}/skills/write-adr/adr-conventions.md` | V kroku 1, dřív než hledáš log — umístění, číslování, stavy, otevřené otázky |
 | `${CLAUDE_PLUGIN_ROOT}/skills/write-adr/adr-template.md` | V kroku 1; struktura šablony určuje, na co se musíš v interview doptat |
-| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než sestoupíš stromem k logu a k zázemí — pravidla struktury, umístění a odkázání |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než sestoupíš stromem k logu — pravidla struktury, umístění a odkázání |
 
 Strukturu báze po zápisu ověřuje `${CLAUDE_PLUGIN_ROOT}/scripts/docs-check.sh`
 (řádky `fail=<soubor> reason=<důvod>`, nebo `result=pass`; kód 1 = nález). Volej ho
@@ -110,11 +110,12 @@ rozhodnutí**. Co v zadání není, vytěž z konverzace a zbytek zjisti postupe
 3. **Prolétni existující ADR** podle vět v indexu logu (ta, kterých se téma
    dotýká, přečti celá). Nové rozhodnutí může na některé navazovat, nahrazovat
    ho, nebo s ním být v rozporu — a všechny tři případy mění, na co se budeš ptát.
-4. **Načti zázemí projektu sestupem od `CLAUDE.md`**: `CLAUDE.md`, `.claude/rules/`
-   a ze vstupního indexu dál podle vět u odkazů do sekcí, kterých se téma
-   rozhodnutí týká. Celou bázi dopředu nečti. Bez báze ti zbývá `CLAUDE.md`
-   a `.claude/rules/`; ADR se píše i v projektu, který bázi ani milestone
-   workflow nemá.
+4. **Načti zázemí projektu**: `CLAUDE.md` a `.claude/rules/` přečti sám. Má-li
+   projekt bázi (podle kapitoly 1 konvencí, viz bod 2), zjisti z ní
+   zázemí nástrojem `Skill`, skill `sagittaras:read-docs`, s otázkou, co báze
+   mimo log ADR stanoví pro oblast rozhodnutí — omezení, chráněná rozhodnutí,
+   cílový návrh. Bez báze ti zbývá `CLAUDE.md` a `.claude/rules/`; ADR se píše
+   i v projektu, který bázi ani milestone workflow nemá.
 5. **Urči režim.** Rozliší se podle toho, co se s rozhodnutím děje — hranici
    popisuje kapitola 5 konvencí:
 

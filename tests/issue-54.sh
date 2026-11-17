@@ -3,7 +3,9 @@
 #
 # Kritérium 3: write-adr i review-adr čtou zázemí sestupem od CLAUDE.md;
 # `grep -n "Zdroje pravdy" skills/write-adr/SKILL.md skills/review-adr/SKILL.md`
-# nic nevrátí. Test navíc ověří, že oba skilly sestup od CLAUDE.md zmiňují.
+# nic nevrátí. Test navíc ověří, že oba skilly sestup od CLAUDE.md zmiňují;
+# write-adr od zavedení read-docs čte zázemí jím (skill čte bázi stromem
+# podle shared/docs-tree.md), takže u něj stačí volání read-docs.
 # Kritérium 5: `bash scripts/lint-skills.sh` projde.
 #
 # Návratové kódy: 0 = prošlo, 1 = selhalo.
@@ -20,12 +22,14 @@ if grep -n "Zdroje pravdy" skills/write-adr/SKILL.md skills/review-adr/SKILL.md;
   fail=1
 fi
 
-for f in skills/write-adr/SKILL.md skills/review-adr/SKILL.md; do
-  if ! grep -q "sestupem od \`CLAUDE.md\`" "$f"; then
-    echo "fail=criterion_3 reason=missing_descent file=$f"
-    fail=1
-  fi
-done
+if ! grep -q "sestupem od \`CLAUDE.md\`" skills/review-adr/SKILL.md; then
+  echo "fail=criterion_3 reason=missing_descent file=skills/review-adr/SKILL.md"
+  fail=1
+fi
+if ! grep -q "sestupem od \`CLAUDE.md\`\|sagittaras:read-docs" skills/write-adr/SKILL.md; then
+  echo "fail=criterion_3 reason=missing_descent file=skills/write-adr/SKILL.md"
+  fail=1
+fi
 
 if ! bash scripts/lint-skills.sh >/dev/null; then
   echo "fail=criterion_5 reason=lint_skills_failed"

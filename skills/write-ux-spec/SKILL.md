@@ -41,20 +41,21 @@ allowed-tools:
   - Edit
   - AskUserQuestion
   - Agent
+  - Skill
   - "Bash(bash:*)"
-# Bash je zúžený na spouštění skriptu kontroly struktury tvarem `bash <cesta>`
-# (kroky 1 a 6); jiné příkazy skill nespouští.
-# Vynechaná zvažovaná pole: Skill — navazující kroky (make-commit,
-# open-pr, train-agent) spouští uživatel, viz krok 10;
-# disable-model-invocation — skill je užitečný i když si ho model vyvolá sám
-# z popisu obrazovky, kterou má někdo postavit; context/agent/background —
-# interview a schválení vyžadují uživatele v hlavním kontextu, fork ani běh na
-# pozadí nemají komu klást otázky; paths — skill se spouští z konverzace
-# o obrazovce, ne prací nad konkrétními soubory; shell — skript se spouští
-# explicitním `bash`;
-# disallowed-tools — allowed-tools je uzavřený výčet a skill se nespouští
-# načtením souboru, není co zakazovat navíc; version/license — verzuje se celý
-# plugin, ne jednotlivý skill.
+# Bash je zúžený na spouštění skriptů tvarem `bash <cesta>` — kontroly
+# struktury (kroky 1 a 6) a mapy báze (krok 2); jiné příkazy skill nespouští.
+# Skill spouští jen read-docs v kroku 2; navazující kroky (make-commit,
+# open-pr, train-agent) spouští uživatel, viz krok 10.
+# Vynechaná zvažovaná pole: disable-model-invocation — skill je užitečný
+# i když si ho model vyvolá sám z popisu obrazovky, kterou má někdo postavit;
+# context/agent/background — interview a schválení vyžadují uživatele
+# v hlavním kontextu, fork ani běh na pozadí nemají komu klást otázky; paths —
+# skill se spouští z konverzace o obrazovce, ne prací nad konkrétními soubory;
+# shell — skripty se spouští explicitním `bash`; disallowed-tools —
+# allowed-tools je uzavřený výčet a skill se nespouští načtením souboru, není
+# co zakazovat navíc; version/license — verzuje se celý plugin, ne jednotlivý
+# skill.
 ---
 
 # Write UX Spec
@@ -70,11 +71,13 @@ projektem, kde relativní cesta `skills/…` míří někam jinam.
 | Soubor | Kdy ho otevři |
 | --- | --- |
 | `${CLAUDE_PLUGIN_ROOT}/skills/write-ux-spec/ux-spec-template.md` | V kroku 1 — kostra, výběr modulů, kontrolní seznam |
-| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než hledáš místo specu a sousední dokumenty — pravidla umístění a odkázání |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 1, dřív než hledáš místo specu a sousední dokumenty — pravidla umístění a odkázání a postup čtení báze (krok 2) |
 
 Strukturu báze ověřuje `${CLAUDE_PLUGIN_ROOT}/scripts/docs-check.sh` (řádky
 `fail=<soubor> reason=<důvod>`, nebo `result=pass`; kód 1 = nález). Volej ho
-z kořene cílového projektu tvarem `bash <cesta>`.
+z kořene cílového projektu tvarem `bash <cesta>`. Mapu báze pro krok 2 vypíše
+`${CLAUDE_PLUGIN_ROOT}/scripts/docs-map.sh` — řádek `root=` a strom s větou
+u každé stránky; kód 1 v kroku 2 nenastane, projekt bez báze skončil v kroku 1.
 
 ## Vstupní kontext
 
@@ -118,9 +121,17 @@ které do specu půjdou jako citace a o kterých se v interview nediskutuje.
 | Data, akce, stavy a fail stavy, které obrazovka obsluhuje | Produktová nebo herní dokumentace |
 | Znovupoužitelné komponenty a vztahy rodič–sourozenec | Sousední UX specy |
 
-Dokumenty hledej **sestupem stromem** podle vět u odkazů (§ Jak najít místo pro nový
-dokument v `docs-tree.md`), ne podle názvu souboru — art bible se nemusí jmenovat
-`art-bible`.
+`CLAUDE.md` a rules čti sám. ADR a produktovou dokumentaci zjisti nástrojem
+`Skill`, skill `sagittaras:read-docs`, s otázkou na architektonické invarianty
+a data, akce a stavy obrazovky; chráněná rozhodnutí z odpovědi převezmi doslova
+jako citace. Invariant, který do specu převezmeš a odpověď ho nenese doslova
+(výčet dat, akcí, stavů a fail stavů, pravidlo zdroje pravdy), přečti v místě
+z Opory (`cesta#kotva`), jen tu sekci, a cituj odtud.
+
+Art bible a sousední UX specy najdi v mapě báze podle § Jak najít odpověď v bázi
+v `docs-tree.md` — podle vět u odkazů, ne podle názvu souboru: art bible se
+nemusí jmenovat `art-bible`. Ze speců vyber ty, jejichž věta ukazuje na rodiče
+nebo sourozence obrazovky.
 
 **Art bible přečti celou**, ne jen prohledej — je to hlavní zdroj všeho, co spec nesmí
 přerozhodovat, a část invariantů z ní plyne nepřímo (vyhrazený vzor, zakázaná kombinace).
@@ -129,8 +140,9 @@ s vizuálními standardy vytěženými z kódu, nebo nejdřív spustit `write-ar
 Bez ní vzniká spec, který si vizuální rozhodnutí vymyslí per obrazovku — a to je přesně
 to selhání, kterému má tenhle postup bránit.
 
-**Sousední specy prohlédni kvůli komponentám.** Prohlásit za novou komponentu něco,
-co už jiný spec definoval, znamená postavit ji podruhé a rozejít se s ní ve tvaru.
+**Vybrané sousední specy přečti celé kvůli komponentám.** Prohlásit za novou
+komponentu něco, co už jiný spec definoval, znamená postavit ji podruhé
+a rozejít se s ní ve tvaru.
 
 ### 3. Výběr modulů
 

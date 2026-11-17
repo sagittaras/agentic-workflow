@@ -65,7 +65,7 @@ Psát ji potřetí znamená mít tři různá chování pro jednu operaci.
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | V kroku 1 před prvním voláním skriptu ze `scripts/` nebo `scripts/gh/` — jejich argumenty a návratové kódy |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 1, když tělo issue neodpovídá očekávanému tvaru |
 | `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než posoudíš, jestli citovaná cesta je precedent k rozšíření |
-| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 3, když Reference cituje doplňkový dokument (ADR, UX spec) — jak ho najít sestupem od `CLAUDE.md` |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 3, jen když `sagittaras:read-docs` nejde spustit — postup čtení báze |
 
 ## Vstupní kontext
 
@@ -115,7 +115,11 @@ který se má rozšířit — ten otevři a přečti **jako první a hlavní zdr
 zadání**. Implementuj podle vzoru, který tam skutečně je, ne podle toho, jak
 si ho pamatuješ nebo jak by „asi měl" vypadat. Ne parafrázi z těla issue —
 tělo issue je zkratka a implementace psaná podle zkratky projde tvojí vlastní
-kontrolou a spadne až u `verify-issue`.
+kontrolou a spadne až u `verify-issue`. Cesta ke kódovému precedentu je vůči
+kořeni repozitáře. Nemá-li Reference žádný kódový precedent, jen odkaz na
+dokument, **neimplementuj a eskaluj** s doporučením `/sagittaras:triage-issue` —
+bez precedentu nezůstává primární zdroj zadání, na který by se implementace
+mohla opřít.
 
 Cituje-li Reference i ADR nebo jiný dokument, čti ho jako **doplňkové
 omezení** — co nesahat, které rozhodnutí je chráněné — ne jako primární popis
@@ -130,15 +134,24 @@ citovanému precedentu **odporuje** (jiné rozhraní nebo struktura, na kterou
 nejde navázat), nebo citovaná cesta jen tematicky souvisí a rozšířit ji na
 tenhle případ nejde (test v `shared/precedent-test.md`).
 
-Doplňkový dokument (ADR a další) hledej **sestupem stromem dokumentace od
-`CLAUDE.md`** podle `shared/docs-tree.md`: z `CLAUDE.md` na vstupní index a dál
-podle vět u odkazů, dokud nenarazíš na dokument, který Reference cituje. Ne
-Globem ani podle názvu souboru — věta v indexu řekne, který dokument platí, i když
-se nejmenuje tak, jak čekáš. Cesta ke kódovému precedentu je vůči kořeni
-repozitáře.
-Nemá-li Reference žádný kódový precedent, jen odkaz na dokument, **neimplementuj
-a eskaluj** s doporučením `/sagittaras:triage-issue` — bez precedentu nezůstává
-primární zdroj zadání, na který by se implementace mohla opřít.
+Doplňkový dokument (ADR a další) čti **skillem `sagittaras:read-docs`**
+s otázkou „Co stanoví <dokument z Reference> pro <oblast> — co nesahat, která
+rozhodnutí jsou chráněná?" a oblastí, kterou issue mění (precedent
+z Reference). Chráněná rozhodnutí z odpovědi ber doslova.
+
+- **Odpověď říká, že projekt bázi nemá, nebo cesta dokumentu z Reference chybí
+  v řádku Přečtené stránky** → přečti dokument přímo na citované cestě; není-li
+  tam, postupuj jako u citované cesty, která neexistuje. Že dokument k oblasti
+  nic nestanoví, není důvod k eskalaci.
+- **Odpověď ho uvede jako nahrazený** → eskaluj: Reference cituje rozhodnutí,
+  které už neplatí.
+- **Kritérium odkazuje na konkrétní sekci dokumentu** (číslo kapitoly UX specu)
+  → tu sekci přečti sám v dokumentu na cestě z Reference (kotvu z Opory použij,
+  je-li tam); read-docs vrací omezení, ne obsah, podle kterého se staví.
+
+Nejde-li skill spustit, čti dokument postupem z § Jak najít odpověď v bázi
+v `shared/docs-tree.md`. Větve výš platí obdobně: kód 1 z mapy znamená projekt
+bez báze a dokument, který v mapě není, čti přímo na citované cestě.
 
 ### 4. Urči základní větev
 
@@ -371,7 +384,8 @@ Přeruš postup a ohlas stav, když:
 - issue nejde načíst — neexistuje, 404, chybějící oprávnění nebo `gh` (krok 1),
 - kterýkoli issue ze `Závisí na` není zavřený (krok 2),
 - citovaný soubor, vzor nebo dokument z `Reference` neexistuje, kritériu odporuje,
-  nebo Reference nemá žádný kódový precedent (krok 3),
+  Reference nemá žádný kódový precedent, nebo citovaný dokument `read-docs`
+  uvede jako nahrazený (krok 3),
 - základní větev je skutečně nejednoznačná (krok 4),
 - typ z labelu nejde jednoznačně namapovat na přípustný typ větve (krok 5),
 - základní větev neexistuje ani na remotu, ani lokálně (krok 5),
@@ -456,7 +470,7 @@ Brána před merge: <cílová větev se nepohnula | zopakována — prošla>
 - **Zaškrtávátka patří `verify-issue`.** Neodškrtávej je, ani když sis kritérium
   ověřil — jinak recenzent posuzuje tvoje tvrzení místo skutečnosti. Nástroj na zápis
   do issue přitom po kroku 1 načtený máš; hranici drží tahle zásada, ne práva.
-- **Reference se otevírá, ne parafrázuje, a kódový precedent v ní je primární
-  zadání.** Tělo issue je zkratka, ne náhrada za to, co je v Referenci; a mezi
-  precedentem a dokumentem (ADR) rozhoduje precedent — dokument jen říká, kam
-  nesahat.
+- **Reference se otevírá (doplňkový dokument přes `read-docs`, krok 3), ne
+  parafrázuje, a kódový precedent v ní je primární zadání.** Tělo issue je
+  zkratka, ne náhrada za to, co je v Referenci; a mezi precedentem a dokumentem
+  (ADR) rozhoduje precedent — dokument jen říká, kam nesahat.
