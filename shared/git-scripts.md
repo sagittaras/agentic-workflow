@@ -127,6 +127,24 @@ kvalitu testů. Tvar tabulky popisuje hlavička skriptu.
 - **S `--ticked-body`** zapíše tělo issue s odškrtnutými kritérii, jejichž test
   potvrdil. Do trackeru nezapisuje — to je další krok volajícího.
 
+### `mutation-check.sh --worktree W --base REF --file P [--file P…] -- <příkaz…>`
+
+Mutačně ověří, jestli test hlídá produkční změnu: v pracovní kopii `W` vrátí změnu
+zadaných souborů proti `REF` (`git diff | git apply -R`), pustí příkaz, kopii obnoví
+a pustí ho znovu.
+
+- **Výstup:** `base=`, `files=`, `applied=`, `mutant=killed|survived`, `restored=`,
+  `original=pass|fail`, `verdict=covered|not_covered|inconclusive`, sekce
+  `[mutant_output]` a `[original_output]`.
+- **Kódy:** `0` mutace proběhla (výsledek nese `verdict`) · `2` chybný argument,
+  `W` není pracovní kopie nebo `REF` neexistuje · `4` `W` není před startem čistá ·
+  `5` `git apply -R` selhal nebo se soubory proti základu nemění · `6` obnovení selhalo.
+
+**Bez čisté kopie se nerozběhne** — obnovení dělá `git checkout -- .`, které by
+cizí změny smazalo. `mutant=killed` znamená jen nenulový kód; jestli spadl test,
+nebo build, rozhoduje volající ze sekce `[mutant_output]`. Při kódu `6` se
+pracovní kopie zahazuje a zakládá znovu.
+
 ---
 
 ## GitHub operace — `scripts/gh/`
@@ -153,6 +171,8 @@ co potřebuje, bez dalšího kola.
 | `label-create.sh` | `--name N --color C [--description D]` |
 | `pr-create.sh` | `--base B --head H --title T --body-file F\|-` |
 | `pr-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
+| `pr-reviews.sh` | `<number>` — sekce `[reviews]`, `[line_comments]`, `[comments]`: všechny připomínky na jedno volání |
+| `pr-update.sh` | `<number> --body-file F\|-` — nahradí celé tělo PR |
 | `pr-list.sh` | `[--milestone M] [--state open\|closed\|all]` |
 | `pr-for-issue.sh` | `<issue> [--base B] [--state open\|closed\|all]` — PR s `Closes #<issue>` v těle, i do integrační větve |
 | `pr-for-branch.sh` | `<head> [--base B] [--state open\|closed\|all]` — PR z head větve tohoto repozitáře, přesná shoda názvu, bez forků |

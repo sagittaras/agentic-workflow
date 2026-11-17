@@ -60,6 +60,8 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
 | Založ label | `label_write` → `create_repo_label`, `name`, `color` | `gh/label-create.sh --name N --color C` |
 | Založ PR | `pull_request_write` → `create`, `base`, `head`, `title`, `body` | `gh/pr-create.sh --base B --head H --title T --body-file F` |
 | Přečti PR | `pull_request_read` → `get`, `pull_number` | `gh/pr-read.sh <n>` |
+| Přečti připomínky k PR | `pull_request_read` → `get_reviews`, `pull_number`; pak pro každé review `get_review_comments` s `review_id` (komentáře k řádkům); obecné komentáře `issue_read` → `get_comments` s číslem PR | `gh/pr-reviews.sh <n>` |
+| Uprav tělo PR | `pull_request_write` → `update`, `pull_number`, `body` | `gh/pr-update.sh <n> --body-file F` |
 | Najdi PR podle head větve | `list_pull_requests`, `state` → porovnej `head` v odpovědi | `gh/pr-for-branch.sh <head> [--state open]` |
 | Najdi PR patřící k issue | `list_pull_requests`, `state: "all"` → porovnej `head` a `Closes #N` v těle | `gh/pr-for-issue.sh <n>`, v běhu milestonu s `--base <integrační větev>` |
 | Vypiš PR milestonu | `list_pull_requests`, `milestone: <id>`, `state: "all"` | `gh/pr-list.sh --milestone <m> --state all` |
