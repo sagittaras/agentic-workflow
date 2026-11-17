@@ -20,7 +20,7 @@ zaškrtávátka i přepisuje, a sekce `Reference` je jediné, podle
 ```
 
 - `<type>` je typ podle Conventional Commits a **musí se shodovat s typovým labelem**,
-  který je na issue nasazený. Rozpor mezi názvem a labelem je nález pro `review-milestone`.
+  který je na issue nasazený — `implement-issue` z labelu odvozuje typ větve i commitu.
 - `<scope>` je oblast v kódu, ne téma milestonu.
 - Jazyk popisu určuje sekce `Jazyk issues` v projektové konfiguraci.
 
@@ -92,7 +92,6 @@ Mechanismus patří do `Reference`; kritérium říká, co musí platit.
 
 **Každé kritérium jde ukázat na precedentu.** Když neumíš říct, který soubor nebo
 vzor z `Reference` kritérium rozšiřuje, nepatří do issue — chybí mu ukotvení.
-Věrohodně znějící parafráze bez opory v kódu je nález pro `review-milestone`.
 
 **Kritérium má být ověřitelné bez doptávání.** Kritérium, které jde přečíst dvěma způsoby,
 zdrží celý řetěz až u `verify-issue`, kde už stojí čas inženýra i recenzenta.
