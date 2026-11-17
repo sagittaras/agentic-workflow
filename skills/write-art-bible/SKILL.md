@@ -51,8 +51,8 @@ allowed-tools:
 # ze stížnosti na nekonzistentní vzhled; context/agent/background — interview
 # vyžaduje uživatele v hlavním kontextu, fork ani běh na pozadí nemají komu
 # klást otázky; paths — skill se spouští z konverzace o vzhledu, ne prací nad
-# konkrétními soubory; shell — awk z kroku 6 se volá přes Bash s výchozím
-# shellem, vnucovat cílovému projektu jiný není důvod; disallowed-tools —
+# konkrétními soubory; shell — contrast.sh z kroku 6 se volá explicitním
+# `bash`, vnucovat cílovému projektu jiný není důvod; disallowed-tools —
 # allowed-tools je uzavřený výčet
 # a skill se nespouští načtením souboru, není co zakazovat navíc;
 # version/license — verzuje se celý plugin, ne jednotlivý skill.
@@ -202,20 +202,16 @@ Při psaní platí:
 - **Ke každé sadě hodnot napiš, kde v kódu žije**, a u dvou kopií i to, že se
   mění současně. Bez toho se dokument a implementace tiše rozejdou.
 - **Kontrastní poměry počítej, neodhaduj.** Poměr napsaný od oka se v dokumentu
-  tváří jako měření. Za `A` a `B` dosaď šest hexadecimálních číslic; zkrácený
-  zápis (`#fff`) nejdřív rozviň, jinak příkaz skončí chybou místo výsledku:
+  tváří jako měření. Změř všechny dvojice text × podklad, které do dokumentu
+  píšeš, jedním voláním:
 
   ```bash
-  awk -v A=ff8a8a -v B=7a2020 'function hx(s, i,n,d){n=0;for(i=1;i<=length(s);i++){d=index("0123456789abcdef",substr(tolower(s),i,1))-1;n=n*16+d}return n}
-  function ch(v){v/=255;return v<=0.03928?v/12.92:((v+0.055)/1.055)^2.4}
-  function lum(h){return 0.2126*ch(hx(substr(h,1,2)))+0.7152*ch(hx(substr(h,3,2)))+0.0722*ch(hx(substr(h,5,2)))}
-  BEGIN{gsub(/[^0-9a-fA-F]/,"",A);gsub(/[^0-9a-fA-F]/,"",B);if(length(A)!=6||length(B)!=6){print "CHYBA: ocekavam sest hex cislic na kazde strane";exit 1}
-  a=lum(A);b=lum(B);hi=(a>b?a:b);lo=(a>b?b:a);printf "%.4f:1\n",(hi+0.05)/(lo+0.05)}'
+  bash "${CLAUDE_PLUGIN_ROOT}/skills/write-art-bible/scripts/contrast.sh" <text>:<podklad> [<text>:<podklad>…]
   ```
 
-  Změř každou dvojici text × podklad, kterou do dokumentu píšeš. Nedosáhne-li
-  prahu, neschovávej to — buď hodnotu posuň, nebo zapiš omezení, za jakých se
-  smí použít.
+  Pro každou dvojici vrátí `ratio=` a verdikty `aa=`, `aa_large=`, `aaa=`. Kód
+  `2` je barva mimo hex. Dvojici s `fail` u prahu, který pro ni platí,
+  neschovávej — buď hodnotu posuň, nebo zapiš omezení, za jakých se smí použít.
 
   Nejsou-li barvy v hexu (`oklch`, `hsl`, `rgb` — výchozí tvar palety Tailwindu
   v4), převeď je nejdřív na hex a v dokumentu uveď obě podoby. Nejde-li převod

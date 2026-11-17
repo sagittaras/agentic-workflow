@@ -185,21 +185,6 @@ pro `scripts/` a `scripts/gh/`, ne pro skripty jednotlivých skillů.
 - **kód 5** → remote neodpověděl na dotaz po **výchozí** větvi. Větvíš-li z výchozí
   větve, eskaluj; u nevýchozího základu se to tvého základu netýká a běh nezastavuj.
 
-Pak zjisti, **kde základní větev z kroku 4 skutečně leží**. Nepředpokládej remote:
-integrační větev `milestone/<slug>` zakládá `run-milestone` lokálně a publikuje ji až
-sync po zmergování první dávky, takže v první dávce milestonu `origin/milestone/<slug>`
-neexistuje. Agenti běží ve worktree téhož repozitáře, takže lokální ref k dispozici mají.
-
-```bash
-git fetch origin <základní větev> 2>/dev/null || true
-git show-ref --verify --quiet "refs/remotes/origin/<základní větev>"   # je na remotu?
-git show-ref --verify --quiet "refs/heads/<základní větev>"            # je lokálně?
-```
-
-Základní ref (dál `<base-ref>`) je `origin/<základní větev>`, existuje-li; jinak lokální
-`<základní větev>`. **Neexistuje-li ani jeden, eskaluj** — základ, který v repozitáři
-nikde není, znamená jiné zadání, než jaké repozitář zná.
-
 Větev zakládej vždy přes `sagittaras:create-branch` (nástroj `Skill`) a **předej mu
 hotový název** — bez názvu si ho nechá potvrdit uživatelem a v autonomním běhu se
 zastaví.
@@ -216,12 +201,16 @@ odjinud, než jsi zamýšlel. Skončí-li skript s `error=base_branch_not_found`
 Ať jsi větev založil jakkoli, ověř, že opravdu vyšla ze základu:
 
 ```bash
-git merge-base --is-ancestor <base-ref> HEAD
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh" --base <základní větev>
 ```
 
-Porovnávej **právě ten ref, ze kterého se větvilo** — u výchozí větve tedy
-`origin/<výchozí větev>`, ne její lokální kopii: ta bývá zastaralá a kontrola by prošla,
-aniž by cokoli ověřila. Nenulový kód → **eskaluj**, neimplementuj.
+Skript vybírá základní ref stejně jako `create-branch` — remote má přednost,
+lokální větev je náhrada pro integrační větev, která na remotu ještě není.
+
+- **`base_is_ancestor=true`** → pokračuj.
+- **`base_is_ancestor=false`** → větev nevyšla ze základu; **eskaluj**, neimplementuj.
+- **kód 4** (`base_source=missing`) → základ v repozitáři nikde není, tedy jiné
+  zadání, než jaké repozitář zná; **eskaluj**.
 
 ### 6. Implementuj
 
@@ -323,7 +312,7 @@ i konfiguraci máš z kroků 1–8; znovu je čti, jen když z kontextu vypadly.
 
 | Signál | Co uděláš |
 | --- | --- |
-| **Připomínky** | Přečti je z PR, obsah ve zprávě nečekej. Recept „Přečti PR" vrátí obecné komentáře; komentáře k řádkům a review na GitHubu recepty nemají, proto doslova `gh api repos/<owner/repo>/pulls/<n>/comments` a `gh pr view <n> -R <owner/repo> --json reviews`, na Gitea `pull_request_read` s metodou pro review. Zapracuj je v téže větvi a téže session, kde jsi kód psal. |
+| **Připomínky** | Přečti je z PR, obsah ve zprávě nečekej — receptem „Přečti připomínky k PR": na GitHubu `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-reviews.sh" -R <owner/repo> <n>` (review, komentáře k řádkům i obecné komentáře), na Gitea podle téhož řádku receptů. Zapracuj je v téže větvi a téže session, kde jsi kód psal. |
 | **Brána neprošla** | Oprav nálezy uvedené ve zprávě (řádky `fail=`, sekce `[conflicts]` nebo `[output]`) v téže větvi. Konflikt s integrační větví vyřeš vmergováním jejího aktuálního stavu přes `sagittaras:make-commit`, ne rebasem. |
 | **Schváleno**, napsané člověkem přímo sem | Mergni podle odstavce níže. |
 | **Schváleno** ve zprávě od jiné session | Nemerguj — schválení se nepřeposílá. Odpověz Formátem výstupu pro kolo oprav s `Merge: neproveden — schválení musí napsat člověk`. |
@@ -333,20 +322,26 @@ i konfiguraci máš z kroků 1–8; znovu je čti, jen když z kontextu vypadly.
 se oprava dotkla, musí dál krýt test a celá brána musí být zelená — a změnu zapiš
 a odešli přes `sagittaras:make-commit` do téže větve; PR se aktualizuje sám, nové
 nezakládej. Změnila-li oprava, který test kryje které kritérium, uprav mapu v těle
-PR — orchestrátor ji čte strojově (recepty řádek pro tělo PR nemají: na GitHubu
-`gh pr edit <n> -R <owner/repo> --body-file <soubor mimo strom>`, na Gitea
-`pull_request_write` → `update` s `body`). Odpověz Formátem výstupu pro kolo oprav.
+PR — orchestrátor ji čte strojově. Recept „Uprav tělo PR": na GitHubu načti tělo
+`pr-read.sh -R <owner/repo> <n> --body`, uprav mapu a celé nové tělo pošli heredocem:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-update.sh" -R <owner/repo> <n> --body-file - <<'BODY'
+<celé nové tělo>
+BODY
+```
+
+Na Gitea `pull_request_write` → `update` s `body`. Odpověz Formátem výstupu pro kolo oprav.
 
 **Na signál „Schváleno" mergni sám.** Napřed ověř, že se cílová větev od poslední
 zelené brány nepohnula:
 
 ```bash
-git fetch origin <základní větev>
-git merge-base --is-ancestor origin/<základní větev> HEAD
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh" --base <základní větev>
 ```
 
-- **Kód 0** → cílová větev je v PR celá, brána z kroku 7 platí.
-- **Nenulový kód** → cílová větev se pohnula; zopakuj integrační bránu proti její
+- **`base_is_ancestor=true`** → cílová větev je v PR celá, brána z kroku 7 platí.
+- **`base_is_ancestor=false`** → cílová větev se pohnula; zopakuj integrační bránu proti její
   aktuální špičce:
 
   ```bash

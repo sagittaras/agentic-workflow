@@ -153,6 +153,26 @@ výchozím stavu testovatelné a netestovatelné nese značku „ověří člov�
 zaškrtávátka odškrtává orchestrátor podle potvrzeného testu (ručně spuštěný
 `verify-issue` dál podle toho, co sám ověřil), ne výhradně `verify-issue`.
 
+## Princip 2.10
+
+Plán milestonu schvaluje člověk
+([2.10](issues.md#210-plán-milestonu-schvaluje-člověk-ne-agentní-review)):
+`review-milestone` vypadává z řetězu mezi `plan-milestone` a `run-milestone`
+a zůstává nástrojem na vyžádání, stejně jako `verify-issue` po 2.6.
+
+| Skill | Stav | Co se mění |
+| --- | --- | --- |
+| `run-milestone` | Odebraná kontrola | Nehledá review komentář na nejnižším issue ani po nové vlně; chybějící nebo nepříznivé review přestává být důvod k eskalaci. Poznámku (prázdná kritéria nebo chybějící `Reference`) kontroluje při sestavení grafu u každého otevřeného issue, ne jen u nové vlny. |
+| `plan-milestone` | Změna konce | Draft vlny ukazuje i kritéria každého Zadání — je to jediné review plánu. Jako další krok doporučuje `run-milestone`, ne `review-milestone`. |
+| `review-milestone` | Z článku řetězu na nástroj | Spouští ho člověk, když chce druhý pohled na plán. Mechanika, okruhy i komentář v trackeru zůstávají; komentář už není doklad pro orchestrátora. |
+| `file-issue` | Menší úprava | Poznámka zařazená do milestonu se nevrací verdiktem review, ale eskalací `run-milestone`. |
+
+**Sdílený kontrakt.** `shared/issue-template.md` přestává jmenovat
+`review-milestone` jako toho, kdo rozpory v issue hlásí — rozpor mezi názvem
+a typovým labelem odnese `implement-issue`, který z labelu odvozuje typ větve
+i commitu. Kontrakt „komentář s review reportem" z [původního
+plánu](../milestone-workflow/index.md) zaniká.
+
 ## Princip 3.1
 
 Štíhlé skilly ([3.1](skill-design.md#31-skill-je-základní-linie-postupu-ne-podnět-k-úvaze-co-jde-příkazem-je-příkaz))
@@ -166,7 +186,7 @@ ně sahá z jiného důvodu.
 | `review-skill` | Nová kritéria | Nálezem je krok popsaný prózou, který jde nahradit příkazem; spouštěč úvahy z tabulky 3.1; věta, která neprojde testem; zdůvodnění pro vývojáře v těle místo v komentáři. Stejně přísně jako dnešní kontrola kvality instrukcí. |
 | `write-agent`, `review-agent` | Nové kritérium | Test každé věty a spouštěče úvahy platí i pro definici agenta — čte se při každém vyvolání. |
 | `write-rule`, `review-rule` | Nové kritérium | Totéž pro rules — čtou se při každém dotyku pokryté cesty, tedy nejčastěji ze všech instrukcí. |
-| Ostatní skilly | Zeštíhlení při dotyku | Audit podle testu každé věty, když se skill mění z jiného důvodu. Kroky, které jdou nahradit příkazem, dostanou skript (plugin `scripts/` nebo `scripts/` skillu, výstup `key=value`). Nejdřív nejdelší skilly, kterých se dotknou přepisy podle 1.7, 1.8 a 2.6–2.9: `run-milestone`, `verify-issue`, `write-adr`, `review-milestone`, `open-pr`. |
+| Ostatní skilly | Zeštíhlení při dotyku | Audit podle testu každé věty, když se skill mění z jiného důvodu. Kroky, které jdou nahradit příkazem, dostanou skript (plugin `scripts/` nebo `scripts/` skillu, výstup `key=value`). Nejdřív nejdelší skilly, kterých se dotknou přepisy podle 1.7, 1.8 a 2.6–2.9: `run-milestone`, `verify-issue`, `write-adr`, `review-milestone`, `open-pr`. Převedeno: stav větve a kontrolu původu drží `scripts/branch-state.sh` (`open-pr`, `implement-issue`), hledání PR z head větve `gh/pr-for-branch.sh` (`open-pr`, `verify-issue`), připomínky k PR a úpravu jeho těla `gh/pr-reviews.sh` a `gh/pr-update.sh` (`implement-issue`), mutační test `scripts/mutation-check.sh` (`verify-issue`) a kontrast barev `write-art-bible/scripts/contrast.sh`. Těla jdou `gh/` skriptům ze stdin (`--body-file -`), takže skilly zakládající issues a komentáře (`file-issue`, `plan-milestone`, `triage-issue`, `review-milestone`, `review-adr`) přišly o `Write`, který měly jen kvůli dočasnému souboru. |
 
 ## Mimo rozsah
 

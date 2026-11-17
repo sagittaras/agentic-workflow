@@ -49,15 +49,14 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Write
   - ToolSearch
   - "Bash(bash:*)"
   - mcp__gitea__issue_read
   - mcp__gitea__issue_write
 # Bash je zúžený na spouštění skriptů; gh ani git se nikdy nevolá přímo,
-# proto volání piš ve tvaru `bash <cesta>`. Write slouží výhradně
-# k dočasnému souboru s přepsaným tělem issue na GitHubu (--body-file);
-# Edit ve výčtu není, skill do zdrojů projektu nezapisuje, jen do trackeru.
+# proto volání piš ve tvaru `bash <cesta>`. Write ani Edit ve výčtu nejsou:
+# přepsané tělo i komentář jdou GitHub skriptům heredocem přes --body-file -,
+# skill do zdrojů projektu nezapisuje, jen do trackeru.
 # Grep/Glob/Read hledají precedent v kódu.
 # Vynechaná zvažovaná pole:
 # disable-model-invocation — skill má být volatelný modelem: během
@@ -198,11 +197,15 @@ včetně jeho sekce „Reference je precedent v kódu":
   v názvu, zmiň to v souhrnu podle Formátu výstupu jako poznámku pro
   autora; sám ani jedno neopravuj.
 
-Zapiš přepsané tělo receptem „Uprav tělo issue". Na GitHubu tělo zapiš
-předtím nástrojem `Write` do dočasného souboru **mimo pracovní strom
-repozitáře** a předej ho přes `--body-file` — víceřádkový markdown se
-v argumentu shellu rozpadne. Soubor leží mimo strom, takže ho není nutné po
-sobě mazat.
+Zapiš přepsané tělo receptem „Uprav tělo issue". Na GitHubu ho předej heredocem
+s ukončovačem v uvozovkách, nikdy argumentem — víceřádkový markdown se
+v argumentu shellu rozpadne:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-update.sh" -R <owner/repo> <číslo issue> --body-file - <<'BODY'
+<přepsané tělo>
+BODY
+```
 
 Skončí-li zápis chybou, postupuj podle forge: na GitHubu podle
 `git-scripts.md` — kód `7` znamená chybějící nebo nepřihlášené `gh`, kód `2`
@@ -221,9 +224,13 @@ spárovanou implementační session (rozhraní a neúplná implementace, doladě
 interaktivně) — tenhle skill sám architekturu nezakládá. Issue nezavírej,
 název ani labely neměň.
 
-Na GitHubu text komentáře zapiš stejně jako v kroku 4a — nástrojem `Write`
-do dočasného souboru mimo pracovní strom a předej ho přes `--body-file`;
-`gh/issue-comment.sh` tělo jinak nepřijme.
+Na GitHubu předej text komentáře stejně jako v kroku 4a heredocem:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-comment.sh" -R <owner/repo> <číslo issue> --body-file - <<'BODY'
+<komentář>
+BODY
+```
 
 Skončí-li zápis komentáře chybou, reaguj stejně jako v kroku 4a a nepokládej
 komentář za zapsaný. Jdi na krok 5.
@@ -231,8 +238,8 @@ komentář za zapsaný. Jdi na krok 5.
 ### 4c. PR by nešlo přezkoumat → navrhni rozdělení
 
 Tělo issue **nepřepisuj** a nová issues nezakládej — rozdělení je návrh pro
-člověka. Okomentuj issue receptem „Okomentuj issue" (na GitHubu přes dočasný
-soubor jako v kroku 4b) a navrhni v něm rozdělení na víc Zadání. U každého
+člověka. Okomentuj issue receptem „Okomentuj issue" (na GitHubu heredocem
+jako v kroku 4b) a navrhni v něm rozdělení na víc Zadání. U každého
 navrženého Zadání uveď:
 
 - název ve tvaru `<type>(<scope>): …` podle šablony issue,

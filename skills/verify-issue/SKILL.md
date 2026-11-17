@@ -57,9 +57,9 @@ disallowed-tools:
 # jako subagent, allowed-tools se nemusí uplatnit, a zákaz doptávání musí platit
 # vždy — skill běží bez uživatele.
 # Vynechaná zvažovaná pole: Write/Edit/NotebookEdit v allowed-tools — skill
-# zásadně neopravuje (viz Zásady) a i dočasnou mutaci v kroku 5 dělá gitem, ne
-# editorem; soubor s reportem vzniká heredocem v Bash, což je payload pro forge,
-# ne zásah do repozitáře. agent — profil žádného z dostupných agentů nesedí
+# zásadně neopravuje (viz Zásady) a i dočasnou mutaci v kroku 5 dělá gitem
+# (mutation-check.sh), ne editorem; report jde heredocem přes stdin, což je
+# payload pro forge, ne zásah do repozitáře. agent — profil žádného z dostupných agentů nesedí
 # (skill potřebuje spouštět příkazy a zapisovat do trackeru), a plánovací
 # systémový prompt by běh táhl k navrhování opravy, což je přesně to, co tenhle
 # skill dělat nesmí; omezení práv nese allowed-tools. background — člověk,
@@ -136,18 +136,15 @@ je stav prostředí, ne nález na PR: skonči `Blocked`, ne `Nesplněno`.
 
 Ověřuješ vždy dvojici. Chybí-li jedna strana, není co s čím porovnat.
 
-1. **Argument je název větve** (není to číslo) → vypiš PR se `state: all`
-   a vyber ten, jehož hlavová větev se jménu rovná — recept „Najdi PR podle
-   head větve" z `forge-recipes.md`. Filtrování podle `head` neumí ani jedna
-   forge jako parametr, takže filtruj až ve výstupu:
+1. **Argument je název větve** (není to číslo) → najdi PR z téhle head větve
+   receptem „Najdi PR podle head větve" z `forge-recipes.md`:
 
    ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-list.sh" -R "<owner/repo>" --state all
-   # ve výstupním JSON hledej položku s headRefName == "<větev>"
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-branch.sh" -R "<owner/repo>" "<větev>"
    ```
 
-   Na Gitea totéž nástrojem `list_pull_requests` se `state: "all"` a porovnáním
-   pole `head`.
+   Na Gitea `list_pull_requests` se `state: "all"` a porovnáním pole `head`
+   ve výstupu — parametr na head větev Gitea nemá.
 2. **Argument je číslo** → přečti ho a rozliš, co jsi dostal: má-li objekt `head`
    a `base`, je to PR, jinak issue. Číselné řady issues a PR jsou na obou forgích
    společné, takže z čísla samotného to poznat nejde. Na GitHubu zkus napřed
@@ -313,31 +310,22 @@ tvrdí, že ho hlídá, pak není splněné. Ověř to tak, že vrátíš produk
 a necháš test běžet:
 
 ```bash
-base="$(git -C "$wt" merge-base "origin/<pr-base>" HEAD)"
-git -C "$wt" diff "$base" HEAD -- <produkční soubory, bez testů> | git -C "$wt" apply -R
-<testovací příkaz>            # musí SPADNOUT
-git -C "$wt" checkout -- .    # obnovení
-git -C "$wt" status --porcelain   # musí být prázdné
-<testovací příkaz>            # musí PROJÍT
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/mutation-check.sh" --worktree <cesta k worktree> \
+  --base origin/<pr-base> --file <produkční soubor> [--file …] -- <testovací příkaz>
 ```
 
-Revert dělej **gitem, ne editací souborů** — obnovení je pak deterministické
-a ověřitelné, kdežto ručně vrácená chyba se v pracovní kopii snadno zapomene.
-Do revertu ber jen produkční soubory; nový test musí zůstat.
+Do `--file` dej jen produkční soubory, které test hlídá; nový test musí zůstat.
+Složený testovací příkaz zabal do `bash -c '…'`. Skript revertuje gitem
+a pracovní kopii po sobě obnoví a ověří.
 
-Vyhodnocení a hraniční stavy:
-
-- Projde-li test i s vrácenou produkční změnou, je kritérium **`Nesplněno`** —
-  test nehlídá to, co o něm kritérium tvrdí.
-- Selže-li místo testu build, důkaz nemáš — zúž revert na menší celek (jeden
-  soubor, jeden hunk), a nepovede-li se to, zapiš `Neověřitelné` i s důvodem.
-- **Selže-li samo `git apply -R`** (binární soubor, nepoužitelný kontext),
-  mutaci neprovedeš: kritérium je `Neověřitelné` a napiš, na čem revert ztroskotal.
-- **Není-li `git status --porcelain` po obnovení prázdný**, worktree zahoď
-  a založ ho znovu z `origin/<pr-head>` — a **znovu obnov závislosti podle
-  kroku 4**, jinak další ověřovací příkaz spadne na prostředí. Neobnovený strom
-  by se nepozorovaně nesl do všech dalších ověření a znehodnotil by je tiše,
-  což je horší než spadnout.
+| Výstup | Výsledek kritéria |
+| --- | --- |
+| `verdict=covered` | Z mutace **Splněno** — ale nejdřív zkontroluj `[mutant_output]`: spadl-li místo testu build, důkaz nemáš; zúž `--file` na menší celek, a nepovede-li se to, **Neověřitelné** i s důvodem. |
+| `verdict=not_covered` | **Nesplněno** — test prošel i s vrácenou změnou, nehlídá to, co o něm kritérium tvrdí. |
+| `verdict=inconclusive` | Test padá i nad nezměněným PR. Je-li to prostředí, postupuj podle odstavce o prostředí výše; jinak je to nález na PR, ne na mutaci. |
+| kód 5 (`apply_failed`, `empty_change`) | **Neověřitelné** — napiš, na čem revert ztroskotal (binární soubor, soubory se proti základu nemění). Kopie zůstala beze změny. |
+| kód 4 | Worktree nebyl čistý už před mutací — něco ho ušpinilo dřív; založ ho znovu (viz řádek níže). |
+| kód 6 (`restored=false`) | Worktree zahoď (`pr-worktree.sh --remove`), založ znovu a **znovu obnov závislosti podle kroku 4**. Neobnovený strom by tiše znehodnotil všechna další ověření. |
 
 **Nejednoznačné kritérium je samo o sobě nálezem.** Jde-li přečíst dvěma způsoby
 nebo není ověřitelné vůbec, zapiš `Neověřitelné` a napiš, které dva výklady
@@ -382,8 +370,13 @@ odškrtává orchestrátor kritéria, jejichž test potvrdil.
 
 Text kritérií ani ostatní sekce **nepřepisuj a nemaž**. Zápis proveď receptem
 „Uprav tělo issue" z `forge-recipes.md`: na Gitea jde celé nové tělo v parametru
-`body`, na GitHubu ho `issue-update.sh` bere jako `--body-file`, takže si ho
-napřed ulož do dočasného souboru způsobem popsaným v kroku 8.
+`body`, na GitHubu ho předej heredocem přes stdin:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-update.sh" -R "<owner/repo>" <číslo issue> --body-file - <<'BODY'
+<celé nové tělo issue>
+BODY
+```
 
 Ověř, že zápis prošel. Neprošel-li, kritéria zůstávají neodškrtnutá — samo
 ověření tím platnost neztrácí, ale příští běh bude zbytečně ověřovat znovu:
@@ -404,30 +397,22 @@ Jak se tělo předává, se liší podle forge:
 
 - **Gitea** — report jde přímo do parametru `body` volání
   `pull_request_review_write` se `state: "COMMENT"`. Žádný soubor nepotřebuješ.
-- **GitHub** — `pr-comment.sh` bere tělo jako `--body-file`, nikdy jako argument:
-  víceřádkový markdown se v shellu o uvozovky a zpětné apostrofy tiše rozpadne.
-  Soubor založ **mimo worktree PR**, ať ho neušpiníš, a celý blok pošli jako
-  **jedno volání Bash** — `$f` by v dalším volání bylo prázdné:
+- **GitHub** — report předej `pr-comment.sh` heredocem přes stdin, nikdy jako
+  argument (víceřádkový markdown se v shellu tiše rozpadne):
 
 ```bash
-f="$(mktemp)"
-cat > "$f" <<'REPORT'
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-comment.sh" -R "<owner/repo>" <číslo PR> --body-file - <<'REPORT'
 <report>
 REPORT
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-comment.sh" -R "<owner/repo>" <číslo PR> --body-file "$f"
 ```
 
 Ukončovač heredocu piš v uvozovkách a **bez odsazení na začátku řádku** — jinak
 ho shell nerozpozná, a bez uvozovek navíc rozexpanduje `$` a zpětné apostrofy
-v reportu, takže do trackeru dorazí něco jiného, než jsi napsal.
+v reportu, takže do trackeru dorazí něco jiného, než jsi napsal. Kód `2`
+s `error=empty_body` znamená právě rozbitý heredoc.
 
 Selže-li uložení komentáře, závěrečnou zprávu vrať i tak a selhání uveď ve
 Výhradách k ověření — komentář sám tuhle výhradu logicky nést nemůže.
-
-Nakonec ukliď dočasné soubory s tělem issue (krok 7) a reportu — worktree je
-uklizený už z úvodu tohohle kroku. Nechané artefakty z předchozího běhu zmatou
-ten příští.
-
 ## Formát výstupu
 
 ````markdown

@@ -2,10 +2,11 @@
 # Přidá komentář k issue. Výstup je key=value na stdout.
 #
 # Použití:
-#   bash scripts/gh/issue-comment.sh -R owner/repo <number> --body-file F
+#   bash scripts/gh/issue-comment.sh -R owner/repo <number> --body-file F|-
 #
-# Tělo se předává vždy souborem; víceřádkový markdown se v argumentu tiše
-# rozpadne o uvozovky a zpětné apostrofy.
+# Tělo se předává souborem, nebo "-" ze stdin (heredoc), nikdy argumentem;
+# víceřádkový markdown se v argumentu tiše rozpadne o uvozovky a zpětné
+# apostrofy.
 #
 # Výstup: number=, url= (odkaz na komentář, ne na issue).
 #
@@ -35,7 +36,7 @@ require_number "$number"
 require_body_file "$body_file"
 gh_require
 
-out="$(gh issue comment "$number" -R "$repo" --body-file "$body_file")"
+out="$(gh issue comment "$number" -R "$repo" --body-file "$BODY_FILE")"
 url="$(printf '%s\n' "$out" | grep -E '^https?://' | tail -1 || true)"
 
 echo "number=$number"

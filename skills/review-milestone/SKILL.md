@@ -1,25 +1,28 @@
 ---
 name: review-milestone
 description: >-
-  Nezávislé review naplánovaného milestonu s čistým kontextem — projde všechna
-  jeho issues a posoudí tvar těl proti šabloně včetně značky „ověří člověk"
-  u netestovatelných kritérií, ukotvení akceptačních kritérií v citovaném
-  souboru nebo vzoru v kódu (ne v próze dokumentu), graf závislostí, překryvy
-  a vnitřní rozpory mezi existujícími issues, rozsah, velikost podle toho,
-  jestli PR půjde ručně přezkoumat, a area labely. Neúplnou vlnu — issues chybějící proti budoucím vlnám —
+  Nástroj na vyžádání: nezávislé review naplánovaného milestonu s čistým
+  kontextem — projde všechna jeho issues a posoudí tvar těl proti šabloně
+  včetně značky „ověří člověk" u netestovatelných kritérií, ukotvení
+  akceptačních kritérií v citovaném souboru nebo vzoru v kódu (ne v próze
+  dokumentu), graf závislostí, překryvy a vnitřní rozpory mezi existujícími
+  issues, rozsah, velikost podle toho, jestli PR půjde ručně přezkoumat,
+  a area labely. Neúplnou vlnu — issues chybějící proti budoucím vlnám —
   nebere jako díru. Vrací verdikt Sound / Needs attention / Not ready
   s nálezy tříděnými podle závažnosti a report ukládá jako komentář
-  do trackeru. Neopravuje.
+  do trackeru. Neopravuje. Není to povinný krok před run-milestone.
 when_to_use: >-
-  Použij k posouzení milestonu, jehož issues už v trackeru existují — jako
-  článek mezi plan-milestone a run-milestone, ručně když uživatel řekne
-  „zreviduj milestone", „zkontroluj plán milestonu" nebo „je ten milestone
-  připravený k běhu". Nepoužívej pro sestavení ani opravu plánu, na to slouží
-  plan-milestone; pro ověření hotové implementace proti kritériím slouží
-  verify-issue; pro posouzení sepsaného ADR review-adr; ani pro review kódu, PR
-  nebo diffu — tenhle skill čte plán, ne změnu v repozitáři. Posouzení a povýšení
-  jednoho issue mimo celý milestone dělá triage-issue. Zavření hotového
-  milestonu dělá close-milestone.
+  Použij, když si člověk nad milestonem, jehož issues už v trackeru
+  existují, vyžádá druhý, agentní pohled na plán — „zreviduj milestone",
+  „zkontroluj plán milestonu", „je ten milestone připravený k běhu".
+  Nespouštěj ho sám jako krok mezi plan-milestone a run-milestone: plán
+  schvaluje člověk při potvrzení draftu a spuštěním běhu; tenhle skill
+  přijde na řadu, až když ho člověk chce. Nepoužívej pro sestavení ani
+  opravu plánu, na to slouží plan-milestone; pro ověření hotové implementace
+  proti kritériím slouží verify-issue; pro posouzení sepsaného ADR
+  review-adr; ani pro review kódu, PR nebo diffu — tenhle skill čte plán, ne
+  změnu v repozitáři. Posouzení a povýšení jednoho issue mimo celý milestone
+  dělá triage-issue. Zavření hotového milestonu dělá close-milestone.
 model: opus
 effort: high
 context: fork
@@ -32,19 +35,21 @@ user-invocable: true
 # dlouhý agentic běh s nástroji, ve kterém se xhigh vrací; model zůstává opus,
 # protože rozpoznat věrohodně znějící parafrázi bez opory je úsudková práce.
 # context: fork je nosný, ne kosmetický — viz úvod těla.
+# Od vize 2.10 nástroj na vyžádání, ne článek řetězu: plán schvaluje člověk
+# a run-milestone review komentář nehledá.
 # Vynechaná zvažovaná pole: agent — fork musí umět zapsat komentář do trackeru
 # a čtecí profily (Explore, Plan) by mu zápis vzaly, žádný jiný obecný profil
-# review nezlepší; disable-model-invocation — skill je článek řetězu a spouští
-# ho plan-milestone i run-milestone, běh je vůči kódu read-only a jediný zápis
-# je komentář; background — volající na verdikt čeká, běh na pozadí by řetěz
-# rozpojil; paths — skill se řídí projektovou konfigurací, ne prací nad
-# konkrétními soubory; shell — skripty se spouštějí explicitním `bash`;
+# review nezlepší; disable-model-invocation — skill musí zůstat volatelný
+# modelem, člověk si ho vyžádá větou („zreviduj milestone"), ne jen příkazem;
+# běh je vůči kódu read-only a jediný zápis je komentář; background — člověk,
+# který si review vyžádal, čeká na verdikt; paths — skill se řídí projektovou
+# konfigurací, ne prací nad konkrétními soubory; shell — skripty se spouštějí
+# explicitním `bash`;
 # version, license — verzuje se celý plugin, ne jednotlivý skill.
 allowed-tools:
   - Read
   - Glob
   - Grep
-  - Write
   - "Bash(bash:*)"
   - ToolSearch
   - mcp__gitea__milestone_read
@@ -52,10 +57,10 @@ allowed-tools:
   - mcp__gitea__issue_read
   - mcp__gitea__issue_write
 # Bash je zúžený na spouštění skriptů; volání proto piš ve tvaru
-# `bash <cesta>`, jinak nespadne do povolení. Write slouží výhradně
-# k dočasnému souboru s tělem komentáře, a to na obou větvích forge: GitHub
-# skripty ho berou přes `--body-file`, na Gitea je to koncept, jehož obsah jde
-# do parametru `body`. Do zdrojů projektu se jím nikdy nezapisuje. ToolSearch
+# `bash <cesta>`, jinak nespadne do povolení. Write v seznamu není: tělo
+# komentáře jde GitHub skriptu heredocem přes `--body-file -` a na Gitea
+# rovnou do parametru `body`, takže dočasný soubor nevzniká a reviewer nemá
+# čím zapsat do projektu. ToolSearch
 # je nutný, protože nástroje `mcp__gitea__*` jsou odložené a bez načtení je
 # nelze zavolat; `issue_write` je mezi nimi jen kvůli komentáři, ne kvůli
 # úpravám issues.
@@ -182,9 +187,10 @@ kterým by se leckterá oprava doporučovala, zavřené issue sám odmítá (jeh
 krok 1, varianta „Předčasný konec") — u zavřeného issue proto totéž zjištění
 zapiš jako `minor` záznam bez doporučení k opravě, nikdy jako blocking.
 Zvláštní případ je otevřené issue se zaškrtnutými kritérii, které teprve
-čeká na merge (`verify-issue` škrtá před mergem, `run-milestone` zavírá až
-po něm) — skill na PR nevidí, takže tam, kde nejde rozhodnout, hlas nanejvýš
-`should-fix` s poznámkou, že může jít o záznam `verify-issue`. Okruh c (graf
+čeká na merge (brána `run-milestone` nebo ručně spuštěný `verify-issue`
+škrtá před mergem, `run-milestone` zavírá až po něm) — skill na PR nevidí,
+takže tam, kde nejde rozhodnout, hlas nanejvýš `should-fix` s poznámkou, že
+může jít o záznam brány. Okruh c (graf
 závislostí) tohle rozlišení nemá — `run-milestone` staví graf ze všech těl
 bez ohledu na stav, takže se hlásí vždy, i na zavřeném issue.
 
@@ -195,8 +201,9 @@ je precedent v kódu", o kterou se opírá okruh 4b. Zkontroluj:
 - sadu a pořadí sekcí těla, včetně toho, kdy se `Závisí na` vynechává celá;
 - tvar názvu a jeho shodu s typovým labelem na issue;
 - jazyk popisů proti sekci `Jazyk issues` v konfiguraci;
-- stav zaškrtávátek — odškrtává až `verify-issue` podle toho, co skutečně
-  ověřil (viz obecné pravidlo o otevřených a zavřených issues výš);
+- stav zaškrtávátek — odškrtává až brána `run-milestone` podle potvrzeného
+  testu, nebo ručně spuštěný `verify-issue` podle toho, co skutečně ověřil
+  (viz obecné pravidlo o otevřených a zavřených issues výš);
 - způsob, jakým je kritérium napsané (pozorovatelné chování, jednoznačnost).
   Dvojznačné kritérium zdrží řetěz až u ověřování, kde už stojí čas inženýra
   i recenzenta;
@@ -214,8 +221,7 @@ o otevřených a zavřených issues výš):
   jedno z toho stačí. Issue je Poznámka, ne Zadání (přesně tvar, který
   zakládá `file-issue`), a do milestonu nepatří jako práce k dispatchi.
   Blocking, s doporučením `/sagittaras:triage-issue` na dotčené issue — bez
-  povýšení by ho `run-milestone` poslal inženýrskému agentovi bez opory
-  nebo bez jediného kritéria.
+  povýšení ho `run-milestone` nespustí a eskaluje.
 - **Reference cituje dokument (ADR/UX-spec sekci) místo cesty ke kódu** —
   blocking nález bez ohledu na to, jestli je kritérium samo věrohodné.
   Kritérium ukotvené jen v próze nejde ukázat na nic ověřitelného v kódu.
@@ -323,32 +329,29 @@ znehodnotí i ty nálezy, které v něm jsou opravdové.
 Report **vždy** zapiš jako komentář na issue s **nejnižším číslem** v milestonu,
 a to i tehdy, když je verdikt Sound.
 
-Proč tam: milestone sám komentáře neumí, takže tenhle komentář je jediný trvalý
-důkaz, že review proběhlo, a `run-milestone` ho před startem hledá. Nejnižší
-číslo je volba deterministická — najde ho každý běh bez prohledávání celého
-milestonu.
+Proč tam: milestone sám komentáře neumí a nejnižší číslo najde každý bez
+prohledávání celého milestonu.
 
 Postup:
 
-1. Tělo komentáře vypiš do **dočasného souboru mimo pracovní strom
-   repozitáře** — soubor uvnitř stromu by tam zůstal jako nesledovaná veteš
-   a spolkl by ho první `git add` v dalším článku řetězu. Předej ho pak podle
-   receptu „Okomentuj issue"; na GitHubu doslova takto:
+1. Komentář založ receptem „Okomentuj issue". Na GitHubu předej tělo heredocem
+   s ukončovačem v uvozovkách, nikdy argumentem — víceřádkový markdown se
+   v shellu o uvozovky a zpětné apostrofy tiše rozbije:
 
    ```bash
    bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-comment.sh" \
-     -R "<owner/repo>" <nejnižší číslo> --body-file "<cesta k souboru>"
+     -R "<owner/repo>" <nejnižší číslo> --body-file - <<'BODY'
+   <report>
+   BODY
    ```
 
-   Tělo předávej vždy souborem (`--body-file` u `gh` skriptů, obsah souboru
-   v parametru `body` u Gitea MCP), nikdy argumentem: víceřádkový markdown se
-   v shellu o uvozovky a zpětné apostrofy rozbije, a rozbije se tiše.
+   Kód `2` s `error=empty_body` znamená rozbitý heredoc. Na Gitea jde report
+   přímo do parametru `body`.
 2. Existuje-li na issue starší review komentář, **přidej nový** a starý nech
    být. Historie review je součást důkazu; přepsaný komentář vypadá, jako by
    dřívější kolo neproběhlo.
 3. Ověř, že komentář vznikl. Selhal-li zápis, řekni to v závěrečné zprávě
-   výslovně — jinak bude `run-milestone` běžet proti nezrevidovanému milestonu
-   v domnění, že review chybí, nebo naopak.
+   výslovně.
 
 Tentýž report vrať i jako závěrečnou zprávu volajícímu.
 
@@ -367,9 +370,8 @@ co se zjistit podařilo a co konkrétně chybí.
 
 ## Formát výstupu
 
-Nadpis drž doslova a doplň do něj název milestonu. Je to jediná značka, podle
-které `run-milestone` pozná komentář jako review report tohoto milestonu —
-volnou formulací by se důkaz o proběhlém review stal nedohledatelným.
+Nadpis drž doslova a doplň do něj název milestonu — podle něj se report
+v historii issue dohledá.
 
 ```markdown
 ## Review milestonu <název milestonu>

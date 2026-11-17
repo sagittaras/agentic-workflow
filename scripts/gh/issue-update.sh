@@ -2,10 +2,10 @@
 # Upraví tělo issue, zavře ho, nebo obojí. Výstup je key=value na stdout.
 #
 # Použití:
-#   bash scripts/gh/issue-update.sh -R owner/repo <number> [--body-file F] [--state closed|open]
+#   bash scripts/gh/issue-update.sh -R owner/repo <number> [--body-file F|-] [--state closed|open]
 #
-# Tělo se předává souborem a nahrazuje se celé — gh nic nepřipojuje.
-# Chceš-li přidat odstavec, přečti issue přes issue-read.sh, slož nové tělo
+# Tělo se předává souborem, nebo "-" ze stdin (heredoc), a nahrazuje se celé
+# — gh nic nepřipojuje. Chceš-li přidat odstavec, přečti issue přes issue-read.sh, slož nové tělo
 # do souboru a pošli ho sem; na dopsání poznámky je issue-comment.sh.
 #
 # Aspoň jeden z přepínačů musí padnout, jinak by volání jen zbytečně
@@ -52,7 +52,7 @@ gh_require
 
 body_updated=false
 if [ -n "$body_file" ]; then
-  gh issue edit "$number" -R "$repo" --body-file "$body_file" >/dev/null
+  gh issue edit "$number" -R "$repo" --body-file "$BODY_FILE" >/dev/null
   body_updated=true
 fi
 
