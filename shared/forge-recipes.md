@@ -61,7 +61,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
 | Založ PR | `pull_request_write` → `create`, `base`, `head`, `title`, `body` | `gh/pr-create.sh --base B --head H --title T --body-file F` |
 | Přečti PR | `pull_request_read` → `get`, `pull_number` | `gh/pr-read.sh <n>` |
 | Najdi PR podle head větve | `list_pull_requests`, `state: "open"` → porovnej `head` v odpovědi | `gh/pr-list.sh --state all` → porovnej `headRefName` |
-| Najdi PR patřící k issue | `list_pull_requests`, `state: "all"` → porovnej `head` a `Closes #N` v těle | `gh/issue-read.sh <n>` → `closedByPullRequestsReferences` |
+| Najdi PR patřící k issue | `list_pull_requests`, `state: "all"` → porovnej `head` a `Closes #N` v těle | `gh/pr-for-issue.sh <n>`, v běhu milestonu s `--base <integrační větev>` |
 | Vypiš PR milestonu | `list_pull_requests`, `milestone: <id>`, `state: "all"` | `gh/pr-list.sh --milestone <m> --state all` |
 | Přiřaď PR milestone | `pull_request_write` → `update`, `pull_number`, `milestone` | `gh/pr-set-milestone.sh <n> --milestone M` |
 | Komentář k PR (review) | `pull_request_review_write` → `create`, `pull_number`, `state: "COMMENT"`, `body` | `gh/pr-comment.sh <n> --body-file F` |
@@ -86,6 +86,9 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
   počet s `open_issues` + `closed_issues` z `milestone_read`. Při rozporu radši ohlas
   než rozhodni.
 - **Komentář se přidává metodou `add_comment`, ne `comment`.**
+- **GitHub propojuje `Closes #N` jen u PR do výchozí větve.** U PR do integrační větve
+  zůstává `closedByPullRequestsReferences` u issue i `closingIssuesReferences` u PR
+  prázdné, i když PR existuje. Vazbu proto hledej v tělech PR (`gh/pr-for-issue.sh`).
 - **Milestone při zakládání PR nastavit nelze** — ani na Gitea, ani na GitHubu. Je to
   povinné druhé volání hned po `create`, ne kosmetika: `close-milestone` podle téhle
   vazby integrační PR dohledává.

@@ -137,6 +137,7 @@ co potřebuje, bez dalšího kola.
 | `pr-create.sh` | `--base B --head H --title T --body-file F` |
 | `pr-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
 | `pr-list.sh` | `[--milestone M] [--state open\|closed\|all]` |
+| `pr-for-issue.sh` | `<issue> [--base B] [--state open\|closed\|all]` — PR s `Closes #<issue>` v těle, i do integrační větve |
 | `pr-set-milestone.sh` | `<number> --milestone M` |
 | `pr-comment.sh` | `<number> --body-file F` |
 | `pr-merge.sh` | `<number> [--squash] [--delete-branch]` |
