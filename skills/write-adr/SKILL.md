@@ -10,11 +10,12 @@ when_to_use: >-
   Použij, když má vzniknout záznam architektonického rozhodnutí, které je
   ohrožené — někdo bez kontextu by ho později mohl vnímat jako zbytečnou
   komplikaci a pokusit se ho „opravit" — „udělej z toho ADR", „zapiš to
-  rozhodnutí", „proč tu máme vlastní vrstvu nad knihovnou X", „dořeš otevřené
-  otázky v ADR 3". Běžnou, levně vratnou volbu nástroje bez skryté ceny (např.
-  „vybrali jsme knihovnu X" bez dalšího kontextu) skill sám odmítne založit —
-  nenabízej ho na ni dopředu. Nepoužívej pro posouzení už sepsaného ADR, na to
-  slouží review-adr; pro pravidlo vázané na část repozitáře write-rule; pro
+  rozhodnutí", „zapiš, proč tu máme vlastní vrstvu nad knihovnou X", „dořeš
+  otevřené otázky v ADR 3". Běžnou, levně vratnou volbu nástroje bez skryté
+  ceny (např. „vybrali jsme knihovnu X" bez dalšího kontextu) skill sám
+  odmítne založit — nenabízej ho na ni dopředu. Nepoužívej pro dohledání už
+  zapsaného důvodu, na to slouží read-docs; pro posouzení už sepsaného ADR
+  review-adr; pro pravidlo vázané na část repozitáře write-rule; pro
   projektové instrukce čtené v každé session write-claude-md; pro zobecněný
   poznatek z review zapsaný do paměti agenta train-agent; pro závazný popis
   vzhledu projektu write-art-bible a pro popis jedné obrazovky nebo flow

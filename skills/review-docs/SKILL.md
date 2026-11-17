@@ -11,10 +11,11 @@ when_to_use: >-
   v autonomní smyčce tě jako subagenta s čistým kontextem spouští write-docs
   po každém zápisu, ručně když uživatel řekne „zreviduj dokumentaci",
   „zkontroluj tu stránku v .docs" nebo „sedí ta stránka ve stromu". Nepoužívej
-  pro psaní ani opravu báze, na to slouží write-docs; pro mechanickou kontrolu
-  struktury (sirotci, mrtvé odkazy, kotvy) stačí skript docs-check.sh; pro
-  review ADR slouží review-adr, UX specu review-ux-spec, rule review-rule;
-  ani pro review kódu či CLAUDE.md samotného.
+  pro psaní ani opravu báze, na to slouží write-docs; pro hledání odpovědi
+  v bázi read-docs; pro mechanickou kontrolu struktury (sirotci, mrtvé
+  odkazy, kotvy) stačí skript docs-check.sh; pro review ADR slouží
+  review-adr, UX specu review-ux-spec, rule review-rule; ani pro review kódu
+  či CLAUDE.md samotného.
 argument-hint: "[kořen pluginu, kořen repozitáře, posuzované stránky, výstup docs-check.sh, číslo kola, nevyřešené nálezy]"
 context: fork
 agent: Plan

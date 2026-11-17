@@ -64,8 +64,8 @@ souboru:
 Najdeš-li při sestupu stránku, která téma už pokrývá, **rozšiř ji** místo zakládání
 druhé — dvě stránky o témže se rozejdou.
 
-Existující dokument (ADR citovaný v `Reference`, art bible, UX spec) se hledá stejným
-sestupem; kdy skončit a kdy jít po odkazu dál, říká § Jak najít odpověď v bázi.
+Existující dokument (ADR citovaný v `Reference`, art bible, UX spec) se hledá
+postupem z § Jak najít odpověď v bázi.
 
 ---
 
@@ -99,16 +99,21 @@ Odpověď na otázku i konkrétní dokument hledej **sestupem po větách u odka
 neprohledávej Grepem, Globem ani `grep` v shellu — ani když sestup nic nenajde: řetězec
 ani název souboru neřekne, co na stránce je a který dokument platí, věta v indexu ano.
 
-1. Začni vstupním indexem, na který odkazuje `CLAUDE.md`. Neodkazuje-li na žádný,
-   platí § Projekt bez báze.
-2. V každém indexu otevři odkazy, jejichž věta pokrývá téma tvé otázky — kryjí-li ho
-   dvě, otevři obě. Odkaz, jehož věta téma nepokrývá, neotevírej, ani pro jistotu.
-3. Sestup končí u stránky, která odpověď nese. Sousední stránky pro úplnost nečti.
+1. Z adresáře projektu spusť `bash <kořen pluginu>/scripts/docs-map.sh` (ve skillu
+   spuštěném loaderem je kořen pluginu `${CLAUDE_PLUGIN_ROOT}`). Vypíše řádek
+   `root=<kořen repozitáře>` a pod ním strom indexů od vstupního indexu jako
+   vnořený seznam: u každé stránky a sekce cestu vůči kořeni a větu z indexu.
+   Indexy po jednom neotevírej, mapa je nese všechny. Kód 1 znamená, že projekt
+   bázi nemá — platí § Projekt bez báze. Nemáš-li Bash, otevři vstupní index,
+   na který odkazuje `CLAUDE.md`, a sestupuj po indexech podle vět.
+2. V mapě vyber stránky, jejichž věta pokrývá téma tvé otázky — kryjí-li ho dvě,
+   otevři obě. Stránku, jejíž věta téma nepokrývá, neotevírej, ani pro jistotu.
+3. Čtení končí u stránky, která odpověď nese. Sousední stránky pro úplnost nečti.
    Míří-li odkaz na kotvu, odpověď je v té sekci.
 4. Ze stránky jdi po odkazu dál, jen když stránka odpověď odkazem odkládá jinam
    („podrobnosti viz…"), nebo když odkaz míří na omezení či chráněné rozhodnutí
    v oblasti, kterou se chystáš měnit. Odkaz na související téma nesleduj.
-5. Skončí-li sestup bez stránky, která odpověď nese, báze ji nemá. Vyčti ji z kódu,
+5. Nenajdeš-li stránku, která odpověď nese, báze ji nemá. Vyčti ji z kódu,
    jde-li to, a mezeru uveď ve výstupu. Stránku mimochodem nezakládej — bázi rozšiřuje
    `/sagittaras:write-docs`.
 

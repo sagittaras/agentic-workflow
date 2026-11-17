@@ -94,13 +94,14 @@ repozitáře, stejně jako kód.
 
 Znalostní báze jako samostatný artefakt
 ([1.8](principles.md#18-znalostní-báze-docs-je-graf-stránek-a-plugin-ji-zakládá-a-udržuje-vlastními-skilly))
-přidává dva skilly a sdílený kontrakt, a mění skilly, které do báze dnes
+přidává tři skilly a sdílený kontrakt, a mění skilly, které do báze dnes
 píšou po svém.
 
 | Skill | Stav | Co se mění |
 | --- | --- | --- |
 | `write-docs` *(nový)* | Nový skill | Založí bázi (vstupní index, odkaz z `CLAUDE.md`), přidá nebo upraví stránku či sekci — místo najde sestupem stromem, stránku odkáže z nadřazeného indexu, doplní odkazy na související témata — a přestaví nabobtnalý dokument na strom. Po každé změně spustí skript kontroly struktury. |
 | `review-docs` *(nový)* | Nový skill | Nezávislé review s čistým kontextem nad úsudkovou částí: věty u odkazů, duplicita s `CLAUDE.md` a mezi stránkami, umístění tématu v sekci. Mechanickou část nechává skriptu a neopravuje. |
+| `read-docs` *(nový)* | Nový skill | Najde v bázi odpověď na otázku postupem čtení ze sdíleného kontraktu, v jednorázovém kontextu na levném modelu; volajícímu vrátí odpověď s citacemi, chráněná rozhodnutí doslova a mezery báze. Kód nečte. |
 | `write-claude-md` | Změna rozsahu | Znalost, která do `CLAUDE.md` nepatří, nabídne přesunout do báze přes `write-docs` — dnes ji jen škrtá, nebo eskaluje, protože „co odsunout do vlastní dokumentace" není jeho volba. |
 | `write-adr`, `write-art-bible`, `write-ux-spec` | Menší úprava | Umístění a odkázání dokumentu berou ze `shared/docs-tree.md`, ne každý po svém; po zápisu spustí skript kontroly struktury. |
 | `implement-issue` | Menší úprava | Zneplatní-li změna zdokumentované chování, upraví stránku báze ve stejném PR. |
@@ -111,7 +112,8 @@ z 1.7 na jednom místě, odkud je čtou `write-docs`, `review-docs`
 i specializované skilly — a skript kontroly struktury ve `scripts/` (bash,
 jako ostatní skripty pluginu): sirotci, indexy bez odkazu na vlastní stránky,
 mrtvé odkazy a kotvy, `CLAUDE.md` bez odkazu na vstupní index. Kontrakt nese
-i postup čtení (§ Jak najít odpověď v bázi). Čtecí skilly z [tabulky
+i postup čtení (§ Jak najít odpověď v bázi), který stojí na skriptu
+`docs-map.sh` — mapě celého stromu s větami u odkazů. Čtecí skilly z [tabulky
 1.7](#princip-17) si dnes sestup parafrázují každý po svém; místo parafráze
 na něj odkážou, až se na ně bude sahat (3.1).
 
