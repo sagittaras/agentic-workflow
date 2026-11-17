@@ -38,7 +38,6 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Write
   - AskUserQuestion
   - ToolSearch
   - "Bash(bash:*)"
@@ -62,9 +61,9 @@ allowed-tools:
 # výpisu existujících issues, když tahle vlna rozšiřuje už založený milestone
 # (krok 2); ve výčtu jsou proto, že je nese tentýž řádek receptu — je to cena
 # za jediné volání ToolSearch místo dvou, a obojí je read-only.
-# Write slouží výhradně dočasnému souboru s tělem issue, které GitHub skripty
-# berou přes --body-file. Edit chybí záměrně: skill nikdy nedopisuje cizí
-# dokumentaci (viz krok 4), a bez Edit to není jen slib v próze.
+# Write ani Edit ve výčtu nejsou: tělo issue jde GitHub skriptům heredocem
+# přes --body-file -, takže dočasný soubor nevzniká, a skill nikdy nedopisuje
+# cizí dokumentaci (viz krok 4) — bez Write a Edit to není jen slib v próze.
 # Vynechaná zvažovaná pole: disable-model-invocation — skill je užitečný i když
 # si ho model vyvolá sám z popisu větší rozdělené práce, a do trackeru nesáhne
 # dřív než po potvrzení v kroku 6; context/agent/background — interview
@@ -297,13 +296,19 @@ jak odkázat:
    `milestone` i `labels`: issue mimo milestone je tichá chyba stejného druhu
    jako nepřipnutý label a hledá se pak napříč celým trackerem.
 
-Tělo issue vypiš do **dočasného souboru mimo pracovní strom repozitáře** a předej ho
-podle receptu (`--body-file` u `gh` skriptů, obsah souboru v parametru `body`
-u Gitea MCP) — nikdy argumentem, víceřádkový markdown se o uvozovky a zpětné
-apostrofy rozbije, a rozbije se tiše. Soubor uvnitř stromu by tam zůstal jako
-nesledovaná veteš a nečistý strom shodí `milestone-branch.sh` hned na začátku
-`run-milestone`, který na tenhle skill navazuje — soubor mimo strom tenhle
-problém nemá, takže ho ani není nutné po sobě mazat. **Do dokumentace
+Tělo issue předávej podle receptu, nikdy argumentem — víceřádkový markdown se
+o uvozovky a zpětné apostrofy rozbije, a rozbije se tiše. Na GitHubu heredocem
+s ukončovačem v uvozovkách, na Gitea obsahem parametru `body`:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-create.sh" -R <owner/repo> --title '<název>' \
+  --milestone '<název milestonu>' --label <typ> --label <area:…> --body-file - <<'BODY'
+<tělo>
+BODY
+```
+
+Do pracovního stromu nezapisuj nic: nečistý strom shodí `milestone-branch.sh`
+hned na začátku `run-milestone`, který na tenhle skill navazuje. **Do dokumentace
 projektu nezapisuj nic** — mezery a chybějící precedenty hlásíš, neopravuješ.
 
 Selže-li zápis uprostřed, **nezačínej znovu od začátku**: vypiš, co už vzniklo,

@@ -50,7 +50,6 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Write
   - "Bash(bash:*)"
   - ToolSearch
   - mcp__gitea__milestone_read
@@ -58,10 +57,10 @@ allowed-tools:
   - mcp__gitea__issue_read
   - mcp__gitea__issue_write
 # Bash je zúžený na spouštění skriptů; volání proto piš ve tvaru
-# `bash <cesta>`, jinak nespadne do povolení. Write slouží výhradně
-# k dočasnému souboru s tělem komentáře, a to na obou větvích forge: GitHub
-# skripty ho berou přes `--body-file`, na Gitea je to koncept, jehož obsah jde
-# do parametru `body`. Do zdrojů projektu se jím nikdy nezapisuje. ToolSearch
+# `bash <cesta>`, jinak nespadne do povolení. Write v seznamu není: tělo
+# komentáře jde GitHub skriptu heredocem přes `--body-file -` a na Gitea
+# rovnou do parametru `body`, takže dočasný soubor nevzniká a reviewer nemá
+# čím zapsat do projektu. ToolSearch
 # je nutný, protože nástroje `mcp__gitea__*` jsou odložené a bez načtení je
 # nelze zavolat; `issue_write` je mezi nimi jen kvůli komentáři, ne kvůli
 # úpravám issues.
@@ -335,19 +334,19 @@ prohledávání celého milestonu.
 
 Postup:
 
-1. Tělo komentáře vypiš do **dočasného souboru mimo pracovní strom
-   repozitáře** — soubor uvnitř stromu by tam zůstal jako nesledovaná veteš
-   a spolkl by ho první `git add` v dalším článku řetězu. Předej ho pak podle
-   receptu „Okomentuj issue"; na GitHubu doslova takto:
+1. Komentář založ receptem „Okomentuj issue". Na GitHubu předej tělo heredocem
+   s ukončovačem v uvozovkách, nikdy argumentem — víceřádkový markdown se
+   v shellu o uvozovky a zpětné apostrofy tiše rozbije:
 
    ```bash
    bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-comment.sh" \
-     -R "<owner/repo>" <nejnižší číslo> --body-file "<cesta k souboru>"
+     -R "<owner/repo>" <nejnižší číslo> --body-file - <<'BODY'
+   <report>
+   BODY
    ```
 
-   Tělo předávej vždy souborem (`--body-file` u `gh` skriptů, obsah souboru
-   v parametru `body` u Gitea MCP), nikdy argumentem: víceřádkový markdown se
-   v shellu o uvozovky a zpětné apostrofy rozbije, a rozbije se tiše.
+   Kód `2` s `error=empty_body` znamená rozbitý heredoc. Na Gitea jde report
+   přímo do parametru `body`.
 2. Existuje-li na issue starší review komentář, **přidej nový** a starý nech
    být. Historie review je součást důkazu; přepsaný komentář vypadá, jako by
    dřívější kolo neproběhlo.

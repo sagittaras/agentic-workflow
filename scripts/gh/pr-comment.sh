@@ -2,10 +2,11 @@
 # Přidá k pull requestu review typu COMMENT. Výstup je key=value na stdout.
 #
 # Použití:
-#   bash scripts/gh/pr-comment.sh -R owner/repo <number> --body-file F
+#   bash scripts/gh/pr-comment.sh -R owner/repo <number> --body-file F|-
 #
-# Tělo se předává vždy souborem; víceřádkový markdown se v argumentu tiše
-# rozpadne o uvozovky a zpětné apostrofy.
+# Tělo se předává souborem, nebo "-" ze stdin (heredoc), nikdy argumentem;
+# víceřádkový markdown se v argumentu tiše rozpadne o uvozovky a zpětné
+# apostrofy.
 #
 # Primárně se zakládá review s výrokem COMMENT — to je protějšek Gitea
 # pull_request_review_write se state COMMENT. Když GitHub review odmítne
@@ -42,10 +43,10 @@ require_body_file "$body_file"
 gh_require
 
 mode="review"
-if ! out="$(gh pr review "$number" -R "$repo" --comment --body-file "$body_file" 2>&1)"; then
+if ! out="$(gh pr review "$number" -R "$repo" --comment --body-file "$BODY_FILE" 2>&1)"; then
   review_error="$out"
   mode="comment"
-  if ! out="$(gh pr comment "$number" -R "$repo" --body-file "$body_file" 2>&1)"; then
+  if ! out="$(gh pr comment "$number" -R "$repo" --body-file "$BODY_FILE" 2>&1)"; then
     echo "error=comment_failed" >&2
     printf '%s\n' "$review_error" >&2
     printf '%s\n' "$out" >&2

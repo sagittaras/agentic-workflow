@@ -30,7 +30,6 @@ effort: medium
 user-invocable: true
 allowed-tools:
   - Read
-  - Write
   - AskUserQuestion
   - ToolSearch
   - "Bash(bash:*)"
@@ -39,10 +38,10 @@ allowed-tools:
   - mcp__gitea__milestone_read
   - mcp__gitea__issue_write
 # Bash je zúžený na spouštění skriptů; gh ani git se nikdy nevolá přímo, takže
-# volání piš ve tvaru `bash <cesta>`, jinak nespadne do povolení. Write slouží
-# výhradně k dočasnému souboru s tělem issue — GitHub větev ho předává přes
-# `--body-file` — nikdy k zápisu do zdrojů projektu; Edit proto ve výčtu není,
-# skill v cílovém projektu nic needituje. ToolSearch je nutný, protože nástroje
+# volání piš ve tvaru `bash <cesta>`, jinak nespadne do povolení. Write ani
+# Edit ve výčtu nejsou: tělo issue jde GitHub skriptu heredocem přes
+# `--body-file -`, takže dočasný soubor nevzniká, a skill v cílovém projektu
+# nic needituje. ToolSearch je nutný, protože nástroje
 # `mcp__gitea__*` jsou odložené a bez načtení je nelze zavolat; jejich názvy
 # odpovídají tvaru, který předepisuje forge-recipes.md. Běží-li v projektu Gitea
 # MCP pod jiným prefixem, zápis neprojde — ohlas to a nech uživatele issue
@@ -215,9 +214,17 @@ Připomínky zapracuj a návrh předlož znovu. Do kroku 6 jdi až s potvrzeným
 Zakládej podle receptů — nejdřív potvrzené chybějící labely („Založ label"), pak
 issue („Založ issue"). Opačné pořadí znamená issue bez labelu.
 
-Na GitHub větvi tělo **zapiš do dočasného souboru mimo pracovní strom repozitáře**
-a předej ho přes `--body-file`; víceřádkový markdown se v argumentu shellu rozpadne.
-Soubor leží mimo strom, takže ho není nutné po sobě mazat.
+Na GitHub větvi předej tělo heredocem s ukončovačem v uvozovkách, nikdy
+argumentem — víceřádkový markdown se v argumentu shellu rozpadne:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-create.sh" -R <owner/repo> --title '<název>' \
+  --label <typ> --label <area:…> [--milestone '<název milestonu>'] --body-file - <<'BODY'
+<tělo>
+BODY
+```
+
+Kód `2` s `error=empty_body` znamená rozbitý heredoc.
 
 Selže-li zápis, **neopakuj celé volání naslepo**: vypiš, co už vzniklo, a řekni,
 co selhalo. U chyby 404 na Gitea ověř oprávnění účtu podle nástrah v receptech

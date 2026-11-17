@@ -2,10 +2,11 @@
 # Založí pull request. Výstup je key=value na stdout.
 #
 # Použití:
-#   bash scripts/gh/pr-create.sh -R owner/repo --base B --head H --title T --body-file F
+#   bash scripts/gh/pr-create.sh -R owner/repo --base B --head H --title T --body-file F|-
 #
-# Tělo se předává vždy souborem; víceřádkový markdown se v argumentu tiše
-# rozpadne o uvozovky a zpětné apostrofy.
+# Tělo se předává souborem, nebo "-" ze stdin (heredoc), nikdy argumentem;
+# víceřádkový markdown se v argumentu tiše rozpadne o uvozovky a zpětné
+# apostrofy.
 #
 # Milestone při zakládání nastavit nelze — ani tady, ani na Gitea. Je to
 # povinné druhé volání hned po založení: pr-set-milestone.sh. Bez něj
@@ -45,7 +46,7 @@ require_body_file "$body_file"
 gh_require
 
 out="$(gh pr create -R "$repo" --base "$base" --head "$head" \
-  --title "$title" --body-file "$body_file")"
+  --title "$title" --body-file "$BODY_FILE")"
 url="$(printf '%s\n' "$out" | grep -E '^https?://' | tail -1 || true)"
 if [ -z "$url" ]; then
   echo "error=unexpected_gh_output" >&2

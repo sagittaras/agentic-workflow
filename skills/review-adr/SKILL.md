@@ -32,7 +32,6 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Write
   - "Bash(bash:*)"
   - ToolSearch
   - mcp__gitea__list_pull_requests
@@ -42,8 +41,8 @@ disallowed-tools:
 # disallowed-tools je při uzavřeném allowed-tools redundantní záměrně: běžíš-li
 # jako subagent, který si tenhle soubor jen přečte, allowed-tools se nemusí
 # uplatnit — a zákaz doptávání je jediná věc, která musí platit vždy.
-# Write slouží výhradně dočasnému souboru s tělem komentáře, do zdrojů projektu
-# se jím nikdy nezapisuje. Bash je zúžený na spouštění skriptů, volání proto piš
+# Write v seznamu není: tělo komentáře jde skriptu heredocem přes
+# `--body-file -`, dočasný soubor nevzniká. Bash je zúžený na spouštění skriptů, volání proto piš
 # tvarem `bash <cesta>`. ToolSearch je nutný, protože `mcp__gitea__*` jsou
 # odložené nástroje a bez načtení je nelze zavolat.
 # Gitea nástroje jsou **užší než řádek receptů „Pracuje s PR"**: `list` kvůli
@@ -283,13 +282,13 @@ uveď.
    s `mcp__gitea__list_pull_requests`. Je to **záměrně užší výběr** než řádek
    „Pracuje s PR" v receptech: `pull_request_write` z něj umí merge i zavření
    PR, a nenačtený nástroj je pevnější hranice než zákaz v Zásadách.
-3. Tělo komentáře vypiš do **dočasného souboru mimo pracovní strom repozitáře** —
-   soubor uvnitř stromu by tam zůstal jako nesledovaná veteš a spolkl by ho první
-   commit autora. Na GitHubu doslova takto:
+3. Na GitHubu předej tělo komentáře heredocem s ukončovačem v uvozovkách:
 
    ```bash
    bash "<kořen pluginu>/scripts/gh/pr-comment.sh" -R "<owner/repo>" <číslo PR> \
-     --body-file "<cesta k dočasnému souboru>"
+     --body-file - <<'BODY'
+   <report>
+   BODY
    ```
 
    Bez `bash` a plné cesty volání mine zúžení `Bash(bash:*)` a ve forku bez
