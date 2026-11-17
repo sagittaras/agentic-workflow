@@ -4,8 +4,8 @@ description: >-
   Nezávislé review znalostní báze s čistým kontextem — posoudí úsudkovou část,
   kterou skript kontroly struktury neumí: jestli věta u odkazu říká, co na
   stránce je, jestli stránka nedubluje CLAUDE.md ani jinou stránku a jestli
-  téma leží ve správné sekci. Výsledek docs-check.sh převezme ze zadání.
-  Vrátí verdikt se seznamem nálezů podle závažnosti. Neopravuje.
+  téma leží ve správné sekci. Výsledek docs-check.sh převezme ze zadání,
+  při přímém vyvolání si skript spustí sám. Vrátí verdikt se seznamem nálezů podle závažnosti. Neopravuje.
 when_to_use: >-
   Použij k posouzení nové nebo upravené stránky či sekce znalostní báze —
   v autonomní smyčce tě jako subagenta s čistým kontextem spouští write-docs
@@ -28,13 +28,15 @@ effort: xhigh
 # Pozor: model, effort, agent i context se uplatní jen při přímém vyvolání.
 # Spouští-li tě write-docs jako subagenta, konfiguraci určuje volající —
 # proto ji jeho krok 6 předává explicitně.
-# Mechanickou část (princip 1.8) drží docs-check.sh; skill ji nepřepočítává,
-# jen převezme výstup ze zadání. Proto nepotřebuje Bash.
+# Mechanickou část (princip 1.8) drží docs-check.sh; skill ji nepřepočítává.
+# Od write-docs převezme výstup ze zadání; při přímém vyvolání ho nikdo
+# nedodá, a tak si skript spustí sám — kvůli tomu Bash(bash:*).
 user-invocable: true
 allowed-tools:
   - Read
   - Glob
   - Grep
+  - "Bash(bash:*)"
 disallowed-tools:
   - AskUserQuestion
 # disallowed-tools je při uzavřeném allowed-tools redundantní záměrně: běžíš-li
@@ -44,9 +46,9 @@ disallowed-tools:
 # Vynechaná zvažovaná pole: background — volající na verdikt čeká, běh na pozadí
 # by smyčku rozpojil; disable-model-invocation — skill má být volatelný modelem,
 # protože ho v každém kole spouští write-docs; Write/Edit — reviewer zásadně
-# neopravuje; Bash/shell — skript kontroly struktury spouští volající, ne
-# reviewer; paths — cesty přicházejí v zadání; version/license — verzuje se
-# celý plugin, ne jednotlivý skill.
+# neopravuje; shell — skript se spouští explicitním `bash`, Bash je zúžený
+# na tvar `bash <cesta>`; paths — cesty přicházejí v zadání; version/license —
+# verzuje se celý plugin, ne jednotlivý skill.
 ---
 
 # Review Docs
@@ -55,6 +57,18 @@ Jsi nezávislý reviewer znalostní báze — ne autor stránky a ne její oprav
 Běžíš bez přístupu k uživateli; co ze stránky nepochopíš, je nález. Pravidla
 struktury drží `<kořen pluginu>/shared/docs-tree.md` a při rozporu s tímto
 skillem platí ono.
+
+## Skript
+
+| Skript | Co dělá |
+| --- | --- |
+| `<kořen pluginu>/scripts/docs-check.sh` | Ověří strukturu báze v repozitáři, ve kterém běží; řádky `fail=<soubor> reason=<důvod>`, nebo `result=pass`. Kódy: 0 v pořádku, 1 nález, 2 nejde o git repozitář |
+
+Spouštíš ho jen tehdy, když výstup chybí v zadání (viz Vstupní kontext).
+Volej ho z kořene posuzovaného repozitáře tvarem
+`bash "<kořen pluginu>/scripts/docs-check.sh"` — bez `bash` a plné cesty
+volání mine zúžení `Bash(bash:*)`. Kód 2 → mechanickou část neposuzuj
+a v Shrnutí uveď, že posuzovaná složka není git repozitář.
 
 ## Vstupní kontext
 
@@ -69,8 +83,14 @@ stránky** (nové i upravené soubory včetně indexů a `CLAUDE.md`), **výstup
 kolo 1) a od 2. kola **nevyřešené nálezy** s tím, jak je autor řešil.
 
 - Chybí posuzované stránky → je to nález, skonči.
-- Chybí výstup `docs-check.sh` → skript nespouštěj, mechanickou část neposuzuj
-  a v Shrnutí uveď, že zůstala neověřená.
+- Chybí kořen pluginu → odvoď ho z cesty, po které jsi četl tenhle soubor:
+  je to složka o dvě úrovně nad `skills/review-docs/`. Při přímém vyvolání ji
+  najdeš v hlavičce skillu jako jeho base directory.
+- Chybí kořen repozitáře → je to aktuální pracovní adresář.
+- Chybí výstup `docs-check.sh` → spusť skript sám (sekce Skript) a jeho výstup
+  ber jako stav po zápisu. Výchozí stav nemáš, krok 2 proto třídí podle
+  posuzovaných stránek. Nepovede-li se kořen pluginu určit nebo skript
+  spustit, mechanickou část neposuzuj a v Shrnutí uveď, že zůstala neověřená.
 - Proměnnou `${CLAUDE_PLUGIN_ROOT}` jako cestu nepoužívej — subagentovi se
   nerozvine.
 
@@ -92,6 +112,10 @@ kolo 1) a od 2. kola **nevyřešené nálezy** s tím, jak je autor řešil.
 
 - nález, který ve výchozím stavu není → **blokující**, převezmi ho doslova;
 - nález z výchozího stavu → **poznámka**, je mimo rozsah zápisu.
+
+Spustil-li jsi skript sám a výchozí stav nemáš: nález, jehož soubor
+(`fail=<soubor>`) patří mezi posuzované stránky → **blokující**, ostatní →
+**poznámka**.
 
 Sirotky, mrtvé odkazy ani kotvy sám nepřepočítávej a nehlas je nad rámec
 výstupu skriptu.
@@ -144,8 +168,8 @@ Vrať ho ve struktuře z Formátu výstupu — na ní staví smyčka `write-docs
 
 ### Kontrola struktury
 
-(Převzato z docs-check.sh: `result=pass` | nové nálezy → v tabulce nálezů |
-„Výstup skriptu chyběl v zadání, neověřeno.")
+(Převzato z docs-check.sh, nebo „Spuštěno reviewerem": `result=pass` |
+nové nálezy → v tabulce nálezů | „Skript nešel spustit, neověřeno.")
 
 ### Nálezy
 
