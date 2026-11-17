@@ -136,18 +136,15 @@ je stav prostředí, ne nález na PR: skonči `Blocked`, ne `Nesplněno`.
 
 Ověřuješ vždy dvojici. Chybí-li jedna strana, není co s čím porovnat.
 
-1. **Argument je název větve** (není to číslo) → vypiš PR se `state: all`
-   a vyber ten, jehož hlavová větev se jménu rovná — recept „Najdi PR podle
-   head větve" z `forge-recipes.md`. Filtrování podle `head` neumí ani jedna
-   forge jako parametr, takže filtruj až ve výstupu:
+1. **Argument je název větve** (není to číslo) → najdi PR z téhle head větve
+   receptem „Najdi PR podle head větve" z `forge-recipes.md`:
 
    ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-list.sh" -R "<owner/repo>" --state all
-   # ve výstupním JSON hledej položku s headRefName == "<větev>"
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-branch.sh" -R "<owner/repo>" "<větev>"
    ```
 
-   Na Gitea totéž nástrojem `list_pull_requests` se `state: "all"` a porovnáním
-   pole `head`.
+   Na Gitea `list_pull_requests` se `state: "all"` a porovnáním pole `head`
+   ve výstupu — parametr na head větev Gitea nemá.
 2. **Argument je číslo** → přečti ho a rozliš, co jsi dostal: má-li objekt `head`
    a `base`, je to PR, jinak issue. Číselné řady issues a PR jsou na obou forgích
    společné, takže z čísla samotného to poznat nejde. Na GitHubu zkus napřed
