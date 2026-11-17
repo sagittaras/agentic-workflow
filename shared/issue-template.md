@@ -103,7 +103,8 @@ kód, výstup testu. Kritérium, které test pokrýt nejde, nese na konci řádk
 `(ověří člověk)`: typicky vizuální podoba, dokumentace nebo nastavení prostředí.
 Značka je výjimka, ne úleva — kritérium, které test pokrýt jde, ji nedostane, a v lidském
 review jsou kritéria se značkou jediná, která tam patří. Značku čte strojově brána
-`criteria-tests.sh`, proto ji piš doslova.
+`criteria-tests.sh`, proto ji piš doslova; důvod, proč test nejde, smíš připsat
+za pomlčku: `(ověří člověk — důvod)`.
 
 **Zaškrtávátka zakládej prázdná.** Odškrtává je orchestrátor (`run-milestone`)
 u kritéria, jehož test potvrdil, a ručně spuštěný `verify-issue` podle toho, co sám

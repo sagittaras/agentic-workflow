@@ -8,7 +8,8 @@
 #
 # Kritéria se čtou ze sekce "## Akceptační kritéria" těla issue (řádky "- [ ]"
 # nebo "- [x]") v pořadí, v jakém tam stojí. Značka "(ověří člověk)" kritérium
-# vyjímá z povinnosti mít test.
+# vyjímá z povinnosti mít test; platí i s vysvětlivkou za oddělovačem,
+# třeba "(ověří člověk — důvod)".
 #
 # Mapa se čte z tabulky pod nadpisem "## Testy kritérií" v těle PR:
 #
@@ -86,7 +87,7 @@ changed_count="$(printf '%s\n' "$changed" | grep -c . || true)"
 # Výstup: <pořadí>\t<1 = ověří člověk, 0 = test>
 criteria="$(tr -d '\r' <"$issue_body" | awk '
   /^## / { in_sec = ($0 ~ /^## Akceptační kritéria[[:space:]]*$/); next }
-  in_sec && /^- \[[ xX]\] / { n++; print n "\t" (index($0, "(ověří člověk)") ? 1 : 0) }
+  in_sec && /^- \[[ xX]\] / { n++; print n "\t" ($0 ~ /\(ověří člověk[)[:space:]—–:,-]/ ? 1 : 0) }
 ')"
 [ -n "$criteria" ] || die missing_criteria_section "tělo issue nemá sekci '## Akceptační kritéria' s řádky '- [ ]'"
 criteria_count="$(printf '%s\n' "$criteria" | grep -c .)"
