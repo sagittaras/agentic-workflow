@@ -217,12 +217,23 @@ Code. 2.6 ho mění na kompromis: AI vykonává, člověk kontroluje. Plugin má
 zlevnit a zrychlit tu část práce, kde AI šetří čas (rozpad, implementace,
 mechanika gitu a PR), ne nahradit tu, kde je člověk levnější a přesnější.
 
-**Recenzent schvaluje, realizátor merguje.** Práce člověka v review končí
-schválením — připomínkou, nebo signálem „hotovo". Merge zařídí ten, kdo PR
-vystavil: má větev i kontext, a kdyby se integrační větev mezitím pohnula,
-vyřeší to on, ne recenzent. Je to stejný vzor, jaký projektová konfigurace už
-drží pro výchozí větev — merge jen na výslovný souhlas člověka —, jen
-zobecněný na každé PR.
+**Recenzent schvaluje, merguje ten, komu schválení napsal.** Práce člověka
+v review končí schválením — připomínkou, nebo signálem „hotovo". Merge zařídí
+session, které člověk schválení napsal přímo: samostatně spuštěná implementace
+tedy sama, v běhu milestonu orchestrátor. Konflikt s integrační větví, která se
+mezitím pohnula, řeší dál ten, kdo PR vystavil — má větev i kontext, recenzent
+ne. Je to stejný vzor, jaký projektová konfigurace už drží pro výchozí větev —
+merge jen na výslovný souhlas člověka —, jen zobecněný na každé PR.
+
+**Schválení se mezi agenty nepřeposílá.** Původně mergovala vždy session, která
+PR vystavila, a orchestrátor jí schválení přeposílal. V běhu milestonu #4
+(16. 11. 2026, [issue #70](https://github.com/sagittaras/agentic-workflow/issues/70))
+to selhalo u každého PR: zpráva od jiné session není slovo člověka a klasifikátor
+auto mode merge zamítl jako merge bez schválení. Allow pravidlo to neřeší —
+plugin ho do `~/.claude/settings.json` uživatele dodat nemůže, a když sedne,
+obejde klasifikátor úplně, i bez jakéhokoli schválení. Klasifikátor tu ale
+chrání vlastnost, kterou chceme i my: schválení nejde podvrhnout zprávou jiného
+agenta.
 
 **Důsledek pro workflow:** review gate je lidské schválení PR, ne verdikt
 agentů, a merge do integrační větve následuje až po něm. Retry kolo vzniká
@@ -288,9 +299,8 @@ a session je zapracuje.
   ani review, takže jeho kontext neroste s počtem issues.
 
 **Důsledek pro workflow:** orchestrátor spustí session na odblokovaná issues
-a čeká, až se jejich PR zmergují — merge provede sama session na signál
-člověka (2.6: recenzent schvaluje, realizátor merguje). Pak odblokuje další
-část grafu. Orchestrátor sám nemerguje. Paralelismus
+a předává jejich PR člověku k review. Na jeho schválení PR sám mergne (2.6:
+merguje ten, komu schválení napsal) a odblokuje další část grafu. Paralelismus
 tím neomezuje počet agentů, ale kapacita člověka na review — dávka se
 dimenzuje podle toho, kolik PR člověk zvládne projít, ne kolik session jde
 spustit.
@@ -305,13 +315,14 @@ subagenti. Cesta pro předávání připomínek je v obou případech stejná:
   schváleno").
 - Orchestrátor naváže na konkrétní session nebo subagenta s jeho kontextem —
   pokračováním přes jeho id, ne novým spuštěním — a předá mu jen ten signál.
-  Ten si připomínky přečte z PR sám, zapracuje je, případně na signál
-  schválení mergne, a vrátí jednořádkový výsledek.
+  Ten si připomínky přečte z PR sám, zapracuje je a vrátí jednořádkový
+  výsledek.
+- Schválení orchestrátor nepřeposílá — na něj PR mergne sám (2.6).
 
 V desktopu by člověk mohl psát i přímo do podřazené session, ale pak se běh
 zastaví: aplikace orchestrátora probudí jen po kole podřazené session, které
 spustil on sám. Signál přes orchestrátora proto není jen fallback pro CLI —
-díky němu se orchestrátor po merge dozví, že má odblokovat další issue.
+díky němu orchestrátor ví, kdy má mergnout a odblokovat další issue.
 
 Proti dvěma přímočarým cestám:
 
@@ -394,8 +405,8 @@ session v PR přizná, že bránu spustila jen sama.
 **Důsledek pro workflow:** integrační brána se v `run-milestone` přesouvá
 z konce (po review, těsně před merge) před lidské review. Červená brána jde
 zpátky session stejnou cestou jako připomínky (2.8, signál) a člověk ji
-nevidí. Před merge na signál schválení (realizátor merguje, 2.6) zopakuje
-bránu session, pohnula-li se mezitím integrační větev. A protože
+nevidí. Před merge na schválení (2.6) zopakuje bránu orchestrátor; červenou
+vrací session a opravené PR jde ke schválení znovu. A protože
 `verify-issue` přestal být povinnou bránou, zaškrtávátka v těle issue by
 nikdo neodškrtal: odškrtne je orchestrátor u kritérií, jejichž test potvrdil
 — znamená to „kryto testem, který prošel", nic víc.

@@ -6,10 +6,10 @@ description: >-
   a odblokovaná issues spouští v podřazených session, kolik jich člověk stačí
   průběžně přezkoumat. Každé PR protáhne branou — test ke každému kritériu
   a ověřovací příkaz nad integrační větví — a teprve pak ho předá člověku.
-  Jeho signály („připomínky", „schváleno") předává session, která PR vystavila;
-  merge provede ona. Po merge zavře issue, odblokuje další práci, přijme novou
-  vlnu z plan-milestone a na konci předloží jedno PR do výchozí větve. Sám
-  neimplementuje, nerecenzuje ani nemerguje.
+  Jeho připomínky předává session, která PR vystavila; na jeho schválení PR
+  sám mergne do integrační větve. Po merge zavře issue, odblokuje další práci,
+  přijme novou vlnu z plan-milestone a na konci předloží jedno PR do výchozí
+  větve. Sám neimplementuje ani nerecenzuje.
 when_to_use: >-
   Použij, když je milestone naplánovaný a zrevidovaný a má se začít
   implementovat — „spusť milestone", „proveď ten milestone", „rozjeď issues
@@ -23,7 +23,8 @@ model: opus
 effort: xhigh
 # Zařazení dle matice: orchestrace workflow → opus × xhigh, bez odchylky. Po
 # přestavbě (vize 2.6, 2.8, 2.9; párová session 16. 11. 2026) orchestrátor
-# nesoudí kvalitu, nemerguje a nečte diffy, takže by sám vystačil se sonnetem —
+# nesoudí kvalitu a nečte diffy (merge je jedno volání skriptu), takže by sám
+# vystačil se sonnetem —
 # jenže start_session dá podřazené session model nejvýš stejné rodiny a effort
 # nejvýš stejný jako orchestrátoru. Levnější orchestrátor by srazil i všechny
 # implementace. Jeho vlastní objem tokenů je po přestavbě malý.
@@ -41,10 +42,17 @@ effort: xhigh
 # - Dvě červené brány po sobě u téhož PR → eskalace, jinak by se session
 #   s orchestrátorem mohly točit donekonečna.
 # - Průběžný sync integrační větve s výchozí odpadl: přetahoval by se o větev
-#   se session, které do ní mergují. Sync je v závěru, nebo na žádost člověka.
-# Zadání pro session popisuje merge na signál samo, dokud ho neumí
-# implement-issue (issue #56 milestonu „Promítnutí principů 1.7–3.1 do skillů“);
-# mapa kritérium → test v těle PR přichází s issue #52.
+#   s merge PR do ní. Sync je v závěru, nebo na žádost člověka.
+# - Merge dělá orchestrátor, ne session (issue #70, běh milestonu #4):
+#   přeposlané „Schváleno" dorazí do session jako zpráva jiné session
+#   a klasifikátor auto mode merge zamítne jako Merge Without Review. Allow
+#   pravidlo plugin dodat nemůže (klasifikátor čte jen ~/.claude/settings.json)
+#   a když sedne, obejde klasifikátor úplně. Merguje proto ten, komu člověk
+#   schválení napsal. Konflikt s integrační větví dál řeší session.
+# - Brána před merge běží vždy: kontrola, jestli se integrační větev od brány
+#   pohnula, by ji u souběžných issues stejně skoro vždy spustila.
+# - Schválení jmenuje číslo PR (Hlášení): klasifikátor nevidí výstupy nástrojů,
+#   takže „issue #44 může mergovat" s merge PR #62 spojit nemusí.
 user-invocable: true
 disable-model-invocation: false
 allowed-tools:
@@ -68,7 +76,8 @@ allowed-tools:
   - mcp__gitea__pull_request_review_write
   - mcp__gitea__list_pull_requests
 # Výčet mcp__gitea__* odpovídá řádku „Orchestruje celý milestone" ve sdílených
-# receptech; pull_request_review_write nese komentář s výsledkem brány.
+# receptech; pull_request_write nese merge, pull_request_review_write komentář
+# s výsledkem brány.
 # Chybějící Write/Edit je hranice: orchestrátor nemá jak začít opravovat cizí
 # PR. Těla pro criteria-tests.sh vznikají přesměrováním výstupu skriptů, na
 # Gitea heredocem v Bash.
@@ -87,9 +96,9 @@ allowed-tools:
 
 # Run Milestone
 
-Řídíš běh milestonu: spouštíš issues v podřazených session, hlídáš bránu a předáváš
-signály člověka. **Kód nepíšeš, kvalitu nesoudíš a nemerguješ** — implementuje
-session, kód přezkoumává člověk a merge provede session na jeho signál.
+Řídíš běh milestonu: spouštíš issues v podřazených session, hlídáš bránu, předáváš
+připomínky člověka a na jeho schválení merguješ. **Kód nepíšeš a kvalitu nesoudíš**
+— implementuje session, kód přezkoumává člověk.
 
 | Soubor | Kdy ho otevřít |
 | --- | --- |
@@ -237,15 +246,40 @@ Pro PR z kroku 4, i pro každé, které session po připomínkách aktualizovala
 `check=skipped` při kódu 0 znamená, že pro oblast není ověřovací příkaz: uveď to
 v komentáři i v hlášení.
 
-### 6. Předání člověku a signály
+### 6. Předání člověku a merge
 
-Ohlas, že PR čeká na člověka (Hlášení). Připomínky píše člověk do PR. Jeho signál
-přichází sem a ty ho předáš session přes `SendMessage`:
+Ohlas, že PR čeká na člověka (Hlášení). Připomínky píše člověk do PR, signál sem:
 
 | Signál od člověka | Co uděláš |
 | --- | --- |
-| „#N má připomínky" | pošli session signál „Připomínky"; obsah nečti ani nepřeposílej, session si ho přečte z PR. Po její odpovědi krok 5 |
-| „#N schváleno" | pošli session signál „Schváleno"; po její odpovědi krok 7 |
+| „PR #N má připomínky" | pošli session signál „Připomínky" (`SendMessage`); obsah nečti ani nepřeposílej, session si ho přečte z PR. Po její odpovědi krok 5 |
+| „mergni PR #N", „PR #N schváleno" | mergni sám (níže) |
+
+Schválení session nepřeposílej: zprávu od jiné session klasifikátor auto mode
+za schválení člověka nebere a merge v ní zamítne.
+
+**Merge.** Napřed zopakuj bránu proti aktuální špičce integrační větve:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <větev PR> <integrační větev> -- <ověřovací příkaz oblasti>
+```
+
+| Brána | Co uděláš |
+| --- | --- |
+| kód 0 | mergni |
+| kód 5 nebo 6 | nemerguj; pošli session signál „Brána neprošla", po její odpovědi krok 5. Opravené PR jde ke schválení znovu |
+| kód 2 nebo 3 | eskaluj |
+
+Mergni receptem „Mergni PR" se strategií ze sekce `Větvení` a se smazáním zdrojové
+větve. GitHub (u `squash` přepínač `--squash`):
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-merge.sh" -R "<owner/repo>" <číslo PR> --squash --delete-branch
+```
+
+Gitea: `pull_request_write` → `merge` s `merge_style` podle `Větvení` a `delete_branch`.
+Odmítne-li merge forge, neobcházej ho (žádný `--admin`) a eskaluj. Zamítne-li ho
+auto mode, požádej člověka, ať napíše „mergni PR #<n>". Po merge krok 7.
 
 Napíše-li člověk přímo do podřazené session, nic nepřeposílej. Stav pak přečti
 z trackeru při jeho další zprávě sem.
@@ -254,9 +288,9 @@ Dokud je v dávce místo, spouštěj mezitím další odblokovaná issues (krok 
 
 ### 7. Po merge
 
-Zpráva session začíná `MERGED: #<číslo>`. Ověř ve forge, že PR je zmergované do
-integrační větve, a issue zavři (recept „Zavři issue") — `Closes #N` mimo výchozí větev
-nezabírá. Zmergovaná PR odblokují závislá issues → krok 3.
+Ověř ve forge, že PR je zmergované do integrační větve, a issue zavři (recept „Zavři
+issue") — `Closes #N` mimo výchozí větev nezabírá. Zmergovaná PR odblokují závislá
+issues → krok 3.
 
 **Nová vlna.** Po každém merge vypiš issues milestonu znovu. Pro každé nové issue:
 
@@ -295,8 +329,8 @@ Eskaluj, když:
 - session ohlásila věcnou překážku, nebo selhala dvakrát stejně;
 - brána neprošla podruhé po sobě; `criteria-tests.sh` nebo `integration-gate.sh`
   skončil kódem 2 nebo 3;
-- session po signálu „Schváleno" nevrátila `MERGED:`, nebo PR podle forge zmergované
-  není;
+- brána před merge skončila kódem 2 nebo 3; forge merge odmítl, nebo PR po merge
+  podle forge zmergované není;
 - `milestone-branch.sh` nebo `sync-branch.sh` skončil nenulovým kódem;
 - nic neběží, nic nečeká na člověka a nic není odblokované.
 
@@ -314,30 +348,23 @@ sagittaras:implement-issue, se základní větví <integrační větev>.
 (subagent_type: "<jméno>") s tímhle zadáním; připomínky a signály mu předávej
 přes SendMessage s jeho id. Sám kód nepiš.]
 
-Do těla PR přidej sekci „## Testy kritérií": tabulka | # | Kritérium | Test |,
-jeden řádek na kritérium issue v jeho pořadí; ve sloupci Test `cesta/k/testu`
-— `název testu`, nebo „ověří člověk" u kritéria s touhle značkou.
-
 Po otevření PR skonči a čekej na signál:
 - Připomínky — přečti je z PR, zapracuj v téže větvi.
 - Brána neprošla — oprav uvedené nálezy v téže větvi.
-- Schváleno — mergni PR do <integrační větev> squashem se smazáním zdrojové
-  větve (recept „Mergni PR"); pohnula-li se mezitím integrační větev, napřed
-  zopakuj integration-gate.sh.
+PR nemerguj: merge provede orchestrátor, až ho člověk schválí.
 
 Každou svou zprávu začni jedním z řádků:
 PR: #<číslo>
 PR: žádné — <věcný důvod>
-MERGED: #<číslo>
 ```
 
 ### Kontext pro session
 
 ```
 Issue #<číslo> patří do milestonu „<název>" v repozitáři <owner/repo>. Běh řídí
-run-milestone: kód přezkoumává člověk, ty implementuješ a na jeho signál
-mergneš. Integrační větev: <integrační větev>. Kritéria, Reference a závislosti
-jsou v těle issue.
+run-milestone: ty implementuješ, kód přezkoumává člověk a na jeho schválení PR
+merguje orchestrátor. Integrační větev: <integrační větev>. Kritéria, Reference
+a závislosti jsou v těle issue.
 ```
 
 ### Signály pro session
@@ -345,7 +372,6 @@ jsou v těle issue.
 ```
 Připomínky: člověk napsal k PR #<n> připomínky. Přečti je z PR a zapracuj.
 Brána neprošla: <řádky fail=, nebo sekce [conflicts] či [output] doslova>
-Schváleno: člověk PR #<n> schválil.
 ```
 
 ### Komentář k PR po bráně
@@ -372,7 +398,7 @@ Eskalované a nezahrnuté: <#číslo — důvod, nebo „žádné">
 
 ```
 Spuštěno: #A, #B.
-#A: PR #<n> prošlo bránou — čeká na tebe.
+#A: PR #<n> prošlo bránou — čeká na tebe; schválíš-li ho, napiš „mergni PR #<n>".
 #A: brána neprošla (<důvod>) — vráceno session.
 #A: zmergováno, issue zavřené; odblokováno #C.
 Eskalace: <co se stalo, co to blokuje> — <otázka>.
@@ -380,9 +406,10 @@ Eskalace: <co se stalo, co to blokuje> — <otázka>.
 
 ## Zásady
 
-- **Nepíšeš kód, nesoudíš kvalitu, nemerguješ.** Merge do integrační větve dělá
-  session na signál člověka, do výchozí větve jen `open-pr` se souhlasem v promptu.
+- **Nepíšeš kód a nesoudíš kvalitu.** Merguješ jen na schválení, které člověk
+  napsal sem: do integrační větve sám (krok 6), do výchozí větve jen `open-pr`
+  se souhlasem v promptu.
 - **Obsah připomínek teče přes PR.** Ty předáváš jen signál.
-- **Rozhoduje strojový řádek** (`PR:`, `MERGED:`, `result=`, návratový kód), ne próza.
+- **Rozhoduje strojový řádek** (`PR:`, `result=`, návratový kód), ne próza.
 - **Status není výsledek.** PR, merge i zavřené issue ověř ve forge.
 - **Stav drží tracker, ne tvoje paměť** — proto jde běh přerušit a navázat.
