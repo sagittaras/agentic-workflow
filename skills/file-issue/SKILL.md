@@ -126,8 +126,9 @@ platí tenhle postup, ne obecná věta o přednosti sdíleného kontraktu výše
 - **`Akceptační kritéria` založ jako holý nadpis, bez jediného řádku pod
   ním** — žádná odrážka, žádná pomlčka, žádný placeholder typu „doplní
   triage-issue". Placeholder je text, který nikdo nepsal jako skutečné
-  kritérium — `triage-issue` ho stejně přepíše, ale člověk i
-  `review-milestone` by ho mezitím mohli číst jako pokus o zadání.
+  kritérium — `triage-issue` ho stejně přepíše, ale člověk by ho mezitím
+  mohl číst jako pokus o zadání a `run-milestone` by v issue Poznámku
+  nepoznal.
   Nevymýšlej kritérium, ani přibližné — to je přesně ta vada, kterou má
   `triage-issue` eliminovat, ne aby ji nejdřív vyrobil tenhle skill.
 - **Sekci `Reference` vynech celou.** Poznámka žádný precedent ještě nemá;
@@ -165,8 +166,7 @@ Pak urči labely:
    ne podle tématu, ze kterého nález vypadl. Podle tohohle labelu vybírá
    `run-milestone` inženýra, až issue někdo do milestonu zařadí.
 3. Nasaď **typový label shodný s typem v názvu** issue. `implement-issue` z něj
-   odvozuje typ větve i commitu a rozpor mezi názvem a labelem je nález pro
-   `review-milestone`.
+   odvozuje typ větve i commitu.
 4. Label, který v projektu chybí, teď **jen navrhni** — zakládá se až v kroku 6 po
    potvrzení. Barvu převezmi od existujícího labelu téže rodiny z výpisu z forge
    (hex bez `#`, šest číslic); nemáš-li od čeho, zeptej se. Vymyšlená barva projde
@@ -193,11 +193,10 @@ přiřazený. Proto se v kroku 6 přiřazení ověřuje z odpovědi forge.
 **Milestone daného názvu nenajdeš** → nezakládej ho a zeptej se. Nový milestone
 zakládá `plan-milestone` spolu s celou sadou issues a jeho popis definuje, co pro
 něj znamená „hotovo"; prázdný milestone založený kvůli jednomu ad hoc issue tuhle
-definici nemá a `review-milestone` pak nemá proti čemu posoudit rozsah.
+definici nemá a člověk pak nemá proti čemu posoudit rozsah.
 
 **Poznámka zařazená do milestonu na Zadání sama nepřejde.** `run-milestone`
-ji podle `area:*` labelu dispečuje, ale bez kritérií nemá inženýr proti
-čemu implementovat a `review-milestone` milestone vrátí jako `Not ready` —
+ji nespustí a eskaluje — bez kritérií nemá inženýr proti čemu implementovat;
 `triage-issue` je tu předpoklad, ne alternativa k zařazení. Řekni to
 v souhrnu řádkem `Stav` podle Formátu výstupu, ať se ví, že milestone samo
 o sobě nestačí.

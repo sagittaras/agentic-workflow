@@ -1,10 +1,11 @@
 # Issues a autonomní vývoj
 
-Principy 2.1–2.9: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
+Principy 2.1–2.10: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
 je povýšení Poznámky samostatný krok a proč se plánuje po vlnách; dál kdo
 přezkoumává výsledný kód (člověk, ne agent — 2.6 nahrazuje agentní review z 2.5),
 jak velké smí issue být, aby šlo jeho PR přezkoumat, jak orchestrátor issues
-spouští a jaké pevné kritérium musí PR splnit, než ho člověk uvidí. Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
+spouští, jaké pevné kritérium musí PR splnit, než ho člověk uvidí, a kdo
+schvaluje plán milestonu (člověk, ne `review-milestone` — 2.10). Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
 míří tam.
 
 ## 2.1 Co issue stanovuje
@@ -410,3 +411,56 @@ vrací session a opravené PR jde ke schválení znovu. A protože
 `verify-issue` přestal být povinnou bránou, zaškrtávátka v těle issue by
 nikdo neodškrtal: odškrtne je orchestrátor u kritérií, jejichž test potvrdil
 — znamená to „kryto testem, který prošel", nic víc.
+
+## 2.10 Plán milestonu schvaluje člověk, ne agentní review
+
+Plán milestonu validuje člověk — stejně jako PR z jeho issues (2.6). Potvrzuje
+draft vlny v `plan-milestone`, kde vidí názvy, závislosti, precedent i kritéria
+každého Zadání, a spuštěním `run-milestone` plán schvaluje. Orchestrátor proto
+v trackeru nehledá review komentář a `review-milestone` vypadává z řetězu:
+zůstává jako nástroj, který si člověk spustí, když chce na plán druhý pohled.
+
+**Why:**
+- **Stejná diagnóza jako u review kódu.** Agentní review plánu má tutéž vadu
+  jako agentní review PR ve 2.6: mandát omezí, *co* agent posuzuje, ne *s jakou
+  důsledností*. Míru, se kterou na plán sáhnout, má člověk.
+- **Platilo se za každou vlnu znovu.** Review běželo jako opus × high ve forku,
+  který čte všechna issues milestonu i jejich precedenty — a `run-milestone`
+  ho vyžadoval po každé vlně (2.4) znovu, protože komentář starší než nová
+  issues se počítal jako chybějící. Čím víc vln, tím víckrát se přečetl celý
+  milestone.
+- **Člověk plán stejně čte.** Kdo přezkoumává každé PR, zná i issues, ze
+  kterých vzniklo. Chyba v plánu, kterou nezachytí u draftu, se mu ukáže
+  nejpozději u prvního PR — po jednom issue, ne po milestonu. Draft vlny je
+  přitom nejlevnější místo k opravě: v trackeru ještě nic neleží.
+- **Mechanickou část review hlídá běh.** Co review hlásilo jako blokující,
+  skončí za běhu eskalací dřív, než vznikne práce: cyklus nebo závislost mimo
+  milestone a Poznámka mezi otevřenými issues (při sestavení grafu),
+  chybějící `area:*` label (před spuštěním issue), neexistující cesta v `Reference`
+  (`implement-issue`), netestovatelné kritérium bez značky „ověří člověk"
+  (brána z [2.9](#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)).
+  Úsudek — ukotvení v precedentu, velikost
+  ([2.7](#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně)),
+  překryvy, rozsah — patří člověku.
+
+**Co se mění:**
+- **Draft vlny nese kritéria.** Dokud plán četl agent, stačil člověku přehled
+  názvů, závislostí a precedentů. Teď je draft jediné review plánu, a tak
+  ukazuje všechno, co půjde do běhu.
+- **Poznámku hlídá orchestrátor u každého issue.** Dřív ji kontroloval jen
+  u nové vlny; issues první vlny kryl review komentář.
+- **Žádný doklad v trackeru.** Spuštění běhu je schválení samo o sobě;
+  komentář „Review milestonu" přestává být kontrakt mezi skilly. Ručně
+  spuštěný `review-milestone` report do trackeru ukládá dál — pro člověka, ne
+  pro orchestrátora.
+
+**Proč nástroj na vyžádání, ne smazání.** Vzorem je `verify-issue` po 2.6,
+jen s jiným důvodem: `verify-issue` zůstal kvůli mutačnímu testu, který
+člověk levně neudělá. U `review-milestone` takový důvod chybí, ale u velkého
+milestonu může člověk chtít druhý pohled na překryvy a rozpory napříč issues.
+Ukáže-li provoz, že ho nikdo nespouští, smaže se.
+
+**Důsledek pro workflow:** řetěz je `plan-milestone → run-milestone`. Člověk
+schvaluje draft vlny, každé PR a nakonec integrační PR do výchozí větve;
+`review-milestone` i `verify-issue` jsou nástroje mimo řetěz, které si spustí,
+když chce.

@@ -143,7 +143,7 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 | `init-workflow` | Jednorázově nastaví projekt pro milestone workflow — forge, větvení, labely, mapu `area:*` → agent, ověřovací příkazy |
 | `plan-milestone` | Naplánuje milestone po vlnách — issues zakládá jen pro položky s precedentem v kódu, ostatní nechá v backlogu |
 | `triage-issue` | Povýší jeden issue bez ukotvených kritérií (Poznámku) na Zadání s precedentem nalezeným v kódu |
-| `review-milestone` | Nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, překryvy a rozpory mezi issues; report uloží do trackeru |
+| `review-milestone` | Na vyžádání nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, překryvy a rozpory mezi issues; report uloží do trackeru. Není povinný krok před `run-milestone`, plán schvaluje člověk |
 | `run-milestone` | Provede milestone s člověkem jako recenzentem — odblokovaná issues spouští v podřazených session, PR protáhne branou a na schválení člověka je mergne do integrační větve |
 | `implement-issue` | Naimplementuje jedno issue přesně v rozsahu jeho akceptačních kritérií a otevře na něj PR |
 | `verify-issue` | Ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a kritéria opřená o regresní test mutačně otestuje |

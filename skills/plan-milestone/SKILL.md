@@ -16,12 +16,13 @@ when_to_use: >-
   i tehdy, když uživatel popisuje větší práci, kterou je potřeba rozdělit
   a založit v trackeru, nebo když se má do existujícího milestonu přidat
   další vlna Zadání. Nepoužívej pro jediný ad hoc issue mimo milestone,
-  na to slouží file-issue; ani pro posouzení už hotového plánu, to dělá
-  review-milestone; ani pro implementaci naplánovaných issues, tu řídí
-  run-milestone; ani pro záznam architektonického rozhodnutí i s alternativami
-  a důsledky, na to je write-adr; nemá-li jednotlivé issue kritéria ukotvená
-  v kódu mimo běh plánování, to řeší triage-issue samostatně. Bez projektové
-  konfigurace workflow skill nezakládá nic a odkáže na init-workflow.
+  na to slouží file-issue; ani pro agentní posouzení už hotového plánu na
+  vyžádání, to dělá review-milestone; ani pro implementaci naplánovaných
+  issues, tu řídí run-milestone; ani pro záznam architektonického
+  rozhodnutí i s alternativami a důsledky, na to je write-adr; nemá-li
+  jednotlivé issue kritéria ukotvená v kódu mimo běh plánování, to řeší
+  triage-issue samostatně. Bez projektové konfigurace workflow skill
+  nezakládá nic a odkáže na init-workflow.
 argument-hint: "[téma milestonu, nebo název existujícího milestonu k rozšíření]"
 model: opus
 effort: high
@@ -122,7 +123,7 @@ projektu. Potřebuješ z ní podsekce **Forge** (kterou větev receptů použít
   `/sagittaras:init-workflow`.
 - **Chybí podsekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
   za pochodu nedoplňuj. Odhadnutá taxonomie labelů rozbije routing v `run-milestone`
-  a pozná se to až u review.
+  a pozná se to až v běhu.
 
 ### 2. Sestav hrubý rozsah
 
@@ -168,9 +169,8 @@ Vyjde-li z klasifikace **nulový počet položek pro tuhle vlnu**, řekni to
 uživateli a zeptej se, jestli má smysl pokračovat krokem 4 s prázdným draftem,
 nebo jestli je na řadě napřed spárovaná implementační session pro některou
 z položek. Prázdný draft znamená, že v kroku 7 vznikne jen milestone jako
-schránka s definicí „hotovo" a žádné issue — `review-milestone` ani
-`run-milestone` nad ním nemají co dělat, dokud první issue nepřibude
-v příští vlně.
+schránka s definicí „hotovo" a žádné issue — `run-milestone` nad ním nemá
+co dělat, dokud první issue nepřibude v příští vlně.
 
 ### 4. Sepiš draft Zadání pro tuhle vlnu
 
@@ -222,7 +222,7 @@ v kroku 2 (rozšíření existujícího milestonu). Jinak teď otevři
 voláním `ToolSearch` načti odložené nástroje podle řádku „Zakládá issues
 a milestony". **Sekci s nástrahami přečti hned teď**, ne až před zápisem —
 část chyb v trackeru selhává tiše (nepřipnutý label vypadá jako úspěšné
-volání) a pozná se až u review.
+volání) a pozná se až v běhu.
 
 Vypiš **existující labely a existující milestony**. Jsou to čtecí operace, takže
 zásada „do trackeru se zapisuje až po potvrzení" platí dál; jenže bez nich neumíš
@@ -261,10 +261,10 @@ do milestonu jen přidáváš — nezakládáš ho znovu.
 
 ### 6. Předlož draft a počkej na potvrzení
 
-Vypiš draft podle Formátu výstupu a **počkej na potvrzení nástrojem AskUserQuestion**.
-Tohle je povinná brzda, ne zdvořilost: tabulka názvů a pořadí závislostí se čte půl
-minuty a je to jediné místo, kde uživatel zachytí špatně odhadnutou vlnu dřív, než
-z ní bude deset issues v trackeru, které někdo musí ručně zavírat.
+Vypiš draft podle Formátu výstupu, **včetně kritérií každého Zadání**, a **počkej na
+potvrzení nástrojem AskUserQuestion**. Tohle je review plánu: agentní review se
+nevyžaduje, takže člověk tu schvaluje všechno, co půjde do běhu — a je to nejlevnější
+místo, kde špatně odhadnutou vlnu zachytí dřív, než z ní bude deset issues v trackeru.
 
 Zároveň si nech potvrdit labely — jmenovitě ty, které podle kroku 5 v projektu ještě
 nejsou a chystáš se je založit, každý s navrženou barvou. Barvu předávej hexem bez
@@ -283,8 +283,8 @@ jak odkázat:
 2. **Milestone**, jde-li o první vlnu. Do popisu napiš, co pro tenhle milestone
    znamená „hotovo" — a pokud backlog z kroku 3 obsahuje nezaložené položky,
    zmiň, že popis pokrývá i budoucí vlny, ne jen tuhle. Podle popisu
-   `review-milestone` posuzuje rozsah (okruh 4e); `close-milestone` popis
-   nečte, zavření řídí jen počty zavřených issues a zmergované integrační PR.
+   posuzuje rozsah člověk (a `review-milestone`, spustí-li ho); `close-milestone`
+   popis nečte, zavření řídí jen počty zavřených issues a zmergované integrační PR.
    **Jedna až dvě věty na jednom řádku**: popis se předává
    argumentem, takže víceřádkový markdown se v shellu tiše rozbije. Co se do
    dvou vět nevejde, patří do issues. Jde-li o další vlnu do existujícího
@@ -314,12 +314,9 @@ jiný repozitář nezkoušej.
 ### 8. Shrň výsledek
 
 Vypiš souhrnnou tabulku podle Formátu výstupu, backlog položek, které do téhle
-vlny nešly (a proč), a jako další krok doporuč `/sagittaras:review-milestone` —
-ten neúplnou vlnu jako nález nebere, takže recenzentovi stačí výčet
-nezaložených položek backlogu pro kontext, ne omluva. Plán **neposuzuješ sám**: recenzent
-sdílející kontext s autorem si odkývá vlastní úvahu, proto review patří
-někomu, kdo tvůj kontext nevidí. Sám ho nespouštěj — rozhodnutí patří
-uživateli.
+vlny nešly (a proč), a jako další krok doporuč `/sagittaras:run-milestone` —
+plán člověk prošel v kroku 6 a spuštěním běhu ho schvaluje. Sám ho nespouštěj,
+rozhodnutí patří uživateli.
 
 ## Formát výstupu
 
@@ -333,6 +330,13 @@ Milestone: <název> — hotovo, když <definice hotového> [nebo: „vlna N do e
 | --- | --- | --- | --- | --- |
 | 1 | <type>(<scope>): <popis> | area:<oblast> | — | <cesta k souboru/vzoru> |
 | 2 | <type>(<scope>): <popis> | area:<oblast> | #1 | <cesta k souboru/vzoru> |
+
+#1 <popis>
+- [ ] <kritérium>
+- [ ] <kritérium> (ověří člověk)
+
+#2 <popis>
+- [ ] <kritérium>
 
 Chybějící labely k založení: <název (barva hexem bez #)>, … nebo „žádné"
 Do téhle vlny nešlo (chybí precedent): <výčet s jednou větou proč — obvykle „potřebuje spárovanou session"> nebo „nic"
@@ -349,7 +353,7 @@ Milestone: <název> — <odkaz>
 
 Založené labely: <výčet, nebo „žádné">
 Backlog na příští vlnu: <výčet s důvodem, nebo „žádný">
-Další krok: /sagittaras:review-milestone
+Další krok: /sagittaras:run-milestone
 ```
 
 ## Zásady
@@ -367,7 +371,7 @@ Další krok: /sagittaras:review-milestone
   ne podle tématu milestonu.** Podle tohohle labelu vybírá `run-milestone` inženýra,
   takže chyba pošle práci špatnému specialistovi a projeví se až u review PR.
 - **Typový label se musí shodovat s typem v názvu issue.** `implement-issue` z něj
-  odvozuje typ větve i commitu; rozpor je nález pro `review-milestone`.
+  odvozuje typ větve i commitu.
 - **Do trackeru se zapisuje až po potvrzení draftu.** Před krokem 7 skill jen čte;
   nic nezakládá a nic nemění.
 - **Sdílený kontrakt má přednost.** Odporuje-li tenhle postup šabloně issue,

@@ -3,7 +3,8 @@
 > **Stav:** rozepsáno, píše se průběžně po principech — od 24. 8. 2026;
 > 16. 11. 2026 přibyly principy 1.7 a 1.8, vize se rozdělila na stránky a principy
 > 2.6–2.9 posunuly cíl od úplné autonomie ke kompromisu (viz níž); princip 3.1
-> otevřel novou skupinu o tvaru skillů samotných.
+> otevřel novou skupinu o tvaru skillů samotných. 17. 11. 2026 přibyl princip
+> 2.10: plán milestonu schvaluje člověk, `review-milestone` je nástroj na vyžádání.
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
 > sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním
@@ -23,6 +24,9 @@ session, ke kterým člověk píše připomínky podle jejich PR
 Než PR člověk uvidí, musí mít každé kritérium test a orchestrátor potvrdit,
 že testy prochází
 ([2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)).
+Stejně jako PR schvaluje člověk i plán milestonu — agentní review plánu
+z řetězu vypadává
+([2.10](issues.md#210-plán-milestonu-schvaluje-člověk-ne-agentní-review)).
 
 Principy jsou číslované napříč stránkami. Číslo je stabilní identifikátor —
 odkazují se na něj stránky mezi sebou i komentáře ve skillech (`run-milestone`:
@@ -78,6 +82,8 @@ autonomně staví:
 - [2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)
   Každé akceptační kritérium kryje test; session ho napíše, orchestrátor
   potvrdí.
+- [2.10](issues.md#210-plán-milestonu-schvaluje-člověk-ne-agentní-review)
+  Plán milestonu schvaluje člověk, ne agentní review.
 
 **[Tvar skillů](skill-design.md)** — co patří do textu, který agent čte při
 každém spuštění skillu:
@@ -91,10 +97,10 @@ každém spuštění skillu:
 - [Principy spolupráce](principles.md) — 1.1–1.8: kostra, vzorová implementace,
   rules, ADR, agenti, navigace dokumentací a znalostní báze `.docs/` s vlastními
   skilly.
-- [Issues a autonomní vývoj](issues.md) — 2.1–2.9: tvar issue, Poznámka
+- [Issues a autonomní vývoj](issues.md) — 2.1–2.10: tvar issue, Poznámka
   a Zadání, vlnové plánování, lidské review místo agentního, velikost issue
   podle přezkoumatelnosti PR, orchestrace přes podřazené session, testy ke
-  kritériím potvrzené orchestrátorem.
+  kritériím potvrzené orchestrátorem, plán milestonu schválený člověkem.
 - [Tvar skillů](skill-design.md) — 3.1: skill jako základní linie postupu,
   příkaz místo popisu, test každé věty a spouštěče úvahy, kterým se vyhnout.
 - [Dopad na existující skilly](skill-impact.md) — který skill se kterým

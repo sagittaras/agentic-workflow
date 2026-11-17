@@ -2,22 +2,24 @@
 name: run-milestone
 description: >-
   Provede naplánovaný milestone s člověkem jako recenzentem: sestaví graf
-  závislostí z issues, ověří v trackeru review plánu, založí integrační větev
-  a odblokovaná issues spouští v podřazených session, kolik jich člověk stačí
-  průběžně přezkoumat. Každé PR protáhne branou — test ke každému kritériu
-  a ověřovací příkaz nad integrační větví — a teprve pak ho předá člověku.
+  závislostí z issues, založí integrační větev a odblokovaná issues spouští
+  v podřazených session, kolik jich člověk stačí průběžně přezkoumat. Každé
+  PR protáhne branou — test ke každému kritériu a ověřovací příkaz nad
+  integrační větví — a teprve pak ho předá člověku.
   Jeho připomínky předává session, která PR vystavila; na jeho schválení PR
   sám mergne do integrační větve. Po merge zavře issue, odblokuje další práci,
   přijme novou vlnu z plan-milestone a na konci předloží jedno PR do výchozí
   větve. Sám neimplementuje ani nerecenzuje.
 when_to_use: >-
-  Použij, když je milestone naplánovaný a zrevidovaný a má se začít
-  implementovat — „spusť milestone", „proveď ten milestone", „rozjeď issues
-  z milestonu" — nebo když se má dokončit přerušený běh milestonu.
+  Použij, když je milestone naplánovaný a má se začít implementovat —
+  „spusť milestone", „proveď ten milestone", „rozjeď issues z milestonu" —
+  nebo když se má dokončit přerušený běh milestonu. Spuštěním člověk plán
+  schvaluje, review plánu se nevyžaduje.
   Nepoužívej pro sestavení plánu a založení issues, na to slouží
-  plan-milestone; pro posouzení hotového plánu review-milestone; pro jediné
-  issue implement-issue, ten si spusť přímo; pro nezávislé ověření kritérií
-  konkrétního PR verify-issue. Zavření milestonu po merge dělá close-milestone.
+  plan-milestone; pro agentní posouzení plánu na vyžádání review-milestone;
+  pro jediné issue implement-issue, ten si spusť přímo; pro nezávislé
+  ověření kritérií konkrétního PR verify-issue. Zavření milestonu po merge
+  dělá close-milestone.
 argument-hint: "[milestone — název, číslo nebo slug]"
 model: opus
 effort: xhigh
@@ -53,6 +55,10 @@ effort: xhigh
 #   pohnula, by ji u souběžných issues stejně skoro vždy spustila.
 # - Schválení jmenuje číslo PR (Hlášení): klasifikátor nevidí výstupy nástrojů,
 #   takže „issue #44 může mergovat" s merge PR #62 spojit nemusí.
+# - Review plánu se nehledá (vize 2.10): plán validuje člověk a spuštěním běhu
+#   ho schvaluje. Jeho mechanickou část hlídá běh sám — graf a Poznámku
+#   v kroku 1 u každého otevřeného issue, `area:*` v kroku 3. Poznámku dřív
+#   hlídal jen krok 7 u nové vlny; první vlnu kryl review komentář.
 user-invocable: true
 disable-model-invocation: false
 allowed-tools:
@@ -86,7 +92,7 @@ allowed-tools:
 # Agent zůstává pro běh bez podřazených session (CLI); SendMessage slouží oběma
 # režimům — pokračuje v session i v subagentovi s jeho kontextem.
 # disable-model-invocation: false — brzdou proti omylu jsou čtecí kroky před
-# první zapisovací akcí (review plánu, dávka) a eskalace, ne zakázané vyvolání.
+# první zapisovací akcí (graf, dávka) a eskalace, ne zakázané vyvolání.
 # Vynechaná zvažovaná pole: disallowed-tools — allowed-tools je uzavřený výčet;
 # context/agent — fork by odřízl člověka, který posílá signály a odpovídá na
 # eskalace; background — běh je rozhovor s člověkem; paths — spouští se
@@ -138,7 +144,8 @@ a PR ve výpisu ošetři podle `forge-recipes.md`. Nesedí-li počet s `open_iss
 `closed_issues`, eskaluj.
 
 **Graf** sestav ze sekce `Závisí na` každého těla. Cyklus nebo odkaz mimo milestone →
-eskaluj.
+eskaluj. Otevřené issue, které je Poznámka — `Akceptační kritéria` jsou prázdná nebo
+`Reference` chybí —, nespouštěj a eskaluj s odkazem na `/sagittaras:triage-issue`.
 
 **Rozpracovanost.** Ke každému otevřenému issue najdi PR přes recept „Najdi PR patřící
 k issue" (nikdy podle názvu větve) a session podle jména `issue-<číslo>`
@@ -150,18 +157,6 @@ k issue" (nikdy podle názvu větve) a session podle jména `issue-<číslo>`
 | session běží, PR zatím není | krok 4 |
 | otevřené PR | krok 5 — bránu pusť znovu, je levná |
 | zmergované PR | krok 7 |
-
-**Review plánu.** Na issue s nejnižším číslem najdi nejnovější komentář s nadpisem
-`## Review milestonu <název milestonu>`. Komentáře si vyžádej výslovně: Gitea
-`issue_read` → `get_comments`, GitHub pole `comments` z `gh/issue-read.sh`. Podle
-řádku `**Verdikt:**`:
-
-| Verdikt | Co uděláš |
-| --- | --- |
-| `Sound` | pokračuj |
-| `Needs attention` | shrň nálezy `should-fix` a zeptej se, jestli spustit běh |
-| `Not ready` | běh nespouštěj; odkaž na `/sagittaras:plan-milestone` a nové review |
-| komentář chybí | nabídni napřed `/sagittaras:review-milestone`, jako druhou možnost běh bez review |
 
 **Dávka.** Zeptej se, kolik issues má běžet souběžně — tolik, kolik PR člověk stačí
 průběžně přezkoumat. Navrhni 3. Hodnota platí, dokud ji člověk nezmění.
@@ -292,13 +287,8 @@ Ověř ve forge, že PR je zmergované do integrační větve, a issue zavři (r
 issue") — `Closes #N` mimo výchozí větev nezabírá. Zmergovaná PR odblokují závislá
 issues → krok 3.
 
-**Nová vlna.** Po každém merge vypiš issues milestonu znovu. Pro každé nové issue:
-
-1. Poznámka (chybí kritéria nebo `Reference`) → nespouštěj, eskaluj s odkazem na
-   `/sagittaras:triage-issue`.
-2. Zadání → zařaď do grafu jako v kroku 1.
-3. Přibylo-li aspoň jedno Zadání, ověř review plánu jako v kroku 1. Komentář starší
-   než nová issues se počítá jako chybějící.
+**Nová vlna.** Po každém merge vypiš issues milestonu znovu a nová zařaď do grafu jako
+v kroku 1, včetně kontroly Poznámky.
 
 Nesedí-li počet issues s milestonem, přečti znovu po další notifikaci; eskaluj až při
 druhé shodné neshodě.
@@ -322,10 +312,10 @@ neběží, nic nečeká na člověka a nic není odblokované → eskaluj jako d
 Eskaluj, když:
 
 - chybí konfigurace nebo potřebná sekce; `gh` vrátí kód 7, nebo forge 404 na zápisu;
-- issue nemá `area:*` label; nástroj odmítl spustit session nebo agenta;
+- issue nemá `area:*` label nebo je Poznámka; nástroj odmítl spustit session nebo
+  agenta;
 - graf má cyklus nebo odkaz mimo milestone; počet issues nesedí (v kroku 7 až
   podruhé);
-- nové issue je Poznámka; review plánu chybí, je `Needs attention` nebo `Not ready`;
 - session ohlásila věcnou překážku, nebo selhala dvakrát stejně;
 - brána neprošla podruhé po sobě; `criteria-tests.sh` nebo `integration-gate.sh`
   skončil kódem 2 nebo 3;
