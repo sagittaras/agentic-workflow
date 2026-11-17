@@ -15,6 +15,8 @@ se kterými Claude Code pracuje.
 | `git` v PATH | Instalace i samotné skilly `create-branch` a `make-commit` |
 | `bash` v PATH | Skilly volají doprovodné `.sh` skripty. Na Windows stačí **Git for Windows** (Git Bash) |
 | Přístup k repozitáři | Repozitář je **privátní** — je potřeba nahraný SSH klíč, nebo přihlášené [`gh`](https://cli.github.com/) pro HTTPS |
+| Přístup k trackeru | Jen pro milestone workflow: na GitHubu přihlášené `gh`, na Gitei připojený Gitea MCP server |
+| Desktopová aplikace Claude | Doporučená pro `run-milestone` — spouští issues v podřazených session, do kterých můžeš psát. V CLI běží v náhradním režimu se subagenty |
 
 ## Instalace
 
@@ -138,17 +140,26 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 
 **Milestone workflow**
 
+Konkrétní práci dělá AI, výsledný kód přezkoumává člověk. Obvyklý průchod je
+`plan-milestone` → `run-milestone` → `close-milestone`: plán schvaluješ
+potvrzením draftu a spuštěním běhu, každé PR dostaneš k review až poté, co má
+každé akceptační kritérium test a ověřovací příkazy nad integrační větví
+prošly. Připomínky píšeš k PR nebo přímo do session, která ho vystavila;
+schválené PR merguje orchestrátor. Finální merge do výchozí větve patří tobě.
+`review-milestone` a `verify-issue` jsou nástroje na vyžádání, ne povinné
+kroky.
+
 | Skill | K čemu |
 | --- | --- |
-| `init-workflow` | Jednorázově nastaví projekt pro milestone workflow — forge, větvení, labely, mapu `area:*` → agent, ověřovací příkazy |
-| `plan-milestone` | Naplánuje milestone po vlnách — issues zakládá jen pro položky s precedentem v kódu, ostatní nechá v backlogu |
-| `triage-issue` | Povýší jeden issue bez ukotvených kritérií (Poznámku) na Zadání s precedentem nalezeným v kódu |
-| `review-milestone` | Na vyžádání nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, překryvy a rozpory mezi issues; report uloží do trackeru. Není povinný krok před `run-milestone`, plán schvaluje člověk |
-| `run-milestone` | Provede milestone s člověkem jako recenzentem — odblokovaná issues spouští v podřazených session, PR protáhne branou a na schválení člověka je mergne do integrační větve |
-| `implement-issue` | Naimplementuje jedno issue přesně v rozsahu jeho akceptačních kritérií a otevře na něj PR |
-| `verify-issue` | Ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a kritéria opřená o regresní test mutačně otestuje |
+| `init-workflow` | Jednorázově nastaví projekt pro milestone workflow do sekce „Workflow (sagittaras)" v `CONTRIBUTING.md` — forge, větvení, labely, ověřovací příkazy, případně mapu `area:*` → agent |
+| `plan-milestone` | Naplánuje milestone po vlnách — issues zakládá jen pro položky s precedentem v kódu a rozpadá je tak, aby PR každého šlo přezkoumat ručně; ostatní nechá v backlogu |
+| `triage-issue` | Povýší jeden issue bez ukotvených kritérií (Poznámku) na Zadání s precedentem nalezeným v kódu; bez precedentu nebo u příliš velkého issue jen vysvětlí v komentáři proč |
+| `run-milestone` | Provede milestone s člověkem jako recenzentem — odblokovaná issues spouští v podřazených session, PR protáhne branou (test ke každému kritériu, ověřovací příkazy) a na schválení člověka je mergne do integrační větve; na konci otevře jedno PR do výchozí větve |
+| `implement-issue` | Naimplementuje jedno issue přesně v rozsahu jeho akceptačních kritérií, každé testovatelné pokryje testem a otevře PR s mapou kritérium → test; zapracuje připomínky z review a spuštěný samostatně PR na schválení mergne |
 | `close-milestone` | Zavře milestone, u kterého ověřil, že všechna issues jsou zavřená a integrační PR opravdu zmergované |
-| `file-issue` | Založí jeden ad hoc issue mimo plánování milestonu, v závazném tvaru pluginu a se správnými labely |
+| `file-issue` | Založí jeden ad hoc issue mimo plánování milestonu jako Poznámku, v závazném tvaru pluginu a se správnými labely |
+| `review-milestone` | Na vyžádání: nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, velikost issues, překryvy a rozpory; report uloží do trackeru |
+| `verify-issue` | Na vyžádání: ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a testy kritérií mutačně otestuje; report uloží k PR |
 
 **Projektová dokumentace**
 
@@ -172,7 +183,7 @@ dá vždycky `/sagittaras` — rozcestník ho sestavuje z frontmatterů na disku
 | `review-rule` | Nezávislé review rule s čistým kontextem — ověří globy proti repozitáři, vrátí verdikt a nálezy, neopravuje |
 | `write-agent` | Vytvoří nebo upraví agenta v cílovém projektu podle matice model × effort × maxTurns |
 | `review-agent` | Nezávislé review agenta s čistým kontextem — vrátí verdikt a nálezy, neopravuje |
-| `train-agent` | Po vyřešené review/retry smyčce nad issue nechá agenta zapsat si z ní do vlastní trvalé paměti zobecněný poznatek |
+| `train-agent` | Nechá agenta zapsat si do vlastní trvalé paměti zobecněný poznatek ze zadaného vstupu — typicky z připomínek člověka k PR a commitů, které je zapracovaly |
 
 **Rozšiřování a údržba pluginu**
 
@@ -194,7 +205,23 @@ session. Změny se do ostré instalace dostanou až pushem a aktualizací výše
 
 Proč skilly vypadají, jak vypadají, a podle jakých principů se mění, popisuje
 dokumentace vývoje — vstupem je [.docs/index.md](.docs/index.md), odkud se
-pokračuje stromem indexů.
+pokračuje stromem indexů. Směr, kterým se plugin aktuálně přestavuje (člověk
+přezkoumává kód, issues běží v podřazených session, testy ke kritériím), shrnuje
+[vize](.docs/vision/index.md).
+
+Plugin se vyvíjí vlastním milestone workflow — konfiguraci nese
+[CONTRIBUTING.md](CONTRIBUTING.md). Ověřovací příkaz pro změny skillů:
+
+```bash
+bash scripts/lint-skills.sh && bash scripts/docs-check.sh
+```
+
+`lint-skills.sh` hlídá, že každý `SKILL.md` má čitelný frontmatter s `name`
+a `description`, `docs-check.sh` strukturu
+znalostní báze (sirotci, mrtvé odkazy, kotvy). Testy akceptačních kritérií
+jednotlivých issues leží v `tests/issue-<číslo>.sh`, testy doprovodných skriptů
+v `tests/<název-skriptu>.sh`. Některé běží proti živému repozitáři a potřebují
+síť a přihlášené `gh`.
 
 `SKILL.md` v kořeni není součástí `skills/` — do pluginu ho zapojuje položka
 `"skills": ["./"]` v `.claude-plugin/plugin.json` a bez ní se nenačte. Slouží
