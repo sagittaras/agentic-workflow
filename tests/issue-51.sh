@@ -2,7 +2,9 @@
 # Test kritérií issue #51 ověřitelných příkazem.
 #
 # Kritérium 5: `plan-milestone` nečte Zdroje pravdy a ADR dohledá sestupem
-#              od `CLAUDE.md` (odkazem na `shared/docs-tree.md`).
+#              od `CLAUDE.md` (odkazem na `shared/docs-tree.md`). Od zavedení
+#              read-docs dohledává ADR jím (skill čte bázi stromem podle
+#              shared/docs-tree.md), takže kritérium splní i jeho volání.
 # Kritérium 6: `bash scripts/lint-skills.sh` projde.
 #
 # Návratové kódy: 0 = prošlo, 1 = selhalo.
@@ -19,8 +21,9 @@ if grep -n "Zdroje pravdy" skills/plan-milestone/SKILL.md; then
   fail=1
 fi
 
-if ! grep -q "shared/docs-tree.md" skills/plan-milestone/SKILL.md \
-  || ! grep -q "CLAUDE.md" skills/plan-milestone/SKILL.md; then
+if ! grep -q "sagittaras:read-docs" skills/plan-milestone/SKILL.md \
+  && { ! grep -q "shared/docs-tree.md" skills/plan-milestone/SKILL.md \
+    || ! grep -q "CLAUDE.md" skills/plan-milestone/SKILL.md; }; then
   echo "fail=criterion_5 reason=missing_docs_tree_descent"
   fail=1
 fi

@@ -11,11 +11,11 @@ when_to_use: >-
   Použij, když má v projektu vzniknout dokumentace nebo se rozšířit — „založ
   dokumentaci", „udělej .docs", „zapiš to do dokumentace", „přidej stránku
   o…", „uprav sekci o…" — i když jiný skill ohlásí, že projekt bázi nemá.
-  Nepoužívej pro CLAUDE.md samotný, na to slouží write-claude-md; pro záznam
-  architektonického rozhodnutí write-adr; pro závazný popis vzhledu
-  write-art-bible; pro popis jedné obrazovky nebo flow write-ux-spec; pro
-  pravidlo vázané na část repozitáře write-rule; ani pro zápis do paměti
-  agenta, na to je train-agent.
+  Nepoužívej pro hledání odpovědi v bázi, na to slouží read-docs; pro
+  CLAUDE.md samotný write-claude-md; pro záznam architektonického rozhodnutí
+  write-adr; pro závazný popis vzhledu write-art-bible; pro popis jedné
+  obrazovky nebo flow write-ux-spec; pro pravidlo vázané na část repozitáře
+  write-rule; ani pro zápis do paměti agenta, na to je train-agent.
 argument-hint: "[téma stránky nebo „nová báze"]"
 model: sonnet
 effort: high

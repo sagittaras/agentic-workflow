@@ -40,6 +40,7 @@ allowed-tools:
   - Grep
   - AskUserQuestion
   - ToolSearch
+  - Skill
   - "Bash(bash:*)"
   - mcp__gitea__label_read
   - mcp__gitea__label_write
@@ -52,6 +53,8 @@ allowed-tools:
 # Proto každé volání píš ve tvaru `bash <cesta>` — jinak nespadne do povolení.
 # Glob/Grep hledají precedent v kódu pro klasifikaci backlogu (krok 3), stejný
 # test jako v triage-issue, sdílený přes shared/precedent-test.md.
+# Skill spouští jen read-docs v kroku 4: ADR k citaci dohledá v bázi ve forku,
+# takže sestup ani zamítnuté stránky nezatíží dlouhý kontext plánování.
 # ToolSearch a nástroje mcp__gitea__* jsou tu kvůli Gitea větvi: jsou odložené
 # a bez ToolSearch se nenačtou, bez uvedení v tomto výčtu se nezavolají. Názvy
 # odpovídají tvaru, který předepisuje forge-recipes.md; běží-li v projektu
@@ -63,7 +66,7 @@ allowed-tools:
 # za jediné volání ToolSearch místo dvou, a obojí je read-only.
 # Write ani Edit ve výčtu nejsou: tělo issue jde GitHub skriptům heredocem
 # přes --body-file -, takže dočasný soubor nevzniká, a skill nikdy nedopisuje
-# cizí dokumentaci (viz krok 4) — bez Write a Edit to není jen slib v próze.
+# cizí dokumentaci (viz krok 7) — bez Write a Edit to není jen slib v próze.
 # Vynechaná zvažovaná pole: disable-model-invocation — skill je užitečný i když
 # si ho model vyvolá sám z popisu větší rozdělené práce, a do trackeru nesáhne
 # dřív než po potvrzení v kroku 6; context/agent/background — interview
@@ -89,7 +92,6 @@ pluginu — při rozporu s tímhle postupem platí ony.
 | `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | V kroku 1, když projektová konfigurace chybí nebo v ní nenajdeš sekci, kterou potřebuješ |
 | `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než začneš klasifikovat backlog |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 4, dřív než napíšeš první název a první kritérium |
-| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 4, chceš-li k Zadání citovat ADR nebo jiný doplňkový dokument |
 | `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | V kroku 2, rozšiřuješ-li existující milestone, jinak v kroku 5 — než poprvé sáhneš na tracker, včetně sekce s nástrahami |
 | `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | Stejně jako recepty — v kroku 2 nebo v kroku 5, na GitHub projektech dřív než složíš první volání skriptu: nese povinné argumenty i význam návratových kódů |
 
@@ -207,8 +209,14 @@ Nad rámec šablony platí:
 - **Každé kritérium ukotvi v precedentu nalezeném v kroku 3** a tu cestu
   uveď v `Reference` — soubor nebo vzor v kódu, ne sekce dokumentu. Odkaz na
   ADR smíš přidat jako doplňkové omezení („nesahej na X, viz ADR-N"), nikdy
-  místo kódové reference. ADR dohledej sestupem stromem dokumentace od
-  `CLAUDE.md` podle `docs-tree.md` a cituj ho cestou vůči kořeni repozitáře.
+  místo kódové reference. U každé položky vlny zavolej `sagittaras:read-docs`
+  s otázkou, které rozhodnutí chrání oblast jejího precedentu; staví-li
+  položka obrazovku nebo flow, zeptej se i na její UX spec. ADR, jehož pasáž
+  odpověď uvede v Chráněných rozhodnutích, přidej do `Reference` cestou
+  uvedenou pod pasáží, UX spec cestou z Opory i s kapitolou. Dokument, který
+  odpověď v Mezerách uvede jako nahrazený, nepřidávej. Vrátí-li odpověď, že
+  projekt nemá `CLAUDE.md` nebo bázi, další položky se už neptej a dokumenty
+  do Reference nepřidávej.
 - **Labely urči rovnou**, podle pravidel v Zásadách níže. Povolené hodnoty bere výčet
   ze sekce `Labely`; label mimo něj nezakládej bez potvrzení v kroku 6.
 
