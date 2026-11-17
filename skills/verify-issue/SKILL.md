@@ -158,9 +158,10 @@ Ověřuješ vždy dvojici. Chybí-li jedna strana, není co s čím porovnat.
 3. **Máš PR, chybí issue** → vezmi číslo z `Closes #N` v těle PR.
 4. **Máš issue, chybí PR** → recept „Najdi PR patřící k issue" z
    `forge-recipes.md`, podle forge:
-   - **GitHub** — issue, které jsi přečetl v kroku 2 (`issue-read.sh`), nese
-     pole `closedByPullRequestsReferences`: přímá vazba na PR, který ho
-     uzavírá, dohledávat `Closes #N` v tělech PR není potřeba.
+   - **GitHub** — `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-issue.sh" -R <owner/repo> <číslo issue>`
+     vrátí PR, která mají v těle `Closes #<číslo issue>`, i ta do integrační
+     větve. Pole `closedByPullRequestsReferences` z `issue-read.sh` je u nich
+     prázdné.
    - **Gitea** — vypiš PR nástrojem `list_pull_requests` se `state: "all"`
      a najdi ten, jehož `body` obsahuje `Closes #<číslo issue>`.
    Nenajdeš-li nic, zkus shodu podle názvu větve.

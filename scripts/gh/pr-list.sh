@@ -15,7 +15,8 @@
 # Vrácená pole: number, title, state, isDraft, headRefName, baseRefName,
 # milestone, labels, url, createdAt, updatedAt, mergedAt,
 # closingIssuesReferences. Tělo PR se záměrně nevrací — u pěti set záznamů
-# by zahltilo výstup; na vazbu k issue stačí closingIssuesReferences.
+# by zahltilo výstup. closingIssuesReferences GitHub plní jen u PR do výchozí
+# větve; vazbu PR → issue i do integrační větve najde gh/pr-for-issue.sh.
 #
 # Návratové kódy: 0 = v pořádku, 2 = chybný argument, 7 = gh chybí nebo není
 # přihlášené. Nenulový kód od gh propadá ven beze změny.

@@ -9,8 +9,8 @@
 #
 # Vrácená pole: number, title, body, state, labels, milestone, assignees,
 # author, url, createdAt, updatedAt, comments,
-# closedByPullRequestsReferences — to poslední je spolehlivá vazba na PR,
-# které issue uzavírá; hledat "Closes #N" v tělech PR není potřeba.
+# closedByPullRequestsReferences. To poslední GitHub plní jen u PR do výchozí
+# větve; PR do integrační větve v něm chybí — ten najde gh/pr-for-issue.sh.
 #
 # Návratové kódy: 0 = v pořádku, 2 = chybný argument, 7 = gh chybí nebo není
 # přihlášené. Nenulový kód od gh (typicky 1 u chybějícího issue nebo
