@@ -225,20 +225,27 @@ existuje a míří do integrační větve → krok 5. Jinak:
 
 Pro PR z kroku 4, i pro každé, které session po připomínkách aktualizovala:
 
-1. Ulož těla do dočasných souborů mimo pracovní strom. GitHub:
-   `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh" -R "<owner/repo>" <issue> --body >"$issue_f"`
-   a totéž `gh/pr-read.sh` pro PR. Gitea: tělo z `issue_read` a `pull_request_read`
-   zapiš heredocem s ukončovačem v uvozovkách.
-2. ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/criteria-tests.sh" --issue-body "$issue_f" \
-     --pr-body "$pr_f" --base <integrační větev> --head <větev PR> --ticked-body "$ticked_f"
+1. Těla ulož a `criteria-tests.sh` spusť **jedním voláním Bash** — proměnná
+   s adresářem by do dalšího volání nepřežila. GitHub:
+
+   ```bash
+   d="$(mktemp -d)"
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh" -R "<owner/repo>" <issue> --body >"$d/issue.md"
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-read.sh" -R "<owner/repo>" <číslo PR> --body >"$d/pr.md"
+   echo "dir=$d"
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/criteria-tests.sh" --issue-body "$d/issue.md" \
+     --pr-body "$d/pr.md" --base <integrační větev> --head <větev PR> --ticked-body "$d/ticked.md"
    ```
-3. Při kódu 0:
+
+   Gitea: místo dvou řádků s `gh/` zapiš těla z `issue_read` a `pull_request_read`
+   do `$d/issue.md` a `$d/pr.md` heredocy s ukončovačem v uvozovkách, ve stejném
+   volání. Cestu z řádku `dir=` dál piš doslova.
+2. Při kódu 0:
    `bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <větev PR> <integrační větev> -- <ověřovací příkaz oblasti>`
 
 | Výsledek | Co uděláš |
 | --- | --- |
-| oba kód 0 | nahraj `$ticked_f` jako tělo issue (recept „Uprav tělo issue"), pošli komentář „Brána prošla" (recept „Komentář k PR (review)") → krok 6 |
+| oba kód 0 | nahraj `<dir>/ticked.md` jako tělo issue (recept „Uprav tělo issue": `issue-update.sh -R "<owner/repo>" <issue> --body-file <dir>/ticked.md`), pošli komentář „Brána prošla" (recept „Komentář k PR (review)", tělo přes `--body-file -`), adresář `<dir>` smaž → krok 6 |
 | `criteria-tests` kód 1, brána kód 5 nebo 6 | pošli session signál „Brána neprošla" s řádky `fail=`, nebo se sekcí `[conflicts]` či `[output]`; po její odpovědi znovu krok 5 |
 | druhá červená brána po sobě u téhož PR | eskaluj |
 | kód 2 nebo 3 kteréhokoli skriptu | eskaluj — vadné issue nebo výpadek, ne chyba session |
