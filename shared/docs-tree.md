@@ -1,13 +1,14 @@
 # Strom dokumentace
 
 > **Rozsah:** Sdílený kontrakt pluginu `sagittaras`. Pravidla struktury znalostní
-> báze cílového projektu — stromu indexů, který začíná odkazem z `CLAUDE.md` — a postup,
-> jak v něm najít místo pro nový dokument a jak ho odkázat. Otevři ho vždy, když
-> dokument v bázi **zakládáš nebo rozšiřuješ** (`write-docs`, `write-adr`,
-> `write-art-bible`, `write-ux-spec`), když **posuzuješ** její strukturu nebo
-> dohledatelnost dokumentu (`review-docs`, `review-adr`, `review-ux-spec`), a když
-> doplňkový dokument citovaný v `Reference` **hledáš** (`plan-milestone`,
-> `implement-issue`, `verify-issue`, `review-milestone`).
+> báze cílového projektu — stromu indexů, který začíná odkazem z `CLAUDE.md` — a postupy,
+> jak v něm najít místo pro nový dokument, jak ho odkázat a jak v něm najít odpověď.
+> Otevři ho vždy, když dokument v bázi **zakládáš nebo rozšiřuješ** (`write-docs`,
+> `write-adr`, `write-art-bible`, `write-ux-spec`), když **posuzuješ** její strukturu
+> nebo dohledatelnost dokumentu (`review-docs`, `review-adr`, `review-ux-spec`), a když
+> v ní dokument nebo odpověď **hledáš** — doplňkový dokument citovaný v `Reference`
+> (`plan-milestone`, `implement-issue`, `verify-issue`, `review-milestone`) i zázemí,
+> o které se opírá zápis nebo review.
 
 Strom je jediná cesta k dokumentaci: co na něj nenavazuje, nikdo nenajde. Registr cest
 vedle dokumentů a hledání podle názvu souboru driftují, protože je změna, která
@@ -63,9 +64,8 @@ souboru:
 Najdeš-li při sestupu stránku, která téma už pokrývá, **rozšiř ji** místo zakládání
 druhé — dvě stránky o témže se rozejdou.
 
-Stejným sestupem se **hledá existující dokument** (ADR citovaný v `Reference`, art
-bible, UX spec): věta u odkazu řekne, který dokument platí a co v něm je, i když se
-nejmenuje tak, jak by Glob čekal.
+Existující dokument (ADR citovaný v `Reference`, art bible, UX spec) se hledá stejným
+sestupem; kdy skončit a kdy jít po odkazu dál, říká § Jak najít odpověď v bázi.
 
 ---
 
@@ -90,6 +90,35 @@ Ve stejné změně, ve které dokument vzniká:
 
 Věta u odkazu není popisek souboru, ale rozhodnutí pro čtenáře, jestli tam má
 sestoupit: říká, co tam najde, ne jak se soubor jmenuje.
+
+---
+
+## Jak najít odpověď v bázi
+
+Odpověď na otázku i konkrétní dokument hledej **sestupem po větách u odkazů**. Bázi
+neprohledávej Grepem, Globem ani `grep` v shellu — ani když sestup nic nenajde: řetězec
+ani název souboru neřekne, co na stránce je a který dokument platí, věta v indexu ano.
+
+1. Začni vstupním indexem, na který odkazuje `CLAUDE.md`. Neodkazuje-li na žádný,
+   platí § Projekt bez báze.
+2. V každém indexu otevři odkazy, jejichž věta pokrývá téma tvé otázky — kryjí-li ho
+   dvě, otevři obě. Odkaz, jehož věta téma nepokrývá, neotevírej, ani pro jistotu.
+3. Sestup končí u stránky, která odpověď nese. Sousední stránky pro úplnost nečti.
+   Míří-li odkaz na kotvu, odpověď je v té sekci.
+4. Ze stránky jdi po odkazu dál, jen když stránka odpověď odkazem odkládá jinam
+   („podrobnosti viz…"), nebo když odkaz míří na omezení či chráněné rozhodnutí
+   v oblasti, kterou se chystáš měnit. Odkaz na související téma nesleduj.
+5. Skončí-li sestup bez stránky, která odpověď nese, báze ji nemá. Vyčti ji z kódu,
+   jde-li to, a mezeru uveď ve výstupu. Stránku mimochodem nezakládej — bázi rozšiřuje
+   `/sagittaras:write-docs`.
+
+**Rozpor stránky s kódem nerozhoduj přepisem jedné strany podle druhé.** Popisuje-li
+stránka, *jak* kód funguje, platí kód a stránku uveď ve výstupu jako zastaralou.
+Nese-li chráněné rozhodnutí — *proč* je konstrukce taková, jaká je —, rozpor uveď
+a kód proti rozhodnutí neměň.
+
+**Z čeho vycházíš, cituj relativní cestou s kotvou**, aby si to čtenář výstupu ověřil
+bez nového sestupu.
 
 ---
 

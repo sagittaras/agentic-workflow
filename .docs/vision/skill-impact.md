@@ -110,7 +110,10 @@ píšou po svém.
 z 1.7 na jednom místě, odkud je čtou `write-docs`, `review-docs`
 i specializované skilly — a skript kontroly struktury ve `scripts/` (bash,
 jako ostatní skripty pluginu): sirotci, indexy bez odkazu na vlastní stránky,
-mrtvé odkazy a kotvy, `CLAUDE.md` bez odkazu na vstupní index.
+mrtvé odkazy a kotvy, `CLAUDE.md` bez odkazu na vstupní index. Kontrakt nese
+i postup čtení (§ Jak najít odpověď v bázi). Čtecí skilly z [tabulky
+1.7](#princip-17) si dnes sestup parafrázují každý po svém; místo parafráze
+na něj odkážou, až se na ně bude sahat (3.1).
 
 ## Principy 2.6–2.9
 

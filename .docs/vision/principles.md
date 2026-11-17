@@ -351,7 +351,10 @@ neumí: jestli věta u odkazu říká, co na stránce je, jestli stránka nedubl
 - **Sdílený kontrakt `shared/docs-tree.md`** s pravidly struktury na jednom
   místě a **skript kontroly struktury** ve `scripts/`. Čtou a spouští je
   i specializované skilly, když dokument zakládají — umístění a odkázání tak
-  přestává být mechanika, kterou si každý řeší po svém.
+  přestává být mechanika, kterou si každý řeší po svém. Kontrakt nese i postup
+  čtení: kdy sestup skončí, kdy jít po odkazu dál a co dělat, když báze
+  odpověď nemá. Bez něj by sestup říkal jen kudy jít, ne kdy přestat, a čtenář
+  by buď četl do šířky pro jistotu, nebo se vrátil ke grepu.
 
 Výchozí umístění je `.docs/`. Projekt, který už má vlastní dokumentační
 složku, si ji ponechá — pravidla struktury platí stejně.
