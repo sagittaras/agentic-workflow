@@ -60,7 +60,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
 | Založ label | `label_write` → `create_repo_label`, `name`, `color` | `gh/label-create.sh --name N --color C` |
 | Založ PR | `pull_request_write` → `create`, `base`, `head`, `title`, `body` | `gh/pr-create.sh --base B --head H --title T --body-file F` |
 | Přečti PR | `pull_request_read` → `get`, `pull_number` | `gh/pr-read.sh <n>` |
-| Najdi PR podle head větve | `list_pull_requests`, `state: "open"` → porovnej `head` v odpovědi | `gh/pr-list.sh --state all` → porovnej `headRefName` |
+| Najdi PR podle head větve | `list_pull_requests`, `state` → porovnej `head` v odpovědi | `gh/pr-for-branch.sh <head> [--state open]` |
 | Najdi PR patřící k issue | `list_pull_requests`, `state: "all"` → porovnej `head` a `Closes #N` v těle | `gh/pr-for-issue.sh <n>`, v běhu milestonu s `--base <integrační větev>` |
 | Vypiš PR milestonu | `list_pull_requests`, `milestone: <id>`, `state: "all"` | `gh/pr-list.sh --milestone <m> --state all` |
 | Přiřaď PR milestone | `pull_request_write` → `update`, `pull_number`, `milestone` | `gh/pr-set-milestone.sh <n> --milestone M` |
@@ -97,5 +97,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
 - **404 na zápisu, i když objekt zjevně existuje**, je skoro vždy chybějící oprávnění
   účtu, pod kterým MCP běží — ne špatný název. Ověř `get_me`, řekni to uživateli a nech
   ho přidat přístup; nehádej jiný repozitář.
-- **Tělo se předává souborem (`--body-file`), ne argumentem.** Víceřádkový markdown
-  s uvozovkami a zpětnými apostrofy se v shellu jinak rozpadne.
+- **Tělo se předává souborem (`--body-file F`), nebo ze stdin (`--body-file -`
+  s heredocem, ukončovač v uvozovkách), nikdy argumentem.** Víceřádkový markdown
+  s uvozovkami a zpětnými apostrofy se v shellu jinak rozpadne. Stdin ušetří
+  dočasný soubor i jeho úklid.

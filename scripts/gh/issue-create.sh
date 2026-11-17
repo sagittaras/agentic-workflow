@@ -2,12 +2,12 @@
 # Založí issue. Výstup je key=value na stdout.
 #
 # Použití:
-#   bash scripts/gh/issue-create.sh -R owner/repo --title T --body-file F \
+#   bash scripts/gh/issue-create.sh -R owner/repo --title T --body-file F|- \
 #     [--milestone M] [--label L]…
 #
-# Tělo se předává vždy souborem. Víceřádkový markdown v argumentu se
-# o uvozovky a zpětné apostrofy rozbije, a rozbije se tiše — vznikne issue
-# s useknutým tělem.
+# Tělo se předává souborem, nebo "-" ze stdin (heredoc), nikdy argumentem.
+# Víceřádkový markdown v argumentu se o uvozovky a zpětné apostrofy rozbije,
+# a rozbije se tiše — vznikne issue s useknutým tělem.
 #
 # --label se smí opakovat; label musí v repozitáři existovat, jinak gh
 # založení odmítne. Na doplnění chybějícího labelu je label-create.sh.
@@ -42,7 +42,7 @@ require_repo "$repo"
 require_body_file "$body_file"
 gh_require
 
-args=(issue create -R "$repo" --title "$title" --body-file "$body_file")
+args=(issue create -R "$repo" --title "$title" --body-file "$BODY_FILE")
 if [ -n "$milestone" ]; then
   args+=(--milestone "$milestone")
 fi

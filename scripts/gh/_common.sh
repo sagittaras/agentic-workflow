@@ -52,13 +52,31 @@ require_number() {
   esac
 }
 
+# require_body_file <cesta|-> — ověří tělo a nastaví BODY_FILE na soubor,
+# který se předá gh. Volá se přímo, ne v $(…): trap úklidu musí patřit
+# skriptu, ne podshellu.
+#
+# "-" čte tělo ze stdin, typicky z heredocu s ukončovačem v uvozovkách ve
+# stejném volání. Volající tak nezakládá dočasný soubor ani po sobě neuklízí
+# a mezi voláními Bash nemusí přežít žádná proměnná s cestou. Prázdné tělo
+# ze stdin je chyba: obvykle znamená rozbitý heredoc, ne záměr.
 require_body_file() {
   if [ -z "${1:-}" ]; then
-    die_usage "missing_body_file" "tělo se předává souborem: --body-file <cesta>"
+    die_usage "missing_body_file" "tělo se předává souborem nebo stdin: --body-file <cesta|->"
+  fi
+  if [ "$1" = "-" ]; then
+    BODY_FILE="$(mktemp)"
+    trap 'rm -f "$BODY_FILE"' EXIT
+    cat >"$BODY_FILE"
+    if [ ! -s "$BODY_FILE" ]; then
+      die_usage "empty_body" "tělo ze stdin je prázdné; předej ho heredocem s ukončovačem v uvozovkách"
+    fi
+    return 0
   fi
   if [ ! -f "$1" ]; then
     die_usage "body_file_not_found" "soubor s tělem '$1' neexistuje"
   fi
+  BODY_FILE="$1"
 }
 
 require_value() {
