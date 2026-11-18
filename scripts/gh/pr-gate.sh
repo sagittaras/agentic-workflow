@@ -13,7 +13,8 @@
 #
 # Výstup: pr=, issue=, head=, base=; řádky criteria-tests.sh (criteria=,
 # tested=, human=, changed_files=, fail=…), criteria_tests=pass|fail; řádky
-# brány (merge=, check=, conflicts=, command=, exit_code=, worktree_removed=);
+# brány (pr_sha=, integration_sha=, merge=, check=, conflicts=, command=,
+# exit_code=, worktree_removed=);
 # issue_body=updated|skipped, comment_mode=review|comment|skipped; result=pass|fail.
 # Sekce brány ([conflicts], [merge_output], [output]) se vypisují jen při
 # neúspěchu — při úspěchu výstup ověřovacího příkazu nikoho nezajímá a jen plní
@@ -115,7 +116,7 @@ case "$rc" in
   *) cat "$d/gate.err" >&2; exit 3 ;;
 esac
 # Hlavička brány (do první prázdné řádky) bez interních cest.
-printf '%s\n' "$gate_out" | sed '/^$/q' | grep -E '^(merge|check|conflicts|command|exit_code|worktree_removed)=' || true
+printf '%s\n' "$gate_out" | sed '/^$/q' | grep -E '^(pr_sha|integration_sha|merge|check|conflicts|command|exit_code|worktree_removed)=' || true
 if [ "$rc" -ne 0 ]; then
   printf '%s\n' "$gate_out" | sed -n '/^\[/,$p'
   echo "result=fail"

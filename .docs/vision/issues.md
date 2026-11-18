@@ -407,7 +407,9 @@ session v PR přizná, že bránu spustila jen sama.
 z konce (po review, těsně před merge) před lidské review. Červená brána jde
 zpátky session stejnou cestou jako připomínky (2.8, signál) a člověk ji
 nevidí. Před merge na schválení (2.6) zopakuje bránu orchestrátor; červenou
-vrací session a opravené PR jde ke schválení znovu. A protože
+vrací session a opravené PR jde ke schválení znovu — kromě opravy konfliktu
+po merge souběžného PR, po které schválení platí dál (běh M1, viz [mapa
+dopadu](skill-impact.md#nálezy-z-provozu-běh-m1)). A protože
 `verify-issue` přestal být povinnou bránou, zaškrtávátka v těle issue by
 nikdo neodškrtal: odškrtne je orchestrátor u kritérií, jejichž test potvrdil
 — znamená to „kryto testem, který prošel", nic víc.

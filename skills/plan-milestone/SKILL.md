@@ -117,7 +117,8 @@ nestojí nic.
 
 Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
 projektu. Potřebuješ z ní podsekce **Forge** (kterou větev receptů použít),
-**Labely** (co smíš nasadit) a **Jazyk issues**.
+**Labely** (co smíš nasadit), **Ověřovací příkazy** (kontrola pořadí v kroku 4)
+a **Jazyk issues**.
 
 - **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
   hodnoty. Řekni uživateli, že projekt nemá workflow konfiguraci, a nabídni
@@ -178,7 +179,7 @@ co dělat, dokud první issue nepřibude v příští vlně.
 Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` a piš přesně podle něj —
 tvar názvu, sekce těla i pravidla pro psaní kritérií, včetně jeho sekce
 „Reference je precedent v kódu". Jazyk textu určuje sekce `Jazyk issues`
-z konfigurace.
+z konfigurace; nadpisy sekcí a značku `(ověří člověk)` piš doslova podle šablony.
 
 Nad rámec šablony platí:
 
@@ -206,6 +207,12 @@ Nad rámec šablony platí:
   Vzniklý cyklus rozetni tak, že rozdělíš jedno z issues, ne tak, že závislost
   zamlčíš — `run-milestone` z ní staví graf a zamlčená hrana pošle práci na
   rozpracovaný základ.
+- **Ověřovací příkaz oblasti musí projít po každém issue nad tím, na čem podle
+  `Závisí na` stojí.** Potřebuje-li soubor, který vzniká v issue, na kterém
+  nezávisí (třeba `docker compose config` bez compose souboru), přidej tu
+  závislost; vznikl-li by cyklus, přesuň soubor do dřívějšího issue, nebo
+  issues sluč. Jinak issue neprojde bránou, dokud není hotové jiné, a vznikne
+  cyklus, který graf nevidí.
 - **Každé kritérium ukotvi v precedentu nalezeném v kroku 3** a tu cestu
   uveď v `Reference` — soubor nebo vzor v kódu, ne sekce dokumentu. Odkaz na
   ADR smíš přidat jako doplňkové omezení („nesahej na X, viz ADR-N"), nikdy

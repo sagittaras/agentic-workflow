@@ -6,7 +6,7 @@
 #
 # Kritérium 1: mapa sedí a příkaz projde → kód 0, issue dostane odškrtnuté
 #              kritérium, PR komentář „Brána prošla" se správnými počty,
-#              výstup příkazu se nevypisuje.
+#              výstup příkazu se nevypisuje, pr_sha= a integration_sha= ano.
 # Kritérium 2: chybějící řádek mapy → kód 1 s fail=, do trackeru se nezapisuje.
 # Kritérium 3: selhaný ověřovací příkaz → kód 6 se sekcí [output], bez zápisu.
 # Kritérium 4: PR mířící jinam než --base → kód 2 dřív, než cokoli spustí.
@@ -106,6 +106,7 @@ run() { # run <pr body> <pr base> [args…] — vrací výstup v $out a kód v $
 
 run "$fx/pr-ok.md" milestone/x -- sh -c 'echo BUILD-$((40+2)); exit 0'
 if [ "$rc" -ne 0 ] || ! grep -qx 'result=pass' <<<"$out" \
+   || ! grep -qE '^pr_sha=[0-9a-f]{40}$' <<<"$out" || ! grep -qE '^integration_sha=[0-9a-f]{40}$' <<<"$out" \
    || ! grep -qx -- '- \[x\] Testované kritérium.' "$fx/written-issue.md" 2>/dev/null \
    || ! grep -qx -- '- \[ \] Dokumentace. (ověří člověk)' "$fx/written-issue.md" 2>/dev/null \
    || ! grep -q 'Testy kritérií: 1 z 2, 1 ověří člověk' "$fx/written-comment.md" 2>/dev/null \

@@ -104,5 +104,5 @@ každém spuštění skillu:
 - [Tvar skillů](skill-design.md) — 3.1: skill jako základní linie postupu,
   příkaz místo popisu, test každé věty a spouštěče úvahy, kterým se vyhnout.
 - [Dopad na existující skilly](skill-impact.md) — který skill se kterým
-  principem mění a jak; samostatná tabulka pro 1.7 a výčet skillů, kterých se
-  vize netýká.
+  principem mění a jak; samostatná tabulka pro 1.7, úpravy mechaniky po nálezech
+  prvního ostrého běhu milestonu a výčet skillů, kterých se vize netýká.

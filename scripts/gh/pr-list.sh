@@ -5,8 +5,10 @@
 # Použití:
 #   bash scripts/gh/pr-list.sh -R owner/repo [--milestone M] [--state open|closed|all]
 #
-# gh pr list nemá přepínač na milestone, filtruje se vyhledávacím
-# kvalifikátorem milestone:"<název>" — proto je M název, ne číslo.
+# --milestone bere název i číslo. gh pr list nemá přepínač na milestone,
+# filtruje se vyhledávacím kvalifikátorem milestone:"<název>", který číslu
+# nerozumí a s ním potichu vrátí [] (běh M1, nález F4) — číslo se proto napřed
+# přeloží na název. Neexistující číslo propadne chybou gh, ne prázdným polem.
 # Bez --state se vypisují jen otevřené; na kontrolu „všechno je mergnuté"
 # se ptej s --state all a dívej se na mergedAt, ne jen na state.
 #
@@ -42,6 +44,11 @@ done
 require_repo "$repo"
 check_state "$state"
 gh_require
+
+case "$milestone" in
+  ''|*[!0-9]*) : ;;
+  *) milestone="$(gh api "repos/$repo/milestones/$milestone" --jq .title)" ;;
+esac
 
 args=(pr list -R "$repo" --state "$state" --limit "$LIMIT" --json "$FIELDS")
 if [ -n "$milestone" ]; then

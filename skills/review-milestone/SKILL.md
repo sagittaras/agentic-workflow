@@ -200,7 +200,8 @@ je precedent v kódu", o kterou se opírá okruh 4b. Zkontroluj:
 
 - sadu a pořadí sekcí těla, včetně toho, kdy se `Závisí na` vynechává celá;
 - tvar názvu a jeho shodu s typovým labelem na issue;
-- jazyk popisů proti sekci `Jazyk issues` v konfiguraci;
+- jazyk popisů proti sekci `Jazyk issues` v konfiguraci — nadpisy sekcí a značka
+  `(ověří člověk)` zůstávají česky v každém jazyce, přeložený nadpis je nález;
 - stav zaškrtávátek — odškrtává až brána `run-milestone` podle potvrzeného
   testu, nebo ručně spuštěný `verify-issue` podle toho, co skutečně ověřil
   (viz obecné pravidlo o otevřených a zavřených issues výš);

@@ -89,7 +89,7 @@ criteria="$(tr -d '\r' <"$issue_body" | awk '
   /^## / { in_sec = ($0 ~ /^## Akceptační kritéria[[:space:]]*$/); next }
   in_sec && /^- \[[ xX]\] / { n++; print n "\t" ($0 ~ /\(ověří člověk[)[:space:]—–:,-]/ ? 1 : 0) }
 ')"
-[ -n "$criteria" ] || die missing_criteria_section "tělo issue nemá sekci '## Akceptační kritéria' s řádky '- [ ]'"
+[ -n "$criteria" ] || die missing_criteria_section "tělo issue nemá sekci '## Akceptační kritéria' s řádky '- [ ]'; nadpisy šablony se nepřekládají (shared/issue-template.md)"
 criteria_count="$(printf '%s\n' "$criteria" | grep -c .)"
 
 # --- mapa v PR -----------------------------------------------------------

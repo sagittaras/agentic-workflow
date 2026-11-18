@@ -87,6 +87,10 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
 - **Stránkuje se po 30.** Než uvěříš, že jsi viděl všechny issues milestonu, porovnej
   počet s `open_issues` + `closed_issues` z `milestone_read`. Při rozporu radši ohlas
   než rozhodni.
+- **GitHub počítá do počtů milestonu i PR.** REST `open_issues` a `closed_issues`
+  zahrnují pull requesty, kterým plugin milestone přiřazuje. `gh/milestone-list.sh`
+  proto počty čte přes GraphQL jen za issues — s výpisem `gh/issue-list.sh` se
+  shodují. Počty z jiného volání (`gh api …/milestones`) k té kontrole nepoužívej.
 - **Komentář se přidává metodou `add_comment`, ne `comment`.**
 - **GitHub propojuje `Closes #N` jen u PR do výchozí větve.** U PR do integrační větve
   zůstává `closedByPullRequestsReferences` u issue i `closingIssuesReferences` u PR

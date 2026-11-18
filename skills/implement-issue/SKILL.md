@@ -30,6 +30,9 @@ effort: xhigh
 # dalším volání (~13k tokenů × Ø 85 volání), proto v těle nejsou zdůvodnění
 # kroků. Paralelní čtení v kroku 3 míří na počet volání — každé stojí aspoň
 # ~86k tokenů výchozího kontextu session.
+# Strojový řádek stojí na začátku zprávy (běh M1, nález F7): notifikace
+# orchestrátoru nese recap a jen ~400 znaků zprávy, řádek na konci se do ní
+# nevešel. „PR: rozpracováno" je pro kolo, které končí s příkazem na pozadí.
 # Merge jen na schválení, které člověk napsal přímo do téhle session (issue #70):
 # zprávu jiné session klasifikátor auto mode za schválení nebere a merge
 # zamítne, proto v běhu milestonu merguje orchestrátor.
@@ -214,8 +217,8 @@ Zavolej skill `sagittaras:open-pr` a předej mu:
 - pokyn, ať PR nemerguje — ani když prompt, kterým jsi byl spuštěn, obsahoval souhlas
   k mergi.
 
-Sám necommituj ani nepushuj. Nevrátí-li `open-pr` číslo a odkaz PR, eskaluj zprávou
-zakončenou `PR: žádné` a vlastní PR nezakládej. Vrátilo-li číslo, ohlas ho Formátem
+Sám necommituj ani nepushuj. Nevrátí-li `open-pr` číslo a odkaz PR, eskaluj Formátem
+výstupu a vlastní PR nezakládej. Vrátilo-li číslo, ohlas ho Formátem
 výstupu a skonči kolo; zůstáváš k dispozici pro krok 9.
 
 ### 9. Čekej na signál a zapracuj ho
@@ -280,10 +283,12 @@ co má opravit `plan-milestone`.
 
 ## Formát výstupu
 
-Zpráva na konci úspěšného běhu. Poslední řádek je **doslovný** — `run-milestone`
-podle něj pozná, že dispatch skutečně něco dodal:
+Každá zpráva **začíná doslovným strojovým řádkem**.
+
+Zpráva na konci úspěšného běhu:
 
 ```markdown
+PR: #<číslo>
 Issue: #<číslo> — <název>
 Větev: <type>/<popis>, základ <základní větev>
 Kritéria: <kolik> z <kolik> kryje test, <kolik> ověří člověk
@@ -291,33 +296,33 @@ Ověření: <příkaz> a testy z mapy — prošlo
 Brána: <potvrdí orchestrátor | potvrdí CI | spustila jen session>
 Odkaz: <url PR>
 Poznámky: <co jsi vědomě neudělal a proč; vynech, není-li co dodat>
-
-PR: #<číslo>
 ```
 
-Zpráva při eskalaci — poslední řádek je opět doslovný:
+Zpráva při eskalaci:
 
 ```markdown
-Nedokončeno: #<číslo issue> — <jednou větou proč>
+PR: žádné — <jednou větou proč>
+Issue: #<číslo> — <název>
 Stav: <co je hotové a kde leží; „nic nezměněno", když se nezačalo>
 Potřebuji rozhodnout: <konkrétní otázka, nebo co má opravit plan-milestone>
-
-PR: žádné
 ```
 
-Zpráva po kole oprav (připomínky, červená brána, i červená brána před merge) —
-poslední řádek doslovný:
+Zpráva po kole oprav (připomínky, červená brána, i červená brána před merge):
 
 ```markdown
+PR: #<číslo>
 Zapracováno: <připomínky | nálezy brány>, <stručně co se změnilo>
 Ověření: <příkaz> a testy z mapy — <prošlo | selhalo, proč>
 Merge: <neproveden — čeká na schválení | neproveden — schválení musí napsat člověk | neproveden — brána proti <základní větev> červená: <kód a nález>>
-
-PR: #<číslo>
 ```
 
-Zpráva po merge — začíná doslovným řádkem, podle kterého orchestrátor pozná, že
-PR je zmergované:
+Zpráva, když končíš kolo a práce ještě běží (třeba ověřovací příkaz na pozadí):
+
+```markdown
+PR: rozpracováno — <na co čekáš>
+```
+
+Zpráva po merge:
 
 ```markdown
 MERGED: #<číslo PR>
@@ -327,8 +332,8 @@ Brána před merge: <cílová větev se nepohnula | zopakována — prošla>
 
 ## Zásady
 
-- **Zpráva vždy nese strojový řádek `PR:` nebo `MERGED:`** a eskalace nikdy nezní jako
-  úspěch.
+- **Zpráva vždy začíná strojovým řádkem `PR:` nebo `MERGED:`** a eskalace nikdy nezní
+  jako úspěch.
 - **Git jen přes delegaci:** `create-branch`, `open-pr`, pro opravy `make-commit`;
   merge jen skriptem nebo receptem z kroku 9. Výjimkou jsou čtecí kontroly
   (`branch-state.sh`) a `integration-gate.sh`, které nic nemění.

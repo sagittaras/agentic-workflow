@@ -109,8 +109,8 @@ na projektu.
 | **Větvení** | `run-milestone`, `implement-issue`, `open-pr`, `close-milestone` | odkud se větví, kam se mergeuje, co smí jen člověk |
 | **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat |
 | **Agenti** | `run-milestone` | komu poslat issue k implementaci |
-| **Ověřovací příkazy** | `verify-issue`, `run-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
-| **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | aby milestone nebyl dvojjazyčný |
+| **Ověřovací příkazy** | `verify-issue`, `run-milestone`, `plan-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
+| **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | v jakém jazyce psát text issues; strojové nadpisy šablony zůstávají česky v každém jazyce |
 
 **Podsekce Agenti je jediná nepovinná.** `init-workflow` ji do `CONTRIBUTING.md`
 založí, právě když vznikne aspoň jeden řádek `oblast → agent` — jinak ji nezaloží

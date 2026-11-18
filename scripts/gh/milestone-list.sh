@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-# Vypíše milestony repozitáře. Vypisuje JSON tak, jak ho vrátí gh.
+# Vypíše milestony repozitáře jako jedno ploché JSON pole.
 #
 # Použití:
 #   bash scripts/gh/milestone-list.sh -R owner/repo [--state open|closed|all]
 #
-# gh nemá `gh milestone`, jde se přes gh api. Stránkuje se po 100 a sbírá se
-# přes --paginate. Novější gh umí --slurp a slepí stránky do jednoho pole;
-# starší vypíše víc polí za sebou — na to se koukej, než výstup naparsuješ.
-# Klíče open_issues a closed_issues z každého milestonu slouží jako kontrola,
-# jestli výpis issues nebyl useknutý.
+# Čte se přes GraphQL, ne přes REST: REST počty open_issues a closed_issues
+# zahrnují i pull requesty, kterým plugin milestone přiřazuje, takže by se
+# s výpisem z issue-list.sh nikdy neshodovaly (běh M1, nález F3). Tady jsou
+# open_issues a closed_issues jen za issues a slouží jako kontrola, jestli výpis
+# issues nebyl useknutý. Stránkuje se po 100 a stránky se slévají do jednoho
+# pole — výstup se nemusí zplošťovat.
+#
+# Vrácená pole: number, title, state (open|closed), description, due_on,
+# html_url, open_issues, closed_issues.
 #
 # Návratové kódy: 0 = v pořádku, 2 = chybný argument, 7 = gh chybí nebo není
 # přihlášené. Nenulový kód od gh propadá ven beze změny.
@@ -30,10 +34,29 @@ require_repo "$repo"
 check_state "$state"
 gh_require
 
-path="repos/$repo/milestones?state=$state&per_page=100"
+case "$state" in
+  open) states="[OPEN]" ;;
+  closed) states="[CLOSED]" ;;
+  all) states="[OPEN, CLOSED]" ;;
+esac
 
-if gh api --help 2>/dev/null | grep -q -- '--slurp'; then
-  gh api "$path" --paginate --slurp
-else
-  gh api "$path" --paginate
-fi
+query='query($owner: String!, $name: String!, $endCursor: String) {
+  repository(owner: $owner, name: $name) {
+    milestones(first: 100, after: $endCursor, states: '"$states"') {
+      nodes {
+        number title state description dueOn url
+        openIssues: issues(states: [OPEN]) { totalCount }
+        closedIssues: issues(states: [CLOSED]) { totalCount }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }
+}'
+filter='.data.repository.milestones.nodes[] | {number, title, state: (.state | ascii_downcase), description, due_on: .dueOn, html_url: .url, open_issues: .openIssues.totalCount, closed_issues: .closedIssues.totalCount}'
+
+# Jeden kompaktní objekt na řádek; do pole se slévá až po úspěchu gh, aby
+# selhání v půlce stránkování nevypsalo useknuté, ale platné pole.
+lines="$(gh api graphql --paginate -f owner="${repo%%/*}" -f name="${repo#*/}" \
+  -f query="$query" --jq "$filter")"
+
+printf '[%s]\n' "$(printf '%s' "$lines" | paste -sd, -)"

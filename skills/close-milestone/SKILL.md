@@ -147,10 +147,9 @@ podle forge víc, než vypadá:
   i pull requesty, počet vyjde vyšší a kontrola „všechno zavřené" projde omylem
   — přesně to selhání, kvůli kterému skill existuje. Stránkuje se po 30, takže
   načítej další stránky (`page`), dokud poslední vrátí plných 30.
-- **GitHub** → `issue-list.sh --milestone "<název>" --state all`. `--milestone`
-  bere **název milestonu, ne číslo**; s číslem filtr vrátí prázdno, kontrola
-  níž pak selže na neshodě počtů a vypadá to jako porucha trackeru. Filtr typu
-  tu nemá protějšek a nepotřebuje ho — `gh issue list` pull requesty nevrací.
+- **GitHub** → `issue-list.sh --milestone "<název>" --state all`. Filtr typu
+  tu nemá protějšek a nepotřebuje ho — `gh issue list` pull requesty nevrací
+  a `milestone-list.sh` počítá `open_issues` a `closed_issues` také bez PR.
   Nestránkuje se, ale výpis je useknutý na 500 položek; blíží-li se počet téhle
   hranici, ohlas to a nerozhoduj z něj.
 
@@ -179,8 +178,7 @@ Parametr milestonu je tu jiný než v kroku 2:
 
 - **Gitea** → `list_pull_requests`, `milestone` jako **jedno číslo** (ne pole
   jako u `list_issues`).
-- **GitHub** → `pr-list.sh --milestone "<název>" --state all`, tedy stejně jako
-  u issues **název**, protože `gh pr list` filtruje vyhledávacím kvalifikátorem.
+- **GitHub** → `pr-list.sh --milestone "<název>" --state all`.
 
 Stav `closed` sám o sobě **nerozlišuje** merge od zavření bez merge. Rozhodující
 pole se liší podle forge a jiné pole na tohle rozhodnutí nepoužívej:

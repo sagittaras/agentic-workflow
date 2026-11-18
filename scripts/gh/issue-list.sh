@@ -5,13 +5,13 @@
 # Použití:
 #   bash scripts/gh/issue-list.sh -R owner/repo [--milestone M] [--state open|closed|all]
 #
-# --milestone bere název milestonu, ne číslo. Bez --state se vypisují jen
-# otevřené — na kontrolu „je všechno hotové" se ptej s --state all.
+# --milestone bere název i číslo, gh issue list rozumí obojímu. Bez --state se
+# vypisují jen otevřené — na kontrolu „je všechno hotové" se ptej s --state all.
 #
 # gh issue list pull requesty nevrací, takže počet nenafoukne o PR; limit je
-# pevných 500 položek. Když se milestone blíží té hranici, porovnej počet
-# s open_issues + closed_issues z milestone-list.sh a radši to ohlas,
-# než abys z useknutého výpisu rozhodl.
+# pevných 500 položek. Počet porovnej s open_issues + closed_issues
+# z milestone-list.sh (ty také počítají jen issues) a při neshodě to radši
+# ohlas, než abys z useknutého výpisu rozhodl.
 #
 # Vrácená pole: number, title, state, labels, milestone, assignees, url,
 # createdAt, updatedAt. Tělo issue ve výpisu není, na to je issue-read.sh.
