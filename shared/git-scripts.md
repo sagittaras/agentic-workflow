@@ -179,6 +179,7 @@ co potřebuje, bez dalšího kola.
 | `pr-set-milestone.sh` | `<number> --milestone M` |
 | `pr-comment.sh` | `<number> --body-file F\|-` |
 | `pr-merge.sh` | `<number> [--squash] [--delete-branch]` |
+| `pr-gate.sh` | `<number> --issue N --base B [--no-write] [-- <příkaz…>]` — brána před review jedním voláním, viz níž |
 
 **Tělo se nikdy nepředává argumentem**, ale souborem, nebo ze stdin přes `--body-file -`
 (heredoc s ukončovačem v uvozovkách ve stejném volání). Víceřádkový markdown v argumentu
@@ -188,3 +189,22 @@ Bash nepřežije; prázdné tělo ze stdin skončí kódem `2` (`empty_body`).
 
 Chybějící `gh` nebo nepřihlášený `gh auth status` hlas kódem `7` s vysvětlením na stderr;
 skill to má uživateli říct rovnou, ne narazit až v půlce běhu milestonu.
+
+### `gh/pr-gate.sh <PR> --issue N --base B [--no-write] [-- <příkaz…>]`
+
+Brána `run-milestone` před review: přečte tělo issue a PR, hlavu i cíl PR vezme
+z forge, spustí `criteria-tests.sh` a při kódu `0` `integration-gate.sh`. Prošlo-li
+obojí, nahraje tělo issue s odškrtnutými kritérii a pošle k PR komentář „Brána
+prošla"; s `--no-write` jen ohlásí, že by to udělal.
+
+- **Výstup:** `pr=`, `issue=`, `head=`, `base=`, řádky `criteria-tests.sh` (bez
+  `result=`), `criteria_tests=pass|fail`, řádky brány `merge=`, `check=`,
+  `conflicts=`, `command=`, `exit_code=`, `worktree_removed=`, pak
+  `issue_body=updated|skipped`, `comment_mode=review|comment|skipped`,
+  `result=pass|fail`. Sekce brány (`[conflicts]`, `[merge_output]`, `[output]`)
+  jen při neúspěchu; u kódů `2`, `3`, `4` a `7` řádek `result=` chybí a důvod nese
+  `error=` na stderr.
+- **Kódy:** `0` prošlo a je zapsáno · `1` nález v mapě kritérií · `2` chybný
+  argument, PR nemíří do `--base` nebo issue bez sekce kritérií · `3` čtení
+  z forge, remote nebo worktree selhalo · `4` brána prošla, ale zápis do trackeru
+  selhal · `5` konflikt · `6` ověřovací příkaz selhal · `7` chybí `gh`.

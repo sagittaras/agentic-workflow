@@ -41,7 +41,7 @@ user-invocable: true
 # Vynechaná zvažovaná pole: allowed-tools — sada nástrojů se liší podle forge
 # a na Gitea jde o odložené `mcp__gitea__*` načítané za běhu přes ToolSearch;
 # uzavřený výčet by je nepokryl a gitea větev by tiše spadla při zakládání PR.
-# Hranicí je tady podmínka výslovného souhlasu v Zásadách, ne zúžení práv;
+# Hranicí je tady podmínka výslovného souhlasu (Vstupní kontext, krok 8), ne zúžení práv;
 # disable-model-invocation — automatické vyvolání na konci implement-issue je
 # celý smysl skillu a PR je vratný artefakt (dá se zavřít);
 # context/agent/background — název a tělo PR se píšou z kontextu odvedené
@@ -54,26 +54,22 @@ user-invocable: true
 
 # Open PR
 
-Cílem je pull request otevřený proti správné základní větvi, s názvem a tělem,
-ze kterých je poznat, co se mění a co se tím zavírá. Git mechaniku skill sám
-nepíše — commit a push deleguje na `sagittaras:make-commit`, zakládání větve na
-`sagittaras:create-branch`. Závazným kontraktem jsou sdílené soubory pluginu;
-při rozporu s tímhle postupem platí ony.
+Cílem je pull request otevřený proti správné základní větvi, s názvem a tělem, ze
+kterých je poznat, co se mění a co se tím zavírá. Commit a push deleguje na
+`sagittaras:make-commit`, zakládání větve na `sagittaras:create-branch`. Při rozporu
+s tímhle postupem platí sdílené soubory pluginu.
 
 | Soubor | Kdy ho otevři |
 | --- | --- |
-| `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | V kroku 1, když projektová konfigurace chybí nebo v ní nenajdeš sekci `Forge` či `Větvení` |
-| `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | Když skript skončí kódem, který postup níže nemapuje |
-| `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | Na Gitea v kroku 6, dřív než sáhneš na tracker — včetně sekce s nástrahami |
+| `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | v kroku 1, když konfigurace chybí nebo v ní nenajdeš sekci `Forge` či `Větvení` |
+| `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | když skript skončí kódem, který postup níže nemapuje |
+| `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | na Gitea v kroku 6, dřív než sáhneš na tracker |
 
-Obsah sdílených souborů si **přečti, ale nepřepisuj do odpovědi**. Recepty se
-mění na jednom místě; kopie v konverzaci zastará a další běh podle ní založí PR
-jinak.
+Obsah sdílených souborů nepřepisuj do odpovědi.
 
 ## Skripty
 
-Stav repozitáře i operace nad GitHubem jdou přes skripty pluginu, volané vždy
-tvarem `bash "<cesta>"`. Příkaz `git` ani `gh` nevolej přímo.
+Skripty volej tvarem `bash "<cesta>"`; `git` ani `gh` nevolej přímo.
 
 | Skript | Co dělá |
 | --- | --- |
@@ -84,93 +80,64 @@ tvarem `bash "<cesta>"`. Příkaz `git` ani `gh` nevolej přímo.
 | `${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-set-milestone.sh` | Přiřadí PR milestone (podle názvu) |
 | `${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-merge.sh` | Mergne PR |
 
-**Každý `gh/` skript potřebuje `-R <owner/repo>`** ze sekce `Forge` konfigurace.
-Bez něj skončí kódem `2`; aktuální adresář v izolovaném worktree `run-milestone`
-nemusí ukazovat na správný repozitář. Společné kódy `gh/` skriptů: `2` chybné
-volání (oprav argumenty, opakování beze změny selže znovu), `7` chybí `gh` nebo
-přihlášení — ohlas rovnou.
+Každý `gh/` skript potřebuje `-R <owner/repo>` ze sekce `Forge`. Společné kódy `gh/`
+skriptů: `2` chybné volání (oprav argumenty, beze změny selže znovu), `7` chybí `gh`
+nebo přihlášení — ohlas rovnou.
 
 ## Vstupní kontext
 
 - Zadání od volajícího (může být prázdné): $ARGUMENTS
 
-Ze zadání vytěž, co v něm je: **základní větev**, **číslo issue**, které PR
-uzavírá, **milestone**, do kterého PR patří, **mapu kritérium → test**
-a **poznámku o bráně** (obojí předává `implement-issue`) a **výslovný souhlas k mergi**
-(fráze jako „a mergni", „udělej i merge", „vytvoř PR a slej to", „a rovnou
-zmerguj"). Co v zadání není, doplň postupem níže — ale nikdy nepřebíjej to,
-co volající předal.
+Ze zadání vytěž **základní větev**, **číslo issue**, které PR uzavírá, **milestone**,
+**mapu kritérium → test** a **poznámku o bráně** (obojí předává `implement-issue`)
+a **výslovný souhlas k mergi** („a mergni", „udělej i merge", „a rovnou zmerguj"). Co
+volající předal, nepřebíjej; zbytek doplň postupem níže.
 
-**Souhlas k mergi musí být explicitní a musí pocházet z promptu, kterým byl
-aktuální běh spuštěn** — dispečuje-li tě `run-milestone` nebo `implement-issue`,
-souhlas hledej v zadání, které ti předaly ony (musí ho samy přenést z původního
-promptu uživatele, jinak ho nemáš odkud vzít). Domněnka z kontextu konverzace
-nestačí: „otevři PR" bez dalšího slova souhlas k mergi neznamená.
+Souhlas k mergi platí, jen když je výslovný a stál v promptu, kterým byl aktuální běh
+spuštěn; dispečuje-li tě jiný skill, jen když ho přenesl do zadání. „Otevři PR"
+souhlas neznamená.
 
-**Skill běží často neinteraktivně**, spuštěný na konci jiné úlohy. Celý postup
-je proto napsaný tak, že se uživatele neptá — jediné místo, kde k němu míří
-otázka, je Eskalace v kroku 10.
+Uživatele se neptej — jediná otázka patří do eskalace (krok 10).
 
 ## Postup
 
 ### 1. Načti konfiguraci a zjisti stav
 
-Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
-projektu. Potřebuješ podsekci **Forge** (kterou větev receptů použít a jaké
-`owner/repo` předat) a **Větvení** (výchozí větev, tvar integrační větve,
-a že do výchozí větve mergeuje jen člověk).
+Ze sekce `## Workflow (sagittaras)` v `CONTRIBUTING.md` potřebuješ **Forge** (větev
+receptů, `owner/repo`) a **Větvení** (výchozí větev, integrační větev, kdo smí mergovat
+do výchozí). Chybí-li soubor nebo sekce, nepokračuj a nabídni `/sagittaras:init-workflow`;
+chybí-li podsekce, nedoplňuj ji a eskaluj s jejím názvem.
 
-- **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
-  hodnoty. Řekni to a nabídni `/sagittaras:init-workflow`.
-- **Chybí podsekce, kterou potřebuješ** → řekni která a nabídni doplnění; sám ji
-  za pochodu nedoplňuj.
+Spusť `bash "${CLAUDE_PLUGIN_ROOT}/scripts/forge-detect.sh"`:
 
-Pak spusť `bash "${CLAUDE_PLUGIN_ROOT}/scripts/forge-detect.sh"`:
+| Výsledek | Co uděláš |
+| --- | --- |
+| kód 2 nebo 3 | eskaluj |
+| `forge=unknown` | typ forge ber z konfigurace; chybí-li i `owner`/`repo`, eskaluj |
+| `owner/repo` se liší od konfigurace | nehádej, který platí, a eskaluj |
 
-- **kód 2** (`not_a_git_repository`) → ohlas a skonči.
-- **kód 3** (remote chybí nebo z něj nejde odvodit `owner/repo`) → ohlas
-  a skonči; PR je operace nad remotem.
-- **`forge=unknown`** → typ forge ber ze sekce `Forge` konfigurace. Chybí-li ale
-  i `owner`/`repo`, zastav se.
-- **`owner/repo` se liší od konfigurace** → **nehádej, který je správný**,
-  a ohlas rozpor: běžíš nad jiným repozitářem, než pro který konfigurace platí.
-
-Nakonec spusť `bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh"`. Jeho výstup
-řídí krok 2 a začátek kroku 4.
+Pak spusť `bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh"`; jeho výstup řídí krok 2.
 
 ### 2. Urči větev, ze které PR poroste
 
-Volající obvykle už na své větvi stojí. **Pak ji použij a novou nezakládej** —
-její commity by na nové větvi nebyly a PR by vzniklo prázdné.
-
 | Výstup `branch-state.sh` | Co uděláš |
 | --- | --- |
-| `detached=true` | Zastav se a ohlas to — commit i větev by se ztratily při prvním přepnutí. |
-| `on_default_branch=false` | `branch=` je head PR, jdi dál. |
-| `on_default_branch=true`, `dirty=true` | Zavolej `sagittaras:create-branch` (změny přeberou s sebou) a pokračuj na nové větvi. **Předej mu hotový název** `<type>/<popis>` odvozený z rozpracovaných změn, jinak si ho nechá potvrdit uživatelem a v autonomním běhu se zastaví. Skončí-li s `checkout_failed`, ohlas to a nepokračuj. |
-| `on_default_branch=true`, `dirty=false` | Zastav se a ohlas to. Přesun hotových commitů z výchozí větve je zásah do historie, který skill záměrně neumí. |
-| `on_default_branch=unknown` | Remote neodpověděl na dotaz po výchozí větvi; ohlas to a skonči — bez remotu PR nevznikne. |
+| `detached=true` | eskaluj |
+| `on_default_branch=false` | `branch=` je head PR — použij ji a novou nezakládej |
+| `on_default_branch=true`, `dirty=true` | zavolej `sagittaras:create-branch` s hotovým názvem `<type>/<popis>` odvozeným z rozpracovaných změn (bez něj se zastaví na potvrzení); `checkout_failed` → eskaluj |
+| `on_default_branch=true`, `dirty=false` | eskaluj — přesun commitů z výchozí větve skill neumí |
+| `on_default_branch=unknown` | eskaluj — remote neodpověděl |
 
 ### 3. Urči základní větev
 
-Základ PR je větev, **ze které se práce vyvíjela**:
-
-- **Předal-li ji volající** (typicky integrační větev `milestone/<slug>`
-  v milestone běhu), platí jeho hodnota. Výchozí větev z konfigurace si v tom
-  případě **nedomýšlej** — PR mířící mimo integrační větev obejde integrační
-  bránu `run-milestone` a zamíří rovnou do výchozí větve.
-- **Jinak** vezmi výchozí větev ze sekce `Větvení`.
+Předal-li ji volající (v milestone běhu integrační větev `milestone/<slug>`), platí jeho
+hodnota a výchozí větev si nedomýšlej. Jinak vezmi výchozí větev ze sekce `Větvení`.
 
 ### 4. Zapiš a odešli rozdělanou práci
 
-Je-li `dirty=false` a `pushed=true` z kroku 1, zavolání `make-commit`
-přeskoč. Jinak zavolej nástrojem `Skill` skill `sagittaras:make-commit`.
-**Vlastní commit logiku nepiš** a **push mu nezakazuj** — pushuje po každém
-commitu a větev bez upstreamu sám publikuje; nad nepushnutou větví PR založit
-nejde. Ohlásí-li, že **necommitnul** (brzda, odmítnutý hook), zastav se
-a ohlas příčinu.
-
-Pak ověř stav proti základu:
+Je-li `dirty=false` a `pushed=true`, `make-commit` přeskoč. Jinak zavolej skill
+`sagittaras:make-commit` a push mu nezakazuj. Necommitnul-li (brzda, odmítnutý hook),
+eskaluj s příčinou. Pak:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh" --base <base>
@@ -178,50 +145,37 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh" --base <base>
 
 | Výstup | Co uděláš |
 | --- | --- |
-| kód 4 (`base_source=missing`) | Základ neexistuje ani lokálně; eskaluj. |
-| `base_source=local` | Základ na remotu není, PR proti němu nejde založit; eskaluj. |
-| `pushed=false` | Větev zůstala nepublikovaná. Eskaluj a **sám nedopushovávej** — publikace je výchozí chování `make-commit`, takže tu je překážka, kterou ohlásil. Zbylé `dirty=true` samo eskalaci neznamená: změny, které s prací nesouvisejí, `make-commit` vynechává záměrně. |
-| `commits_ahead=0` | Nezakládej nic a ohlas to — prázdné PR nemá co recenzovat. |
-| jinak | Pokračuj. |
+| kód 4, nebo `base_source=local` | eskaluj — základ na remotu není |
+| `pushed=false` | eskaluj a sám nedopushovávej; zbylé `dirty=true` samo eskalaci neznamená |
+| `commits_ahead=0` | nic nezakládej a eskaluj |
+| jinak | pokračuj |
 
 ### 5. Sestav název a tělo
 
-**Název** je Conventional Commit odpovídající odvedené práci, ve stejném tvaru
-jako názvy issues: `<type>(<scope>): <popis>`. Uzavírá-li PR právě jedno issue,
-**vezmi jeho název doslova** — tracker pak ukazuje tentýž řetězec dvakrát a nic
-se nerozchází. Jinak ho odvoď ze zapsaných commitů, ne ze zadání.
+**Název** je `<type>(<scope>): <popis>`. Uzavírá-li PR právě jedno issue, vezmi jeho
+název doslova; jinak ho odvoď ze zapsaných commitů.
 
-**Tělo** piš podle Formátu výstupu: krátké shrnutí a `Closes #N`, jen když PR
-opravdu nějaké issue uzavírá.
-
-Předal-li volající **mapu kritérium → test**, vlož ji pod nadpis
-`## Testy kritérií` **doslova** — nezkracuj řádky, nepřečíslovávej je a nadpis
-neměň. Orchestrátor ji čte skriptem podle nadpisu a čísel v prvním sloupci;
-upravená mapa neprojde jeho branou, i když je obsahově stejná. Předal-li
-**poznámku o bráně**, dej ji hned pod mapu. Nepředal-li ani jedno, sekci
-nevkládej a nevymýšlej ji.
-
-> `Closes #N` zabírá na obou forge až při merge do **výchozí** větve. V milestone
-> běhu, kde PR míří do integrační větve, se tím issue nezavře; odkaz tam má
-> smysl jako vazba, zavření vlastní `run-milestone` a `close-milestone`.
+**Tělo** piš podle Formátu výstupu; `Closes #N` jen tehdy, když PR issue opravdu
+uzavírá. Mapu kritérium → test vlož pod `## Testy kritérií` **doslova** — nezkracuj
+řádky, nepřečíslovávej je a nadpis neměň; orchestrátor ji čte skriptem. Poznámku
+o bráně dej hned pod mapu. Nepředal-li volající ani jedno, sekci nevkládej.
 
 ### 6. Založ PR
 
-**Nejdřív ověř, že z head větve už otevřené PR není:**
+Napřed ověř, že z head větve otevřené PR není:
 
 - **GitHub** → `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-branch.sh" -R <owner/repo> <head> --state open`
-- **Gitea** → jedním voláním `ToolSearch` načti nástroje podle řádku „Pracuje
-  s PR" v receptech, pak `list_pull_requests` se `state: "open"` a porovnej
-  `head` v odpovědi s head větví.
+- **Gitea** → jedním `ToolSearch` načti nástroje z řádku „Pracuje s PR" receptů, pak
+  `list_pull_requests` se `state: "open"` a porovnej `head` s head větví.
 
 | Výsledek | Co uděláš |
 | --- | --- |
-| prázdné pole | Založ PR. |
-| PR se stejnou základní větví (`baseRefName`) | **Nezakládej druhé** — vrať stávající a skonči úspěchem. Opakované spuštění po přerušeném běhu je normální stav. |
-| PR s jinou základní větví | Rozpor, který sám nerozsoudíš: eskaluj. |
+| prázdné pole | založ PR |
+| PR se stejnou základní větví | nezakládej druhé — vrať stávající a skonči úspěchem |
+| PR s jinou základní větví | eskaluj |
 
-**GitHub** — tělo předej heredocem s ukončovačem v uvozovkách ve stejném volání,
-název v jednoduchých uvozovkách:
+**GitHub** — tělo heredocem s ukončovačem v uvozovkách ve stejném volání, název
+v jednoduchých uvozovkách:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-create.sh" -R <owner/repo> \
@@ -230,81 +184,45 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-create.sh" -R <owner/repo> \
 BODY
 ```
 
-Skript vrátí `number=` a `url=`. Kód `2` s `error=empty_body` znamená rozbitý
-heredoc — oprav ukončovač, ne obsah. U chyby 404 ověř oprávnění účtu podle
-nástrah v receptech; jiný repozitář nezkoušej.
+Skript vrátí `number=` a `url=`. Kód 2 s `error=empty_body` je rozbitý heredoc —
+oprav ukončovač, ne obsah. U 404 ověř oprávnění účtu podle nástrah v receptech;
+jiný repozitář nezkoušej.
 
-**Gitea** — `pull_request_write` → `create` s `base`, `head`, `title` a obsahem
-těla přímo v parametru `body`; shell v cestě není.
+**Gitea** — `pull_request_write` → `create` s `base`, `head`, `title` a tělem v `body`.
 
 ### 7. Přiřaď milestone
 
-Patří-li PR do milestonu, přiřaď mu ho **druhým voláním** hned po založení —
-při zakládání to nejde ani na jedné forge a `close-milestone` podle téhle vazby
-integrační PR dohledává.
+Patří-li PR do milestonu, přiřaď ho druhým voláním hned po založení:
 
 - **GitHub** → `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-set-milestone.sh" -R <owner/repo> <n> --milestone '<název milestonu>'`
 - **Gitea** → `pull_request_write` → `update` s `pull_number` a **číselným id**
-  milestonu (napřed ho dohledej ve výpisu milestonů, název nestačí).
+  milestonu z výpisu milestonů.
 
-Selže-li přiřazení, **PR nerušit** — už existuje a je platné. Ohlas jeho číslo
-spolu s tím, že milestone přiřazený není, a eskaluj; `close-milestone` by jinak
-milestone nezavřel.
+Selže-li přiřazení, PR neruš; ohlas jeho číslo a eskaluj.
 
-Nepatří-li PR do milestonu, krok přeskoč.
+### 8. Merge jen se souhlasem z promptu
 
-### 8. Proveď merge, obsahoval-li prompt výslovný souhlas
-
-Nenašel-li krok „Vstupní kontext" v promptu, kterým byl aktuální běh spuštěn,
-výslovný souhlas k mergi, **krok přeskoč** — PR zůstává otevřené.
-
-Souhlas našel → mergni strategií ze sekce `Větvení` (squash) a se smazáním
-zdrojové větve:
+Bez výslovného souhlasu krok přeskoč — PR zůstává otevřené. Se souhlasem mergni
+strategií ze sekce `Větvení` (squash) se smazáním zdrojové větve:
 
 - **GitHub** → `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-merge.sh" -R <owner/repo> <n> --squash --delete-branch`
-- **Gitea** → `pull_request_write` → `merge` s `pull_number`,
-  `merge_style: "squash"` a `delete_branch`.
+- **Gitea** → `pull_request_write` → `merge` s `pull_number`, `merge_style: "squash"`
+  a `delete_branch`.
 
-Mergovat smíš **do jakékoli základní větve** — souhlas v promptu je přesně ta
-výjimka, kterou řádek `merge do výchozí větve: jen člověk` v sekci `Větvení`
-připouští. Integrační bránu `run-milestone` to nemění: ta svůj merge do
-integrační větve provádí sama, tenhle krok se týká jen PR, které zakládáš ty.
-
-Nenulový kód merge (konflikt, nesplněná ochrana větve) **neobcházej** — PR
-zůstává otevřené, ohlas to v souhrnu a eskaluj podle kroku 10. Nezkoušej force
-merge ani jiný recept.
+Souhlas v promptu platí pro jakoukoli základní větev — je to výjimka, kterou řádek
+`merge do výchozí větve` v sekci `Větvení` připouští. Nenulový kód merge neobcházej
+(žádný force merge ani jiný recept): PR zůstává otevřené a eskaluj.
 
 ### 9. Shrň výsledek
 
-Vypiš souhrn podle Formátu výstupu: číslo a odkaz PR, base a head větev, co
-uzavírá, přiřazený milestone, výsledek merge (proveden, nebo „neprovádí se")
-a co jsi cestou přeskočil nebo delegoval. **Merge nenabízej jako svůj další
-krok** — bez souhlasu v promptu se tady skill zastavuje.
+Vypiš souhrn podle Formátu výstupu. Merge nenabízej jako svůj další krok.
 
 ### 10. Eskalace
 
-Přeruš postup a ohlas stav, nastane-li kterákoli z těchto situací:
-
-- chybí projektová konfigurace nebo v ní chybí sekce `Forge` či `Větvení`;
-- `forge-detect.sh` skončí kódem `2` nebo `3`, nebo nezná `owner`/`repo`;
-- `owner/repo` z detekce se liší od konfigurace;
-- stojíš na výchozí větvi se vším zapsaným, na odpojené HEAD, nebo remote
-  neodpověděl (`on_default_branch=unknown`);
-- `create-branch` větev nezaložil (`checkout_failed`);
-- `make-commit` necommitnul, nebo větev zůstala nepublikovaná;
-- základní větev na remotu není (`base_source=local` nebo kód 4);
-- head větev nemá ani po kroku 4 proti základní žádný commit navíc;
-- z téhle head větve už existuje otevřené PR proti **jiné** základní větvi
-  (shodné PR není důvod k eskalaci — vrať ho a skonči);
-- PR vzniklo, ale přiřazení milestonu selhalo;
-- prompt obsahoval souhlas k mergi, ale merge v kroku 8 selhal;
-- forge vrátí 404 nebo `gh` chybí či není přihlášené (kód `7`).
-
-Eskalace vždy shrne, co už vzniklo (commit, větev, PR), a položí **jednu
-konkrétní otázku** nástrojem AskUserQuestion. Selže-li volání nebo odpověď
-nedorazí, je uživatel mimo hru: nezakládej nic dalšího a stav jen ohlas —
-nezaložený PR se doplní jedním během, kdežto zbloudilý PR proti výchozí větvi
-uklízí někdo ručně.
+Eskaluješ v místech, kde to kroky říkají, a když forge vrátí 404 nebo `gh` skončí
+kódem 7. Shrň, co už vzniklo (commit, větev, PR), a polož jednu konkrétní otázku
+nástrojem AskUserQuestion. Selže-li volání nebo odpověď nedorazí, nic dalšího
+nezakládej a stav jen ohlas.
 
 ## Formát výstupu
 
@@ -350,14 +268,5 @@ Merge: proveden — squash do <základní větev>, zdrojová větev smazána
 
 ## Zásady
 
-- **Skill mergne jen na výslovný souhlas v promptu, jinak nikdy.** Bez něj je
-  výstupem jen otevřené PR.
-- **Základní větev se nedomýšlí.** Co předal volající, platí; výchozí větev
-  z konfigurace je až fallback.
-- **Git mechanika se deleguje bez výjimky.** Commit, push i publikace větve přes
-  `sagittaras:make-commit`, větev přes `sagittaras:create-branch`. Napsat je
-  potřetí znamená tři různá chování téže operace.
-- **Tělo PR nikdy argumentem.** Na GitHubu heredocem přes `--body-file -`, na
-  Gitea obsahem parametru `body`.
-- **Sdílený kontrakt má přednost.** Odporuje-li tenhle postup receptům,
-  konfiguraci nebo kontraktu skriptů, platí ony.
+- **Tělo PR nikdy argumentem** — na GitHubu heredocem přes `--body-file -`, na Gitea
+  v parametru `body`.

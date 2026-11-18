@@ -84,3 +84,18 @@ skillů. Napřed se změní `write-skill` a `review-skill`, aby podle něj vznik
 všechno nové, a stávající skilly se podle něj zeštíhlí, když se na ně sahá
 z jiného důvodu — přepisy podle 1.7, 1.8 a 2.6–2.9 zasáhnou většinu
 milestonového řetězu, včetně nejdelších `run-milestone` a `verify-issue`.
+
+### Změřeno v provozu
+
+Rozbor transkriptů prvního ostrého běhu `run-milestone` (milestone o 17 issues,
+17. 11. 2026, Opus 5.5) dal principu čísla. Běh stál v cenách API asi $133: čtení
+cache 55 %, zápis cache 25 %, výstup 20 %. Cena každého volání roste s kontextem,
+a každá session začínala na ~86k tokenech ještě před první akcí — rozhoduje tedy
+počet volání × velikost kontextu. Text skillů pluginu v implementační session
+(~30k tokenů, čeština vychází na ~2,1 znaku na token) stál asi 7 % běhu; výstup
+modelu i s opakovaným čtením asi 31 %; výstupy buildů a testů jen ~1,5 %. Odsud
+plyne pořadí pák: méně volání (paralelní čtení, skript místo řetězu příkazů),
+kratší text načítaný na začátku session, rozhodnutí v plánu místo v kontextu
+implementace. Měření opravňuje výjimku z pravidla „zeštíhlit až při dotyku":
+skilly, které se načítají do každé implementační session (`implement-issue`,
+`open-pr`, `make-commit`, `create-branch`), se zeštíhlily cíleně.
