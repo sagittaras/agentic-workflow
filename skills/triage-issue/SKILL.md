@@ -114,7 +114,8 @@ interaktivní větev.
 Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni cílového
 projektu. Potřebuješ podsekce **Forge** (kterou větev receptů použít a jaké
 `owner/repo` předat) a **Jazyk issues** (v jakém jazyce psát přepsané tělo
-nebo komentář).
+nebo komentář; nadpisy sekcí a značka `(ověří člověk)` zůstávají doslova podle
+šablony).
 
 - **`CONTRIBUTING.md` neexistuje nebo sekci nemá** → nepokračuj a nedomýšlej si
   hodnoty. Ohlas to podle Formátu výstupu, varianta „Předčasný konec", a nabídni

@@ -15,3 +15,8 @@ která v repozitáři ještě neexistuje?* Odpověď ano/ne určuje další krok
 
 Nehledej vzor jen proto, aby se našel — vzdálená podobnost („taky se to týká
 skillů") nestačí, precedent musí být to konkrétní místo, které se rozšiřuje.
+
+**Odložené rozhodnutí precedent nemá.** Odkládá-li citovaný dokument rozhodnutí,
+na kterém kritérium stojí („rozhodne se s …", „TODO", „zatím neurčeno"), a neurčuje
+ho ani kód, vychází test pro tu část ne. Rozhodne-li ho uživatel hned při plánování
+nebo povýšení, zapiš rozhodnutí do kritérií a test projde.

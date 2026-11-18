@@ -186,7 +186,29 @@ ně sahá z jiného důvodu.
 | `review-skill` | Nová kritéria | Nálezem je krok popsaný prózou, který jde nahradit příkazem; spouštěč úvahy z tabulky 3.1; věta, která neprojde testem; zdůvodnění pro vývojáře v těle místo v komentáři. Stejně přísně jako dnešní kontrola kvality instrukcí. |
 | `write-agent`, `review-agent` | Nové kritérium | Test každé věty a spouštěče úvahy platí i pro definici agenta — čte se při každém vyvolání. |
 | `write-rule`, `review-rule` | Nové kritérium | Totéž pro rules — čtou se při každém dotyku pokryté cesty, tedy nejčastěji ze všech instrukcí. |
-| Ostatní skilly | Zeštíhlení při dotyku | Audit podle testu každé věty, když se skill mění z jiného důvodu. Kroky, které jdou nahradit příkazem, dostanou skript (plugin `scripts/` nebo `scripts/` skillu, výstup `key=value`). Nejdřív nejdelší skilly, kterých se dotknou přepisy podle 1.7, 1.8 a 2.6–2.9: `run-milestone`, `verify-issue`, `write-adr`, `review-milestone`, `open-pr`. Převedeno: stav větve a kontrolu původu drží `scripts/branch-state.sh` (`open-pr`, `implement-issue`), hledání PR z head větve `gh/pr-for-branch.sh` (`open-pr`, `verify-issue`), připomínky k PR a úpravu jeho těla `gh/pr-reviews.sh` a `gh/pr-update.sh` (`implement-issue`), mutační test `scripts/mutation-check.sh` (`verify-issue`) a kontrast barev `write-art-bible/scripts/contrast.sh`. Těla jdou `gh/` skriptům ze stdin (`--body-file -`), takže skilly zakládající issues a komentáře (`file-issue`, `plan-milestone`, `triage-issue`, `review-milestone`, `review-adr`) přišly o `Write`, který měly jen kvůli dočasnému souboru. |
+| Ostatní skilly | Zeštíhlení při dotyku | Audit podle testu každé věty, když se skill mění z jiného důvodu. Kroky, které jdou nahradit příkazem, dostanou skript (plugin `scripts/` nebo `scripts/` skillu, výstup `key=value`). Nejdřív nejdelší skilly, kterých se dotknou přepisy podle 1.7, 1.8 a 2.6–2.9: `run-milestone`, `verify-issue`, `write-adr`, `review-milestone`, `open-pr`. Převedeno: stav větve a kontrolu původu drží `scripts/branch-state.sh` (`open-pr`, `implement-issue`), hledání PR z head větve `gh/pr-for-branch.sh` (`open-pr`, `verify-issue`), připomínky k PR a úpravu jeho těla `gh/pr-reviews.sh` a `gh/pr-update.sh` (`implement-issue`), mutační test `scripts/mutation-check.sh` (`verify-issue`) a kontrast barev `write-art-bible/scripts/contrast.sh`. Těla jdou `gh/` skriptům ze stdin (`--body-file -`), takže skilly zakládající issues a komentáře (`file-issue`, `plan-milestone`, `triage-issue`, `review-milestone`, `review-adr`) přišly o `Write`, který měly jen kvůli dočasnému souboru. Po rozboru tokenů běhu M1 ([měření u 3.1](skill-design.md#změřeno-v-provozu)) zeštíhleny skilly, které se načítají do každé implementační session — `implement-issue`, `open-pr`, `make-commit`, `create-branch` — a bránu před review v `run-milestone` drží jedním voláním `gh/pr-gate.sh`. |
+
+## Nálezy z provozu: běh M1
+
+První ostrý běh `run-milestone` (milestone o 17 issues, 17. 11. 2026) ukázal
+místa, kde mechanika při doslovném provedení selže nebo při souběhu issues
+střílí naprázdno. Směr principů se nemění; upřesňuje se jen mechanika, kterou
+popisuje 2.9 (kdy schválení přežije opravu). Kde se tahle tabulka rozchází
+s tabulkami výš, platí tahle.
+
+| Skill | Co se mění |
+| --- | --- |
+| `run-milestone` | O výsledku session rozhoduje forge (`gh/pr-for-issue.sh`), zpráva je jen podnět — notifikace nese recap a jen začátek zprávy; přibyl stav `PR: rozpracováno`. Konflikt proti jiné špičce integrační větve, než byl předchozí, se do pravidla dvou červených bran nepočítá; selhaný příkaz ano. Brána před merge se přeskočí, nepohnula-li se od zelené brány ani jedna větev (`integration-gate.sh --same-as`). Po merge zkontroluje ostatní PR na konflikt a doplní dávku ve stejném turnu — z turnu po notifikaci aplikace session nespustí. Schválení po opravě konfliktu platí dál, po opravě nálezu nebo selhaného příkazu ne; smí jmenovat číslo issue a smí přijít předem. Eskalované issue místo v dávce nezabírá. Když se plán rozejde s realitou, navrhne opravu trackeru (přesun issue do milestonu, sloučení issues, přejmenování přeložených nadpisů), ne PR pro víc issues. |
+| `implement-issue` | Strojový řádek `PR:` stojí na začátku zprávy, ne na konci. |
+| `close-milestone` | Kontrola počtů na GitHubu prochází — `gh/milestone-list.sh` počítá jen issues, bez PR. |
+| `plan-milestone` | Ověřovací příkaz oblasti musí projít už po prvním issue té oblasti, jinak vzniká cyklus, který graf nevidí. |
+| `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | Nadpisy šablony a značka `(ověří člověk)` zůstávají česky v každém jazyce issues. |
+
+**Sdílený kontrakt.** `shared/issue-template.md` vyjmenovává strojové prvky,
+které se nepřekládají. `shared/forge-recipes.md` přidává nástrahu s počty PR
+v milestonu na GitHubu. `shared/git-scripts.md` popisuje SHA a `--same-as`
+u `integration-gate.sh`, `--milestone` u `issue-update.sh` a číslo milestonu
+u `pr-list.sh`.
 
 ## Mimo rozsah
 

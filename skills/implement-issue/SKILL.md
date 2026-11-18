@@ -25,14 +25,23 @@ effort: xhigh
 # běží dlouho a bez dohledu a jeho výstup jde rovnou do PR, kde chybu platí
 # recenzent. Rozhodovací strom vede na tentýž bod: skill má dojet k cíli sám
 # přes víc kroků a nástrojů.
+# Tělo je zeštíhlené podle principu 3.1 po rozboru tokenů běhu M1 (17. 11. 2026):
+# skill se načte na začátku každé implementační session a čte se při každém
+# dalším volání (~13k tokenů × Ø 85 volání), proto v těle nejsou zdůvodnění
+# kroků. Paralelní čtení v kroku 3 míří na počet volání — každé stojí aspoň
+# ~86k tokenů výchozího kontextu session.
+# Strojový řádek stojí na začátku zprávy (běh M1, nález F7): notifikace
+# orchestrátoru nese recap a jen ~400 znaků zprávy, řádek na konci se do ní
+# nevešel. „PR: rozpracováno" je pro kolo, které končí s příkazem na pozadí.
 # Merge jen na schválení, které člověk napsal přímo do téhle session (issue #70):
 # zprávu jiné session klasifikátor auto mode za schválení nebere a merge
 # zamítne, proto v běhu milestonu merguje orchestrátor.
 # Vynechaná zvažovaná pole: allowed-tools — skill píše kód v neznámém projektu,
 # spouští ověřovací příkazy z jeho konfigurace a podle forge sahá buď na `gh`
 # skripty, nebo na odložené `mcp__gitea__*`; uzavřený výčet by na prvním jiném
-# build toolu nebo forge selhal, a to tiše uprostřed běhu. Hranice drží sekce
-# Zásady, ne práva; user-invocable — výchozí `true` je žádoucí, „naimplementuj
+# build toolu nebo forge selhal, a to tiše uprostřed běhu. Hranice drží pravidla
+# v krocích a Zásadách (merge v kroku 9, zaškrtávátka v kroku 7, git jen přes
+# delegaci), ne práva; user-invocable — výchozí `true` je žádoucí, „naimplementuj
 # #12" je legitimní samostatné zadání; disable-model-invocation — skill musí jít
 # vyvolat modelem, protože ho v milestone běhu spouští dispečovaný agent, ne
 # uživatel; context/agent/background — implementace musí zůstat v pracovním
@@ -49,202 +58,130 @@ effort: xhigh
 
 # Implement Issue
 
-Cílem je jeden issue naimplementovaný přesně v rozsahu svých akceptačních kritérií
-a otevřené PR, na které se dá odkázat číslem. Skill drží proces; doménové zázemí
-přináší agent, který ho spustil. Závazné jsou sdílené soubory pluginu a projektová
-konfigurace — při rozporu s tímhle postupem platí ony.
-
-Git mechaniku skill nepíše znovu: větev zakládá `sagittaras:create-branch`, zápis
-a PR obstará `sagittaras:open-pr` (ten uvnitř volá `sagittaras:make-commit`).
-Psát ji potřetí znamená mít tři různá chování pro jednu operaci.
+Cílem je jeden issue naimplementovaný přesně v rozsahu akceptačních kritérií a otevřené
+PR, na které se dá odkázat číslem. Závazné jsou sdílené soubory pluginu a projektová
+konfigurace — při rozporu s tímhle postupem platí ony. Git mechaniku obstarají
+`sagittaras:create-branch`, `sagittaras:open-pr` a `sagittaras:make-commit`.
 
 | Soubor | Kdy ho otevři |
 | --- | --- |
-| `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | V kroku 1, když konfigurace chybí nebo v ní nenajdeš sekci, kterou potřebuješ |
-| `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | V kroku 1, dřív než sáhneš na tracker — včetně sekce s nástrahami |
-| `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | V kroku 1 před prvním voláním skriptu ze `scripts/` nebo `scripts/gh/` — jejich argumenty a návratové kódy |
-| `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | V kroku 1, když tělo issue neodpovídá očekávanému tvaru |
-| `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | V kroku 3, dřív než posoudíš, jestli citovaná cesta je precedent k rozšíření |
-| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | V kroku 3, jen když `sagittaras:read-docs` nejde spustit — postup čtení báze |
+| `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | v kroku 1, když konfigurace chybí nebo v ní nenajdeš sekci, kterou potřebuješ |
+| `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | Gitea: před prvním sáhnutím na tracker. GitHub: jen pro operaci, kterou tenhle skill nejmenuje skriptem |
+| `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | jen když skript ze `scripts/` vrátí kód, který tenhle skill nemapuje |
+| `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | v kroku 1, když tělo issue neodpovídá očekávanému tvaru |
+| `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` | v kroku 3, než posoudíš, jestli citovaná cesta je precedent k rozšíření |
+| `${CLAUDE_PLUGIN_ROOT}/shared/docs-tree.md` | v kroku 3, jen když `sagittaras:read-docs` nejde spustit |
 
 ## Vstupní kontext
 
 - Zadání (číslo issue, případně základní větev): $ARGUMENTS
 
-Dispečuje-li tě `run-milestone`, přijde zadání v promptu agenta, ne v argumentech —
-základní větev hledej i tam.
+Dispečuje-li tě `run-milestone`, přijde zadání v promptu, ne v argumentech — základní
+větev hledej i tam.
 
 ## Postup
 
-### 1. Načti konfiguraci a přečti issue celé
+### 1. Načti konfiguraci a issue
 
-Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu.
-Chybí-li `CONTRIBUTING.md` nebo sekce, **nepokračuj a nedomýšlej si hodnoty**
-— bez ní neznáš výchozí větev, ověřovací příkazy ani forge. Ohlas to a nabídni
-`/sagittaras:init-workflow`. Když v ní chybí podsekce, kterou potřebuješ, řekni
-která a nedoplňuj ji za pochodu.
+Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu. Chybí-li
+soubor nebo sekce, nepokračuj, ohlas to a nabídni `/sagittaras:init-workflow`. Chybí-li
+podsekce, kterou potřebuješ, nedoplňuj ji a eskaluj s jejím názvem.
 
-Než sáhneš na tracker, vezmi volání z tabulky v receptech, ne z hlavy: sloupec podle
-sekce `Forge`, na Gitea si napřed **jedním** voláním `ToolSearch` načti odložené
-nástroje podle řádku „Jen čte a komentuje".
+Načti issue — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh" -R <owner/repo> <n>`;
+Gitea: jedním `ToolSearch` načti nástroje z řádku „Jen čte a komentuje" receptů, pak
+`issue_read`. Potřebuješ **Souhrn**, **Akceptační kritéria**, **Reference**, **Závisí na**,
+typový label (typ větve) a `area:*` label (ověřovací příkaz v kroku 7).
 
-Přečti celé tělo issue: **Souhrn**, **Akceptační kritéria**, **Reference**,
-**Závisí na** — a k tomu typový a `area:*` label. Typ z labelu určuje typ větve,
-`area:*` vybírá ověřovací příkaz v kroku 7. Neodpovídá-li tělo očekávanému tvaru,
-porovnej ho se šablonou issue; jinak nerozeznáš vadné issue od vlastního přehlédnutí.
+Nejde-li issue načíst — neexistuje, 404, chybí oprávnění, `gh` skončí kódem 7 —
+eskaluj a neimplementuj. Zadání si z čísla a promptu nedomýšlej.
 
-**Nejde-li issue načíst** — neexistuje, forge vrátí 404 nebo chybí oprávnění, `gh`
-není nainstalované či přihlášené — **eskaluj a neimplementuj**. Číslo issue plus
-kontext promptu vypadá jako dost informací na to, aby se zadání „domyslelo"; výsledkem
-je věrohodná práce na něčem, co nikdo nezadal.
+### 2. Ověř závislosti
 
-### 2. Ověř, že závislosti jsou zavřené
+Každé `#N` ze `Závisí na` musí být zavřené (`issue-read.sh` / `issue_read`, pole `state`). Není-li,
+eskaluj. Chybí-li sekce celá, issue nezávisí na ničem. Prázdná sekce nebo „nic" je
+odchylka od šablony — ohlas ji a pokračuj.
 
-Každé `#N` ze sekce `Závisí na` si přečti a ověř, že je **zavřené**. Není-li,
-skonči a ohlas to podle formátu eskalace. Stavět na základu, který ještě neexistuje,
-je práce k zahození: kód, o který se máš opřít, nikde není, a co napíšeš místo něj,
-se bude po merge závislosti přepisovat.
+### 3. Otevři precedent z Reference
 
-Chybí-li sekce `Závisí na` celá, issue nezávisí na ničem a pokračuješ. Prázdná
-sekce nebo „nic" je odchylka od šablony — ohlas ji, ale běh kvůli ní nezastavuj.
+Kódový precedent z `Reference` je primární zdroj zadání: implementuj podle toho, co
+v souboru skutečně je, ne podle parafráze v těle issue. Precedent, jeho testy a okolní
+kód čti v jednom kroku — nezávislá čtení a hledání pošli jako paralelní volání nástrojů,
+ne jedno po druhém. Z velkého souboru čti jen potřebný úsek (`Grep`, `Read` s rozsahem).
 
-### 3. Otevři skutečný precedent z Reference
+| Co najdeš | Co uděláš |
+| --- | --- |
+| Reference nemá kódový precedent, jen dokument | eskaluj s doporučením `/sagittaras:triage-issue` |
+| citovaná cesta (soubor, vzor, dokument) neexistuje | eskaluj — vada plánu |
+| kritérium popisuje chování, které v precedentu zatím není | implementuj ho jako rozšíření precedentu — ten přírůstek issue přináší |
+| kritérium precedentu odporuje (jiné rozhraní nebo struktura), nebo cesta jen tematicky souvisí (`precedent-test.md`) | eskaluj |
 
-Sekce `Reference` je **primárně odkaz na existující soubor nebo vzor v kódu**,
-který se má rozšířit — ten otevři a přečti **jako první a hlavní zdroj
-zadání**. Implementuj podle vzoru, který tam skutečně je, ne podle toho, jak
-si ho pamatuješ nebo jak by „asi měl" vypadat. Ne parafrázi z těla issue —
-tělo issue je zkratka a implementace psaná podle zkratky projde tvojí vlastní
-kontrolou a spadne až u `verify-issue`. Cesta ke kódovému precedentu je vůči
-kořeni repozitáře. Nemá-li Reference žádný kódový precedent, jen odkaz na
-dokument, **neimplementuj a eskaluj** s doporučením `/sagittaras:triage-issue` —
-bez precedentu nezůstává primární zdroj zadání, na který by se implementace
-mohla opřít.
+Dokument citovaný vedle kódu (ADR, UX spec) je doplňkové omezení — kam nesahat, co je
+chráněné; tvar implementace určuje precedent. Čti ho skillem `sagittaras:read-docs`
+s otázkou „Co stanoví <dokument z Reference> pro <oblast precedentu> — co nesahat, která
+rozhodnutí jsou chráněná?" a chráněná rozhodnutí z odpovědi ber doslova.
 
-Cituje-li Reference i ADR nebo jiný dokument, čti ho jako **doplňkové
-omezení** — co nesahat, které rozhodnutí je chráněné — ne jako primární popis
-toho, co postavit. Tvar implementace určuje kódový precedent, ne próza
-dokumentu.
+- Odpověď říká, že projekt bázi nemá, nebo dokument chybí v řádku Přečtené stránky →
+  přečti ho přímo na citované cestě; není-li tam, eskaluj jako u neexistující cesty.
+- Odpověď ho uvede jako nahrazený → eskaluj.
+- Kritérium odkazuje na konkrétní sekci dokumentu → tu sekci přečti sám.
 
-**Citovaná cesta neexistuje** (soubor, vzor i dokument) → **eskaluj**, je to
-vada plánu. **Citovaná cesta existuje, ale kritérium popisuje chování, které
-v ní zatím není** → to není nález — přesně tenhle přírůstek issue přináší;
-implementuj ho jako rozšíření precedentu. Eskaluj až tehdy, kritérium
-citovanému precedentu **odporuje** (jiné rozhraní nebo struktura, na kterou
-nejde navázat), nebo citovaná cesta jen tematicky souvisí a rozšířit ji na
-tenhle případ nejde (test v `shared/precedent-test.md`).
-
-Doplňkový dokument (ADR a další) čti **skillem `sagittaras:read-docs`**
-s otázkou „Co stanoví <dokument z Reference> pro <oblast> — co nesahat, která
-rozhodnutí jsou chráněná?" a oblastí, kterou issue mění (precedent
-z Reference). Chráněná rozhodnutí z odpovědi ber doslova.
-
-- **Odpověď říká, že projekt bázi nemá, nebo cesta dokumentu z Reference chybí
-  v řádku Přečtené stránky** → přečti dokument přímo na citované cestě; není-li
-  tam, postupuj jako u citované cesty, která neexistuje. Že dokument k oblasti
-  nic nestanoví, není důvod k eskalaci.
-- **Odpověď ho uvede jako nahrazený** → eskaluj: Reference cituje rozhodnutí,
-  které už neplatí.
-- **Kritérium odkazuje na konkrétní sekci dokumentu** (číslo kapitoly UX specu)
-  → tu sekci přečti sám v dokumentu na cestě z Reference (kotvu z Opory použij,
-  je-li tam); read-docs vrací omezení, ne obsah, podle kterého se staví.
-
-Nejde-li skill spustit, čti dokument postupem z § Jak najít odpověď v bázi
-v `shared/docs-tree.md`. Větve výš platí obdobně: kód 1 z mapy znamená projekt
-bez báze a dokument, který v mapě není, čti přímo na citované cestě.
+Že dokument k oblasti nic nestanoví, důvod k eskalaci není. Nejde-li `read-docs`
+spustit, postupuj podle § Jak najít odpověď v bázi v `shared/docs-tree.md`; kód 1
+z mapy znamená projekt bez báze a dokument, který v mapě není, čti přímo na citované
+cestě.
 
 ### 4. Urči základní větev
 
-- **V milestone běhu** jsi dostal integrační větev `milestone/<slug>`. Větvi z ní:
-  je v ní kód issues, které doběhly před tebou, a bez nich stavíš na neúplném základu.
-- **Samostatně** větvi z výchozí větve podle sekce `Větvení` konfigurace.
-
-Nedomýšlej si. Přišla-li základní větev v zadání i v konfiguraci a liší se, nebo
-mluví-li zadání o milestonu, ale větev nejmenuje, zeptej se — špatný základ se pozná
-až u merge, kdy je oprava dražší než jedna otázka.
+V milestone běhu větvi z integrační větve `milestone/<slug>` ze zadání, samostatně
+z výchozí větve podle sekce `Větvení`. Liší-li se větev v zadání a v konfiguraci, nebo
+zadání mluví o milestonu a větev nejmenuje, zeptej se.
 
 ### 5. Založ větev
 
-Název odvoď z **práce**, ne z čísla issue (`feat/issue-42` je za rok nečitelné),
-typ vezmi z typového labelu. Tvar i kolize si nech ověřit dřív, než větev vznikne:
+Název `<type>/<popis>` odvoď z práce, ne z čísla issue; typ z typového labelu. Ověř ho:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" --check <název>
 ```
 
-Návratové kódy tenhle skript popisuje ve **vlastní hlavičce** — `git-scripts.md` platí
-pro `scripts/` a `scripts/gh/`, ne pro skripty jednotlivých skillů.
+| Kód | Co uděláš |
+| --- | --- |
+| 0 | pokračuj |
+| 2 | eskaluj |
+| 3 | typový label mimo výčet z hintu namapuj na nejbližší přípustný typ a mapování uveď ve výstupu; nejde-li jednoznačně, eskaluj |
+| 4 | větev existuje — zvol popis, který práci odlišuje, ne pořadové číslo |
+| 5 | větvíš-li z výchozí větve, eskaluj; u nevýchozího základu pokračuj |
 
-- **kód 2** → nejde o git repozitář nebo chybí argument; eskaluj.
-- **kód 3** → typ nebo popis neprošel tvarem. Přípustné typy vypíše skript v hintu;
-  typový label mimo tenhle výčet mapuj na nejbližší přípustný a mapování uveď ve
-  výstupu. Nejde-li namapovat jednoznačně, eskaluj — typ větve se propisuje do commitu
-  i do názvu PR.
-- **kód 4** → větev už existuje. Vymysli popis, který práci odlišuje; nepřilepuj
-  pořadové číslo.
-- **kód 5** → remote neodpověděl na dotaz po **výchozí** větvi. Větvíš-li z výchozí
-  větve, eskaluj; u nevýchozího základu se to tvého základu netýká a běh nezastavuj.
-
-Větev zakládej vždy přes `sagittaras:create-branch` (nástroj `Skill`) a **předej mu
-hotový název** — bez názvu si ho nechá potvrdit uživatelem a v autonomním běhu se
-zastaví.
-
-- **Základ je výchozí větev** → stačí název; skill větví z `origin/<výchozí větev>`.
-- **Základ je integrační nebo jiná nevýchozí větev** → řekni mu základ výslovně,
-  aby zavolal skript s `--base <základní větev>`. Bez toho by větev vyšla z výchozí
-  větve, přišla by o kód, na kterém issue stojí, a chyba by se ukázala až u review.
-
-Ve výstupu ověř řádek `base=` — je to jediné místo, kde se pozná, že se větvilo
-odjinud, než jsi zamýšlel. Skončí-li skript s `error=base_branch_not_found` (kód 5),
-**eskaluj**; nezakládej větev náhradně z výchozí větve.
-
-Ať jsi větev založil jakkoli, ověř, že opravdu vyšla ze základu:
+Větev založ skillem `sagittaras:create-branch` a předej mu hotový název (bez něj se
+zastaví na potvrzení uživatelem). U nevýchozího základu mu řekni základ výslovně, ať
+volá skript s `--base <základní větev>`. `error=base_branch_not_found` → eskaluj,
+nezakládej náhradně z výchozí větve. Pak:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh" --base <základní větev>
 ```
 
-Skript vybírá základní ref stejně jako `create-branch` — remote má přednost,
-lokální větev je náhrada pro integrační větev, která na remotu ještě není.
-
-- **`base_is_ancestor=true`** → pokračuj.
-- **`base_is_ancestor=false`** → větev nevyšla ze základu; **eskaluj**, neimplementuj.
-- **kód 4** (`base_source=missing`) → základ v repozitáři nikde není, tedy jiné
-  zadání, než jaké repozitář zná; **eskaluj**.
+`base_is_ancestor=true` → pokračuj; `false` nebo kód 4 → eskaluj.
 
 ### 6. Implementuj
 
-Tvar implementace vychází z precedentu přečteného v kroku 3 — to je vzor, který
-rozšiřuješ. Okolní kód si přečti navíc kvůli tomu, co precedent sám neurčuje:
-jak se v projektu pojmenovává, kde leží testy, jak vypadá obdobná už hotová věc.
-Vlastní vzor zavedený vedle zavedeného je nález pro recenzenta, ne přínos.
+Implementuj přesně to, co říkají kritéria: tvar podle precedentu, pojmenování a umístění
+testů podle okolního kódu. Nic navíc — žádné rozšíření rozsahu ani refaktor okolí.
+Kritérium podspecifikované, sporné nebo zjevně špatné → zastav a eskaluj; má ho opravit
+`plan-milestone`.
 
-Implementuj **přesně to, co říkají akceptační kritéria**. Žádné rozšiřování rozsahu,
-žádné vylepšení navíc, žádný refaktor okolí „když už jsem tady": co není v kritériích,
-nikdo neposoudil a nikdo to nečeká.
+### 7. Pokryj kritéria testy a spusť bránu
 
-Vypadá-li kritérium při implementaci podspecifikovaně, protiřečí si s jiným nebo je
-zjevně špatně, **zastav a ohlas to**. Je to signál, že se má vrátit `plan-milestone` —
-domyšlené kritérium vypadá jako hotová práce a rozdíl se najde až v produkci.
+Projdi kritéria v pořadí, v jakém stojí v issue:
 
-### 7. Pokryj každé kritérium testem a spusť bránu
+- **Bez značky `(ověří člověk)`** ho kryje test, který jsi v téhle změně napsal nebo
+  rozšířil; existující test, na který jsi nesáhl, nestačí. Ověřuje-li se kritérium
+  příkazem a projekt pro takovou kontrolu testy nemá, obal příkaz testovým skriptem,
+  který při selhání skončí nenulovým kódem.
+- **Se značkou** test nemá; přečti v kódu, kde je naplněné, a v mapě ho tak označ.
+- **Bez značky, a test napsat nejde** → zastav a eskaluj; značku přidává plánování.
 
-Než otevřeš PR, projdi kritéria jedno po druhém, v pořadí, v jakém stojí v issue:
-
-- **Kritérium bez značky `(ověří člověk)` kryje test, který jsi v téhle změně
-  napsal nebo rozšířil.** Test patří tam, kde má projekt testy (zjistil sis to
-  v kroku 6). Ověřuje-li se kritérium příkazem — „`bash scripts/lint.sh` projde",
-  „`grep …` nic nevrátí" — a projekt pro takovou kontrolu testy nemá, obal příkaz
-  testovým skriptem, který při selhání skončí nenulovým kódem. Existující test,
-  na který jsi nesáhl, kritérium nekryje: orchestrátor přijme jen test, který PR
-  mění, a pro člověka je to tvrzení bez důkazu. „Přečetl jsem to v kódu" tady
-  nestačí — po merge už nic nehlídá.
-- **Kritérium se značkou `(ověří člověk)`** test nemá. Přečti v kódu, kde je
-  naplněné, a v mapě ho tak označ.
-- **Kritérium bez značky, na které test napsat nejde**, je vada plánu, ne výjimka,
-  kterou si uděláš sám: **zastav a eskaluj** — značku přidává plánování.
-
-Zapiš si mapu kritérium → test, jeden řádek na kritérium; předáš ji v kroku 8:
+Mapa, jeden řádek na kritérium; číslo je pořadí v issue, cesta vůči kořeni repozitáře:
 
 ```markdown
 | # | Kritérium | Test |
@@ -253,77 +190,55 @@ Zapiš si mapu kritérium → test, jeden řádek na kritérium; předáš ji v 
 | 2 | <zkrácené znění kritéria> | ověří člověk |
 ```
 
-Číslo je pořadí kritéria v issue; cesta je vůči kořeni repozitáře.
+Spusť všechny testy z mapy a ověřovací příkaz pro `area:*` label ze sekce
+`Ověřovací příkazy`:
 
-Pak **spusť všechny testy z mapy a ověřovací příkaz** pro `area:*` label issue ze
-sekce `Ověřovací příkazy` konfigurace:
+- všechno prošlo → krok 8;
+- selže kvůli tvé změně → oprav a spusť znovu; nedaří-li se, PR neotvírej a eskaluj;
+- selže z příčiny mimo issue → neopravuj, PR neotvírej, eskaluj.
 
-- **Všechno prošlo** → pokračuj krokem 8.
-- **Selže kvůli tvé změně** → oprav ji a spusť znovu. Nepodaří-li se to,
-  **PR neotvírej a eskaluj** — PR s červenou bránou spotřebuje čas recenzenta na to,
-  co jsi věděl už předtím.
-- **Selže z příčiny, která s issue nesouvisí** (rozbitý build už před tvou změnou)
-  → neopravuj, je to cizí rozsah; ale ani PR neotvírej a eskaluj. Bez zelené brány
-  nejde poznat, jestli tvoje změna funguje.
+Bránu po tobě potvrdí v milestone běhu orchestrátor, samostatně CI, má-li ho projekt
+(`.github/workflows/`, `.gitea/workflows/`). Nemá-li ani jedno, řekne to PR (krok 8).
 
-Zjisti taky, **kdo bránu potvrdí po tobě**. V milestone běhu je to orchestrátor
-(`run-milestone`, který tě dispečoval). Spuštěný samostatně se podívej, jestli
-projekt má CI, které na PR běží (`.github/workflows/`, `.gitea/workflows/`
-a obdobné). Nemá-li ani jedno, je tvůj běh jediné spuštění brány a PR to musí
-říct — jinak recenzent bere zelenou za nezávisle potvrzenou.
+Zaškrtávátka v těle issue nech prázdná.
 
-**Zaškrtávátka v těle issue nech prázdná** — tvoje kontrola je self-report a do
-issue ho nezapisuješ.
+### 8. Otevři PR
 
-### 8. Zapiš práci a otevři PR
+Zavolej skill `sagittaras:open-pr` a předej mu:
 
-Zavolej nástrojem `Skill` skill `sagittaras:open-pr` a předej mu:
+- že už jsi na své větvi a novou nemá zakládat;
+- základní větev PR z kroku 4;
+- `Closes #N` do těla;
+- milestone issue, patří-li do nějakého;
+- mapu z kroku 7 doslova, k vložení pod nadpis `## Testy kritérií`;
+- běžíš-li bez orchestrátoru a projekt nemá CI, poznámku: „Bránu (testy kritérií
+  a ověřovací příkaz) spustila jen session, která PR otevřela; nezávisle ji nepotvrdil
+  orchestrátor ani CI.";
+- pokyn, ať PR nemerguje — ani když prompt, kterým jsi byl spuštěn, obsahoval souhlas
+  k mergi.
 
-- že **jsi už na své větvi** — má ji použít a novou nezakládat,
-- **základní větev PR** = ta z kroku 4,
-- **`Closes #N`** do těla,
-- **milestone issue**, patří-li do nějakého, aby `close-milestone` PR dohledal,
-- **mapu kritérium → test** z kroku 7, doslova, k vložení do těla PR pod nadpis
-  `## Testy kritérií` — orchestrátor ji tam čte strojově,
-- **poznámku o bráně**, běžíš-li bez orchestrátoru a projekt nemá CI: „Bránu
-  (testy kritérií a ověřovací příkaz) spustila jen session, která PR otevřela;
-  nezávisle ji nepotvrdil orchestrátor ani CI.",
-- **pokyn, ať PR nemerguje** — ani když prompt, kterým jsi byl spuštěn, obsahoval
-  souhlas k mergi. Ten se týká PR, které ještě nikdo neviděl; merge přijde až
-  potom, co PR přezkoumal a schválil člověk.
-
-Commit vzniká uvnitř přes `sagittaras:make-commit`; sám necommituj ani nepushuj.
-
-**Nevrátí-li `open-pr` číslo a odkaz PR** — zastavil se na brzdě, forge selhalo, chybí
-mu sekce konfigurace — použij eskalační šablonu zakončenou `PR: žádné` a **vlastní PR
-místo něj nezakládej**. Zpráva, ze které nejde poznat, že PR nevzniklo, stojí
-`run-milestone` celé kolo přeposlání navíc.
-
-Vrátilo-li `open-pr` číslo PR, ohlas ho podle Formátu výstupu a **skonči kolo, ne
-práci**: PR teď čte člověk a ty zůstáváš k dispozici pro krok 9. Dispečoval-li tě
-`run-milestone`, PR merguje on; spuštěný samostatně mergneš sám v kroku 9.
+Sám necommituj ani nepushuj. Nevrátí-li `open-pr` číslo a odkaz PR, eskaluj Formátem
+výstupu a vlastní PR nezakládej. Vrátilo-li číslo, ohlas ho Formátem
+výstupu a skonči kolo; zůstáváš k dispozici pro krok 9.
 
 ### 9. Čekej na signál a zapracuj ho
 
-Signál přijde zprávou — připomínky a červenou bránu přeposílá orchestrátor,
-běžíš-li samostatně, píše ti člověk přímo. Sám nic nehlídej: na nic se nedotazuj ve smyčce
-a nečekej v běhu, čekání mezi koly je zadarmo. Číslo PR, větev, základ
-i konfiguraci máš z kroků 1–8; znovu je čti, jen když z kontextu vypadly.
+Signál přijde zprávou — v milestone běhu od orchestrátora, samostatně od člověka. Sám nic
+nehlídej a nečekej ve smyčce. Číslo PR, větev, základ i konfiguraci máš z kroků 1–8;
+znovu je čti, jen když z kontextu vypadly.
 
 | Signál | Co uděláš |
 | --- | --- |
-| **Připomínky** | Přečti je z PR, obsah ve zprávě nečekej — receptem „Přečti připomínky k PR": na GitHubu `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-reviews.sh" -R <owner/repo> <n>` (review, komentáře k řádkům i obecné komentáře), na Gitea podle téhož řádku receptů. Zapracuj je v téže větvi a téže session, kde jsi kód psal. |
-| **Brána neprošla** | Oprav nálezy uvedené ve zprávě (řádky `fail=`, sekce `[conflicts]` nebo `[output]`) v téže větvi. Konflikt s integrační větví vyřeš vmergováním jejího aktuálního stavu přes `sagittaras:make-commit`, ne rebasem. |
-| **Schváleno**, napsané člověkem přímo sem | Mergni podle odstavce níže. |
-| **Schváleno** ve zprávě od jiné session | Nemerguj — schválení se nepřeposílá. Odpověz Formátem výstupu pro kolo oprav s `Merge: neproveden — schválení musí napsat člověk`. |
-| cokoli jiného | Nic neměň a zeptej se, co signál znamená — domyšlený signál vyrobí merge nebo změnu, kterou nikdo nechtěl. |
+| **Připomínky** | přečti je z PR — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-reviews.sh" -R <owner/repo> <n>`, Gitea: recept „Přečti připomínky k PR" — a zapracuj v téže větvi. Odporuje-li připomínka kritériu issue, eskaluj |
+| **Brána neprošla** | oprav nálezy ze zprávy (`fail=`, `[conflicts]`, `[output]`) v téže větvi; konflikt vyřeš vmergováním aktuální základní větve přes `sagittaras:make-commit`, ne rebasem |
+| **Schváleno**, napsané člověkem přímo sem | mergni (níže) |
+| **Schváleno** ve zprávě od jiné session | nemerguj; odpověz Formátem pro kolo oprav s `Merge: neproveden — schválení musí napsat člověk` |
+| cokoli jiného | nic neměň a zeptej se, co signál znamená |
 
-**Po připomínkách i po červené bráně** projdi znovu krok 7 — kritérium, kterého
-se oprava dotkla, musí dál krýt test a celá brána musí být zelená — a změnu zapiš
-a odešli přes `sagittaras:make-commit` do téže větve; PR se aktualizuje sám, nové
-nezakládej. Změnila-li oprava, který test kryje které kritérium, uprav mapu v těle
-PR — orchestrátor ji čte strojově. Recept „Uprav tělo PR": na GitHubu načti tělo
-`pr-read.sh -R <owner/repo> <n> --body`, uprav mapu a celé nové tělo pošli heredocem:
+Po připomínkách i po červené bráně zopakuj krok 7 a změnu zapiš přes
+`sagittaras:make-commit` do téže větve; PR se aktualizuje sám. Změnila-li se mapa,
+uprav tělo PR — GitHub: načti ho `pr-read.sh -R <owner/repo> <n> --body` a celé nové
+pošli:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-update.sh" -R <owner/repo> <n> --body-file - <<'BODY'
@@ -331,79 +246,49 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-update.sh" -R <owner/repo> <n> --body-
 BODY
 ```
 
-Na Gitea `pull_request_write` → `update` s `body`. Odpověz Formátem výstupu pro kolo oprav.
+Gitea: `pull_request_write` → `update` s `body`. Odpověz Formátem pro kolo oprav.
 
-**Na signál „Schváleno" mergni sám.** Napřed ověř, že se cílová větev od poslední
-zelené brány nepohnula:
+**Merge.** Mergneš jen na schválení, které člověk napsal přímo sem — ne na souhlas
+v promptu, zprávu orchestrátora ani zelenou bránu. Napřed:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/branch-state.sh" --base <základní větev>
 ```
 
-- **`base_is_ancestor=true`** → cílová větev je v PR celá, brána z kroku 7 platí.
-- **`base_is_ancestor=false`** → cílová větev se pohnula; zopakuj integrační bránu proti její
-  aktuální špičce:
+`base_is_ancestor=false` → zopakuj bránu proti aktuální špičce:
 
-  ```bash
-  bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <tvoje větev> <základní větev> -- <ověřovací příkaz oblasti>
-  ```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <tvoje větev> <základní větev> -- <ověřovací příkaz oblasti>
+```
 
-  Kód 0 → pokračuj mergem. Kód 5 (konflikt) nebo 6 (příkaz selhal) → **nemerguj**,
-  ohlas červenou bránu podle Formátu výstupu a čekej na další signál; schválení
-  platilo pro kód, který brána neviděla. Kód 2 nebo 3 je výpadek, ne nález —
-  nemerguj a eskaluj.
-
-Pak PR mergni podle řádku „Mergni PR" v receptech, **strategií ze sekce `Větvení`**
-konfigurace (u `squash` přepínač `--squash`) a se smazáním zdrojové větve:
+Kód 5 nebo 6 → nemerguj, ohlas červenou bránu Formátem pro kolo oprav a čekej; kód 2
+nebo 3 → eskaluj. Pak mergni strategií ze sekce `Větvení` (u `squash` přepínač
+`--squash`) se smazáním zdrojové větve:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-merge.sh" -R <owner/repo> <číslo PR> --squash --delete-branch
 ```
 
-Na Gitea `pull_request_write` → `merge` s `merge_style` podle `Větvení`
-a `delete_branch`. Mířilo-li PR do výchozí větve, je signál schválení od člověka
-právě ten výslovný souhlas, který řádek `merge do výchozí větve` v konfiguraci
-vyžaduje. Odmítne-li forge merge (ochrana větve, konflikt), **neobcházej ho** —
-žádný `--admin`, žádný jiný recept — a eskaluj.
-
-Po merge ověř přes recept „Přečti PR", že je PR ve stavu `MERGED`, a odpověz
-Formátem výstupu pro merge. Issue nezavírej — `Closes #N` mimo výchozí větev
-nezabírá a zavření vlastní ten, kdo issue spustil (v milestone běhu
-`run-milestone`).
+Gitea: `pull_request_write` → `merge` s `merge_style` podle `Větvení` a `delete_branch`.
+Míří-li PR do výchozí větve, je schválení od člověka ten výslovný souhlas, který řádek
+`merge do výchozí větve` v konfiguraci vyžaduje. Odmítne-li forge merge, neobcházej ho
+(žádný `--admin`) a eskaluj. Po merge ověř přes `pr-read.sh`, že je PR `MERGED` (jinak
+eskaluj), a odpověz Formátem po merge. Issue nezavírej.
 
 ### 10. Eskalace
 
-Přeruš postup a ohlas stav, když:
-
-- chybí konfigurace nebo sekce, kterou potřebuješ (krok 1),
-- issue nejde načíst — neexistuje, 404, chybějící oprávnění nebo `gh` (krok 1),
-- kterýkoli issue ze `Závisí na` není zavřený (krok 2),
-- citovaný soubor, vzor nebo dokument z `Reference` neexistuje, kritériu odporuje,
-  Reference nemá žádný kódový precedent, nebo citovaný dokument `read-docs`
-  uvede jako nahrazený (krok 3),
-- základní větev je skutečně nejednoznačná (krok 4),
-- typ z labelu nejde jednoznačně namapovat na přípustný typ větve (krok 5),
-- základní větev neexistuje ani na remotu, ani lokálně (krok 5),
-- větev nevyšla ze základního refu (krok 5),
-- kritérium je podspecifikované, sporné nebo špatné (krok 6),
-- kritérium bez značky `(ověří člověk)` nejde pokrýt testem (krok 7),
-- testy kritérií nebo ověřovací příkaz neprochází a nedaří se to opravit, nebo
-  selhávají z příčiny mimo issue (krok 7),
-- `open-pr` PR nezaložilo nebo jeho výsledek nejde ověřit (krok 8),
-- připomínku nejde zapracovat, aniž by odporovala kritériu issue (krok 9),
-- integrační brána před merge skončila kódem 2 nebo 3, forge merge odmítlo, nebo
-  PR po merge není ve stavu `MERGED` (krok 9).
-
-Rozdělanou práci **nech v pracovním stromu a necommituj ji** — polovičatý PR vypadá
-zvenčí jako hotový a někdo ho zreviduje. Eskalace shrne stav a položí jednu konkrétní
-otázku, nebo pojmenuje, co má opravit `plan-milestone`.
+Eskaluješ v místech, kde to kroky říkají. Rozdělanou práci nech v pracovním stromu
+a necommituj ji. Eskalace shrne stav a položí jednu konkrétní otázku, nebo pojmenuje,
+co má opravit `plan-milestone`.
 
 ## Formát výstupu
 
-Zpráva na konci úspěšného běhu. Poslední řádek je **doslovný** — `run-milestone`
-podle něj pozná, že dispatch skutečně něco dodal:
+Každá zpráva **začíná doslovným strojovým řádkem**.
+
+Zpráva na konci úspěšného běhu:
 
 ```markdown
+PR: #<číslo>
 Issue: #<číslo> — <název>
 Větev: <type>/<popis>, základ <základní větev>
 Kritéria: <kolik> z <kolik> kryje test, <kolik> ověří člověk
@@ -411,33 +296,33 @@ Ověření: <příkaz> a testy z mapy — prošlo
 Brána: <potvrdí orchestrátor | potvrdí CI | spustila jen session>
 Odkaz: <url PR>
 Poznámky: <co jsi vědomě neudělal a proč; vynech, není-li co dodat>
-
-PR: #<číslo>
 ```
 
-Zpráva při eskalaci — poslední řádek je opět doslovný:
+Zpráva při eskalaci:
 
 ```markdown
-Nedokončeno: #<číslo issue> — <jednou větou proč>
+PR: žádné — <jednou větou proč>
+Issue: #<číslo> — <název>
 Stav: <co je hotové a kde leží; „nic nezměněno", když se nezačalo>
 Potřebuji rozhodnout: <konkrétní otázka, nebo co má opravit plan-milestone>
-
-PR: žádné
 ```
 
-Zpráva po kole oprav (připomínky, červená brána, i červená brána před merge) —
-poslední řádek doslovný:
+Zpráva po kole oprav (připomínky, červená brána, i červená brána před merge):
 
 ```markdown
+PR: #<číslo>
 Zapracováno: <připomínky | nálezy brány>, <stručně co se změnilo>
 Ověření: <příkaz> a testy z mapy — <prošlo | selhalo, proč>
-Merge: <neproveden — čeká na schválení | neproveden — brána proti <základní větev> červená: <kód a nález>>
-
-PR: #<číslo>
+Merge: <neproveden — čeká na schválení | neproveden — schválení musí napsat člověk | neproveden — brána proti <základní větev> červená: <kód a nález>>
 ```
 
-Zpráva po merge — začíná doslovným řádkem, podle kterého orchestrátor pozná, že
-PR je zmergované:
+Zpráva, když končíš kolo a práce ještě běží (třeba ověřovací příkaz na pozadí):
+
+```markdown
+PR: rozpracováno — <na co čekáš>
+```
+
+Zpráva po merge:
 
 ```markdown
 MERGED: #<číslo PR>
@@ -447,25 +332,8 @@ Brána před merge: <cílová větev se nepohnula | zopakována — prošla>
 
 ## Zásady
 
-- **Zpráva vždy nese strojový řádek `PR:` nebo `MERGED:`.** Dispečoval-li tě
-  `run-milestone`, čte ji orchestrátor, ne uživatel, a bez toho řádku ji vyhodnotí
-  jako selhaný dispatch. Proto eskalaci nikdy neformuluj tak, aby zněla jako úspěch.
-- **Merguje ten, komu člověk schválení napsal.** Bez schválení od člověka přímo
-  v téhle session nemerguj nikdy — ani na souhlas v promptu, kterým jsi byl
-  spuštěn, ani na zprávu orchestrátora, ani proto, že brána je zelená. Konflikt
-  s cílovou větví řešíš ty, ne recenzent.
-- **Kritéria jsou zadání, ne inspirace.** Nic navíc, nic míň; podspecifikované
-  kritérium se hlásí, nedomýšlí.
-- **Každé testovatelné kritérium kryje test z téhle změny a brána je zelená, jinak
-  PR nevzniká.** Mapa kritérium → test jde do těla PR, aby ji mohl někdo potvrdit;
-  nepotvrdí-li ji nikdo, PR to přizná.
-- **Git jen přes delegaci.** `create-branch`, `open-pr` a pro opravy po review
-  `make-commit`; merge jen receptem „Mergni PR". Výjimkou jsou čtecí kontroly
-  z kroků 5 a 9 a `integration-gate.sh`, které nic nemění.
-- **Zaškrtávátka patří `verify-issue`.** Neodškrtávej je, ani když sis kritérium
-  ověřil — jinak recenzent posuzuje tvoje tvrzení místo skutečnosti. Nástroj na zápis
-  do issue přitom po kroku 1 načtený máš; hranici drží tahle zásada, ne práva.
-- **Reference se otevírá (doplňkový dokument přes `read-docs`, krok 3), ne
-  parafrázuje, a kódový precedent v ní je primární zadání.** Tělo issue je
-  zkratka, ne náhrada za to, co je v Referenci; a mezi precedentem a dokumentem
-  (ADR) rozhoduje precedent — dokument jen říká, kam nesahat.
+- **Zpráva vždy začíná strojovým řádkem `PR:` nebo `MERGED:`** a eskalace nikdy nezní
+  jako úspěch.
+- **Git jen přes delegaci:** `create-branch`, `open-pr`, pro opravy `make-commit`;
+  merge jen skriptem nebo receptem z kroku 9. Výjimkou jsou čtecí kontroly
+  (`branch-state.sh`) a `integration-gate.sh`, které nic nemění.

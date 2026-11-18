@@ -113,7 +113,8 @@ a **Jazyk issues**.
 ### 2. Sestav issue jako Poznámku
 
 Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` kvůli tvaru názvu
-a sekcí těla. Jazyk textu určuje sekce `Jazyk issues` z konfigurace. Pro
+a sekcí těla. Jazyk textu určuje sekce `Jazyk issues` z konfigurace; nadpisy
+sekcí piš doslova podle šablony. Pro
 Poznámku se ale od šablony vědomě odchyluješ **ve třech bodech** — v nich
 platí tenhle postup, ne obecná věta o přednosti sdíleného kontraktu výše:
 

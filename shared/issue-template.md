@@ -24,6 +24,14 @@ zaškrtávátka i přepisuje, a sekce `Reference` je jediné, podle
 - `<scope>` je oblast v kódu, ne téma milestonu.
 - Jazyk popisu určuje sekce `Jazyk issues` v projektové konfiguraci.
 
+**Strojové prvky se nepřekládají.** `Jazyk issues` platí pro popis v názvu a pro text
+pod nadpisy. Doslova česky, v jakémkoli jazyce issues, zůstávají:
+
+- nadpisy těla issue: `## Souhrn`, `## Akceptační kritéria`, `## Reference`,
+  `## Závisí na`;
+- značka `(ověří člověk)` za kritériem;
+- nadpis `## Testy kritérií` v těle PR.
+
 ---
 
 ## Tělo

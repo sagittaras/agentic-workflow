@@ -98,13 +98,17 @@ Worktree stojí na odpojené HEAD: do ověřovací kopie se nemá commitovat.
 Úklid po sobě je součást postupu, ne úklid navíc — nechaný worktree drží referenci
 a mate další běh.
 
-### `integration-gate.sh <pr-branch> <integration-branch> -- <příkaz…>`
+### `integration-gate.sh <pr-branch> <integration-branch> [--same-as <pr_sha> <integration_sha>] [-- <příkaz…>]`
 
 Ověří, že PR obstojí proti aktuální špičce integrační větve. Merge dělá v dočasném
 worktree, takže pracovní strom volajícího zůstane netknutý.
 
-- **Výstup:** `merge=ok|conflict`, `check=pass|fail|skipped`, `worktree=`, plus sekce
-  `[output]` s výstupem příkazu.
+- **Výstup:** `pr_ref=`, `integration_ref=`, `pr_sha=`, `integration_sha=` (commity,
+  proti kterým brána běžela), `merge=ok|conflict`, `check=pass|fail|skipped`,
+  `worktree=`, plus sekce `[output]` s výstupem příkazu.
+- **S `--same-as`** se brána nespouští znovu, stojí-li obě větve pořád na zadaných
+  commitech: vypíše `reused=true` a skončí kódem `0`. Jinak `reused=false` a proběhne
+  celá. SHA se předávají jen ze zelené brány — volající tím přebírá její výsledek.
 - **Kódy:** `0` merge i příkaz prošly · `2` chybný argument nebo některá z větví
   neexistuje · `3` remote nedostupný, nebo založení dočasného worktree selhalo ·
   `5` konflikt při merge · `6` příkaz selhal.
@@ -155,30 +159,32 @@ což v izolovaném worktree nemusí platit.
 
 Skripty, které něco zakládají, vypisují `number=` a `url=` — na to se skill odkazuje dál.
 Skripty, které jen čtou, vypisují JSON tak, jak ho vrátí `gh`, aby si skill mohl vytáhnout,
-co potřebuje, bez dalšího kola.
+co potřebuje, bez dalšího kola. Výjimkou je `milestone-list.sh`, který GraphQL odpověď
+přetvaruje do klíčů REST (viz tabulka).
 
 | Skript | Argumenty |
 | --- | --- |
 | `issue-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
-| `issue-list.sh` | `[--milestone M] [--state open\|closed\|all]` |
+| `issue-list.sh` | `[--milestone M] [--state open\|closed\|all]` — `M` je název i číslo |
 | `issue-create.sh` | `--title T --body-file F\|- [--milestone M] [--label L]…` |
-| `issue-update.sh` | `<number> [--body-file F\|-] [--state closed]` |
+| `issue-update.sh` | `<number> [--body-file F\|-] [--state closed\|open] [--milestone <název>]` |
 | `issue-comment.sh` | `<number> --body-file F\|-` |
-| `milestone-list.sh` | `[--state open\|closed\|all]` |
+| `milestone-list.sh` | `[--state open\|closed\|all]` — ploché JSON pole; `open_issues` a `closed_issues` počítají jen issues, bez PR |
 | `milestone-create.sh` | `--title T [--description D]` |
-| `milestone-update.sh` | `<number> --state closed` |
+| `milestone-update.sh` | `<number> --state closed` — `open_issues` a `closed_issues` ve výstupu jsou REST počty včetně PR, ke kontrole výpisu issues se nehodí |
 | `label-list.sh` | — |
 | `label-create.sh` | `--name N --color C [--description D]` |
 | `pr-create.sh` | `--base B --head H --title T --body-file F\|-` |
 | `pr-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
 | `pr-reviews.sh` | `<number>` — sekce `[reviews]`, `[line_comments]`, `[comments]`: všechny připomínky na jedno volání |
 | `pr-update.sh` | `<number> --body-file F\|-` — nahradí celé tělo PR |
-| `pr-list.sh` | `[--milestone M] [--state open\|closed\|all]` |
+| `pr-list.sh` | `[--milestone M] [--state open\|closed\|all]` — `M` je název i číslo; neexistující číslo skončí chybou, ne prázdným polem |
 | `pr-for-issue.sh` | `<issue> [--base B] [--state open\|closed\|all]` — PR s `Closes #<issue>` v těle, i do integrační větve |
 | `pr-for-branch.sh` | `<head> [--base B] [--state open\|closed\|all]` — PR z head větve tohoto repozitáře, přesná shoda názvu, bez forků |
 | `pr-set-milestone.sh` | `<number> --milestone M` |
 | `pr-comment.sh` | `<number> --body-file F\|-` |
 | `pr-merge.sh` | `<number> [--squash] [--delete-branch]` |
+| `pr-gate.sh` | `<number> --issue N --base B [--no-write] [-- <příkaz…>]` — brána před review jedním voláním, viz níž |
 
 **Tělo se nikdy nepředává argumentem**, ale souborem, nebo ze stdin přes `--body-file -`
 (heredoc s ukončovačem v uvozovkách ve stejném volání). Víceřádkový markdown v argumentu
@@ -188,3 +194,23 @@ Bash nepřežije; prázdné tělo ze stdin skončí kódem `2` (`empty_body`).
 
 Chybějící `gh` nebo nepřihlášený `gh auth status` hlas kódem `7` s vysvětlením na stderr;
 skill to má uživateli říct rovnou, ne narazit až v půlce běhu milestonu.
+
+### `gh/pr-gate.sh <PR> --issue N --base B [--no-write] [-- <příkaz…>]`
+
+Brána `run-milestone` před review: přečte tělo issue a PR, hlavu i cíl PR vezme
+z forge, spustí `criteria-tests.sh` a při kódu `0` `integration-gate.sh`. Prošlo-li
+obojí, nahraje tělo issue s odškrtnutými kritérii a pošle k PR komentář „Brána
+prošla"; s `--no-write` jen ohlásí, že by to udělal.
+
+- **Výstup:** `pr=`, `issue=`, `head=`, `base=`, řádky `criteria-tests.sh` (bez
+  `result=`), `criteria_tests=pass|fail`, řádky brány `pr_sha=`,
+  `integration_sha=`, `merge=`, `check=`, `conflicts=`, `command=`, `exit_code=`,
+  `worktree_removed=`, pak
+  `issue_body=updated|skipped`, `comment_mode=review|comment|skipped`,
+  `result=pass|fail`. Sekce brány (`[conflicts]`, `[merge_output]`, `[output]`)
+  jen při neúspěchu; u kódů `2`, `3`, `4` a `7` řádek `result=` chybí a důvod nese
+  `error=` na stderr.
+- **Kódy:** `0` prošlo a je zapsáno · `1` nález v mapě kritérií · `2` chybný
+  argument, PR nemíří do `--base` nebo issue bez sekce kritérií · `3` čtení
+  z forge, remote nebo worktree selhalo · `4` brána prošla, ale zápis do trackeru
+  selhal · `5` konflikt · `6` ověřovací příkaz selhal · `7` chybí `gh`.

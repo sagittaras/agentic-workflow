@@ -5,6 +5,14 @@
 # Použití:
 #   bash scripts/integration-gate.sh <pr-branch> <integration-branch>
 #   bash scripts/integration-gate.sh <pr-branch> <integration-branch> -- <příkaz…>
+#   bash scripts/integration-gate.sh <pr-branch> <integration-branch> \
+#     --same-as <pr_sha> <integration_sha> [-- <příkaz…>]
+#
+# Vypisuje pr_sha= a integration_sha=, tedy commity, proti kterým brána běžela.
+# S --same-as se brána nespouští znovu, stojí-li obě větve pořád na zadaných
+# commitech: vypíše reused=true a skončí kódem 0 (výsledek se bere z dřívějšího
+# zeleného běhu — volající předává SHA jen ze zelené brány). Jinak reused=false
+# a brána proběhne celá.
 #
 # Merge probíhá v dočasném worktree s odpojenou HEAD, takže pracovní strom
 # volajícího zůstane netknutý a nezáleží na tom, na jaké větvi zrovna stojí.
@@ -32,10 +40,22 @@ pr_branch="${1:-}"
 integration_branch="${2:-}"
 if [ -z "$pr_branch" ] || [ -z "$integration_branch" ]; then
   echo "error=missing_branch_argument" >&2
-  echo "hint=použití: integration-gate.sh <pr-branch> <integration-branch> [-- <příkaz…>]" >&2
+  echo "hint=použití: integration-gate.sh <pr-branch> <integration-branch> [--same-as <pr_sha> <integration_sha>] [-- <příkaz…>]" >&2
   exit 2
 fi
 shift 2
+
+same_pr="" same_int=""
+if [ "${1:-}" = "--same-as" ]; then
+  if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+    echo "error=missing_value" >&2
+    echo "hint=--same-as čeká dva SHA: <pr_sha> <integration_sha>" >&2
+    exit 2
+  fi
+  same_pr="$2"
+  same_int="$3"
+  shift 3
+fi
 
 cmd=()
 if [ "${1:-}" = "--" ]; then
@@ -103,6 +123,18 @@ integration_ref="$(resolve_ref "$integration_branch")" || {
 
 echo "pr_ref=$pr_ref"
 echo "integration_ref=$integration_ref"
+pr_sha="$(git rev-parse "$pr_ref^{commit}")"
+integration_sha="$(git rev-parse "$integration_ref^{commit}")"
+echo "pr_sha=$pr_sha"
+echo "integration_sha=$integration_sha"
+
+if [ -n "$same_pr" ]; then
+  if [ "$pr_sha" = "$same_pr" ] && [ "$integration_sha" = "$same_int" ]; then
+    echo "reused=true"
+    exit 0
+  fi
+  echo "reused=false"
+fi
 
 # --- dočasný worktree ----------------------------------------------------
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/sagittaras-gate.XXXXXX")"

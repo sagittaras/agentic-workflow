@@ -42,7 +42,11 @@ effort: xhigh
 #   první, i když pozdější už skončila. Proto výslovný zákaz v kroku 4.
 # - Dávka = kapacita člověka na review, ptá se na ni na startu (navrhuje 3).
 # - Dvě červené brány po sobě u téhož PR → eskalace, jinak by se session
-#   s orchestrátorem mohly točit donekonečna.
+#   s orchestrátorem mohly točit donekonečna. Konflikt proti jiné špičce
+#   integrační větve, než byl předchozí, se nepočítá: v běhu M1 (17. 11. 2026)
+#   způsobil 7 z 8 červených bran konflikt po merge souběžného PR, ne session.
+#   Proto brána vypisuje integration_sha=. Selhaný příkaz (kód 6) se počítá
+#   vždy — jinak by pojistka při souběžných merge přestala fungovat.
 # - Průběžný sync integrační větve s výchozí odpadl: přetahoval by se o větev
 #   s merge PR do ní. Sync je v závěru, nebo na žádost člověka.
 # - Merge dělá orchestrátor, ne session (issue #70, běh milestonu #4):
@@ -51,10 +55,28 @@ effort: xhigh
 #   pravidlo plugin dodat nemůže (klasifikátor čte jen ~/.claude/settings.json)
 #   a když sedne, obejde klasifikátor úplně. Merguje proto ten, komu člověk
 #   schválení napsal. Konflikt s integrační větví dál řeší session.
-# - Brána před merge běží vždy: kontrola, jestli se integrační větev od brány
-#   pohnula, by ji u souběžných issues stejně skoro vždy spustila.
-# - Schválení jmenuje číslo PR (Hlášení): klasifikátor nevidí výstupy nástrojů,
-#   takže „issue #44 může mergovat" s merge PR #62 spojit nemusí.
+# - Brána před merge se přeskočí jen přes integration-gate.sh --same-as: skript
+#   porovná SHA obou větví se zelenou branou před review v témže volání, takže
+#   kontrola nestojí nic navíc (M1: #83 a #85 schválené hned po bráně).
+# - Brána před review jde na GitHubu jedním skriptem gh/pr-gate.sh (rozbor tokenů
+#   běhu M1, 17. 11. 2026): orchestrátor měl 216 volání s průměrným kontextem
+#   221k a brána s čtením těl a zápisem do trackeru ho stála 4–5 volání na běh.
+#   Skript bere hlavu PR z forge — ručně psaný název větve skončil v M1 kódem 2 —
+#   a výstup ověřovacího příkazu vypisuje jen při neúspěchu.
+# - Sdílené soubory se čtou podmíněně: v M1 je orchestrátor načetl hned na startu
+#   (~8k tokenů) a nesl je ~200 voláními, přitom GitHubová větev má příkazy
+#   přímo v těle.
+# - Hlášení žádá číslo PR: klasifikátor nevidí výstupy nástrojů, takže „issue #44
+#   může mergovat" s merge PR #62 spojit nemusí. Schválení číslem issue se přesto
+#   bere, sedí-li na jedno PR — v M1 tak přišla většina schválení a auto mode
+#   žádné nezamítl; zamítne-li, krok 6 požádá o „mergni PR #n".
+# - Další rozhodnutí z běhu M1: výsledek session čte orchestrátor z forge, protože
+#   notifikace nese recap a jen ~400 znaků zprávy (F7). start_session z turnu po
+#   notifikaci aplikace odmítne a karta own_initiative zahodí name i
+#   source_branch, proto se místo doplňuje v turnu merge (F6). Po merge se
+#   ostatní PR kontrolují na konflikt, aby oprava běžela během review, a schválení
+#   po opravě konfliktu platí dál — člověk v M1 nové nechtěl (F2). PR pro víc
+#   issues ani issue mimo milestone běh nepřijímá, opravuje se tracker (F5, E1).
 # - Review plánu se nehledá (vize 2.10): plán validuje člověk a spuštěním běhu
 #   ho schvaluje. Jeho mechanickou část hlídá běh sám — graf a Poznámku
 #   v kroku 1 u každého otevřeného issue, `area:*` v kroku 3. Poznámku dřív
@@ -108,9 +130,9 @@ připomínky člověka a na jeho schválení merguješ. **Kód nepíšeš a kval
 
 | Soubor | Kdy ho otevřít |
 | --- | --- |
-| `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | v kroku 1, kde v konfiguraci co hledat |
-| `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | před prvním sáhnutím na tracker |
-| `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | před prvním voláním skriptu ze `scripts/` |
+| `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` | v kroku 1, jen když v konfiguraci nenajdeš sekci, kterou potřebuješ |
+| `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md` | Gitea: před prvním sáhnutím na tracker. GitHub: jen pro operaci, kterou tenhle skill nejmenuje skriptem |
+| `${CLAUDE_PLUGIN_ROOT}/shared/git-scripts.md` | jen když skript vrátí kód, který tenhle skill nemapuje |
 | `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md` | v kroku 1, nejsi-li si jistý čtením `Závisí na` |
 
 ## Vstupní kontext
@@ -139,17 +161,21 @@ subagentů (krok 3).
 
 **Milestone** urči ze zadání. Sedí na víc otevřených milestonů nebo na žádný → zeptej se.
 
-**Issues.** Vypiš všechna issues milestonu, otevřená i zavřená. Stránkování po 30
-a PR ve výpisu ošetři podle `forge-recipes.md`. Nesedí-li počet s `open_issues` +
-`closed_issues`, eskaluj.
+**Issues.** Vypiš všechna issues milestonu, otevřená i zavřená. GitHub:
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-list.sh" -R "<owner/repo>" --milestone "<název>" --state all`.
+Gitea: podle receptu, včetně stránkování po 30 a filtru na PR. Nesedí-li počet
+s `open_issues` + `closed_issues`, eskaluj.
 
-**Graf** sestav ze sekce `Závisí na` každého těla. Cyklus nebo odkaz mimo milestone →
-eskaluj. Otevřené issue, které je Poznámka — `Akceptační kritéria` jsou prázdná nebo
-`Reference` chybí —, nespouštěj a eskaluj s odkazem na `/sagittaras:triage-issue`.
+**Graf** sestav ze sekce `Závisí na` každého těla. Cyklus nebo odkaz na otevřené issue
+mimo milestone → eskaluj. Otevřené issue, které je Poznámka — `Akceptační kritéria` jsou
+prázdná nebo `Reference` chybí —, nespouštěj a eskaluj s odkazem na
+`/sagittaras:triage-issue`. Nadpisy čti doslova: issue s přeloženým nadpisem šablony
+(`## Acceptance criteria`) brána nepřečte — nespouštěj ho a navrhni opravu (krok 9).
 
-**Rozpracovanost.** Ke každému otevřenému issue najdi PR přes recept „Najdi PR patřící
-k issue" (nikdy podle názvu větve) a session podle jména `issue-<číslo>`
-(`list_sessions`).
+**Rozpracovanost.** Ke každému otevřenému issue najdi PR podle těla, nikdy podle názvu
+větve — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-issue.sh" -R "<owner/repo>"
+<issue> --base <integrační větev>`, Gitea: recept „Najdi PR patřící k issue" — a session
+podle jména `issue-<číslo>` (`list_sessions`).
 
 | Stav | Kam |
 | --- | --- |
@@ -177,7 +203,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/milestone-branch.sh" <slug>
 
 Spusť každé issue ve stavu „bez PR, bez session", jehož závislosti jsou všechny
 zavřené — dokud počet rozběhnutých issues (session běží, brána, čeká na člověka)
-nedosáhne dávky. Chybí-li na issue `area:*` label, nespouštěj a eskaluj.
+nedosáhne dávky. Eskalované issue místo nezabírá; vrátí-li ho člověk do práce, zabírá
+ho znovu. Chybí-li na issue `area:*` label, nespouštěj a eskaluj.
 
 **S podřazenými session** zavolej pro každé issue `mcp__ccd_session__start_session`:
 
@@ -199,8 +226,11 @@ Je-li pro oblast issue v mapě `Agenti` agent, uveď ho v zadání; jinak zadán
 `run_in_background: true` a promptem podle Zadání pro session v podobě bez agenta.
 
 Veď si přehled issue → id session nebo agenta → PR → stav. Totéž issue nespouštěj
-podruhé, dokud jeho session nebo agent existuje. Odmítne-li nástroj spuštění, eskaluj
-s jeho chybou.
+podruhé, dokud jeho session nebo agent existuje.
+
+Odmítne-li `start_session` spuštění, protože turn nezačal zprávou člověka (typicky po
+notifikaci), jiný `initiation` nezkoušej. Ohlas, že místo v dávce je volné (Hlášení), a issue spusť na začátku další zprávy
+člověka. Jiné odmítnutí → eskaluj s chybou nástroje.
 
 ### 4. Výsledek session
 
@@ -209,67 +239,86 @@ notifikace jmenuje, kdo skončil — zpracuj právě tenhle výsledek a čekej d
 konkrétní session nečekej a souběžná issues nezapisuj jako kroky seznamu úkolů, které
 se plní po pořadí: issue, které skončí dřív, by čekalo na to, které jsi spustil první.
 
-Výsledek platí, jen když zpráva začíná řádkem `PR: #<číslo>` a to PR podle forge
-existuje a míří do integrační větve → krok 5. Jinak:
+O výsledku session i o její odpovědi na signál rozhoduje forge, zpráva je jen podnět.
+U každé notifikace najdi otevřené PR issue —
+GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-issue.sh" -R "<owner/repo>"
+<issue> --base <integrační větev> --state open`, Gitea: recept „Najdi PR patřící k issue".
+Rozhoduje první řádek tabulky, který sedí:
 
-- `PR: žádné` s věcným důvodem → eskaluj, neposílej znovu;
-- řádek chybí, PR neexistuje, nebo krátká odpověď bez práce → pošli totéž zadání
-  jednou znovu (`SendMessage` na její id); podruhé eskaluj.
+| Zpráva a forge | Co uděláš |
+| --- | --- |
+| zpráva má řádek `PR: rozpracováno — …` | nic neposílej, čekej na další notifikaci; nepřijde-li, zkontroluj PR ve forge při další zprávě člověka |
+| zpráva má řádek `PR: žádné — <důvod>` | eskaluj, neposílej znovu |
+| forge vrátí otevřené PR | krok 5 |
+| PR není | pošli totéž zadání jednou znovu (`SendMessage` na její id); podruhé eskaluj |
 
 ### 5. Brána před review
 
 Pro PR z kroku 4, i pro každé, které session po připomínkách aktualizovala:
 
-1. Těla ulož a `criteria-tests.sh` spusť **jedním voláním Bash** — proměnná
-   s adresářem by do dalšího volání nepřežila. GitHub:
+GitHub — jedno volání; skript přečte těla, hlavu PR vezme z forge, pustí testy
+kritérií i integrační bránu a při úspěchu zapíše odškrtnutá kritéria a komentář
+„Brána prošla". Nemá-li oblast ověřovací příkaz, vynech `--` i příkaz.
 
-   ```bash
-   d="$(mktemp -d)"
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh" -R "<owner/repo>" <issue> --body >"$d/issue.md"
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-read.sh" -R "<owner/repo>" <číslo PR> --body >"$d/pr.md"
-   echo "dir=$d"
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/criteria-tests.sh" --issue-body "$d/issue.md" \
-     --pr-body "$d/pr.md" --base <integrační větev> --head <větev PR> --ticked-body "$d/ticked.md"
-   ```
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-gate.sh" -R "<owner/repo>" <číslo PR> \
+  --issue <issue> --base <integrační větev> -- <ověřovací příkaz oblasti>
+```
 
-   Gitea: místo dvou řádků s `gh/` zapiš těla z `issue_read` a `pull_request_read`
-   do `$d/issue.md` a `$d/pr.md` heredocy s ukončovačem v uvozovkách, ve stejném
-   volání. Cestu z řádku `dir=` dál piš doslova.
-2. Při kódu 0:
-   `bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <větev PR> <integrační větev> -- <ověřovací příkaz oblasti>`
+Gitea — v jednom volání Bash založ `d="$(mktemp -d)"`, vypiš `echo "dir=$d"`, zapiš
+těla z `issue_read` a `pull_request_read` do `$d/issue.md` a `$d/pr.md` (heredoc,
+ukončovač v uvozovkách) a spusť
+`criteria-tests.sh --issue-body "$d/issue.md" --pr-body "$d/pr.md" --base <integrační
+větev> --head <head větev PR> --ticked-body "$d/ticked.md"`; při kódu 0
+`integration-gate.sh <head větev PR> <integrační větev> -- <příkaz>` (bez příkazu
+vynech `--`). Prošlo-li obojí,
+nahraj `ticked.md` jako tělo issue a pošli komentář podle Formátu výstupu; cestu
+z řádku `dir=` piš v dalších voláních doslova a adresář pak smaž.
 
 | Výsledek | Co uděláš |
 | --- | --- |
-| oba kód 0 | nahraj `<dir>/ticked.md` jako tělo issue (recept „Uprav tělo issue": `issue-update.sh -R "<owner/repo>" <issue> --body-file <dir>/ticked.md`), pošli komentář „Brána prošla" (recept „Komentář k PR (review)", tělo přes `--body-file -`), adresář `<dir>` smaž → krok 6 |
-| `criteria-tests` kód 1, brána kód 5 nebo 6 | pošli session signál „Brána neprošla" s řádky `fail=`, nebo se sekcí `[conflicts]` či `[output]`; po její odpovědi znovu krok 5 |
-| druhá červená brána po sobě u téhož PR | eskaluj |
-| kód 2 nebo 3 kteréhokoli skriptu | eskaluj — vadné issue nebo výpadek, ne chyba session |
+| kód 0 | → krok 6 |
+| kód 1, 5 nebo 6 | pošli session signál „Brána neprošla" s řádky `fail=`, nebo se sekcí `[conflicts]` či `[output]`; po její odpovědi krok 4 |
+| druhá červená brána po sobě u téhož PR | eskaluj. Konflikt (kód 5) ale eskaluj, jen když i předchozí brána skončila konfliktem se stejným `integration_sha=`; jinak se počítá jako první červená |
+| kód 2, 3, 4 nebo 7 | eskaluj — vadné issue, výpadek nebo nezapsaný výsledek, ne chyba session |
 
-`check=skipped` při kódu 0 znamená, že pro oblast není ověřovací příkaz: uveď to
-v komentáři i v hlášení.
+`check=skipped` znamená, že pro oblast není ověřovací příkaz: uveď to v hlášení.
 
 ### 6. Předání člověku a merge
 
-Ohlas, že PR čeká na člověka (Hlášení). Připomínky píše člověk do PR, signál sem:
+Platí-li pro PR schválení (níže), mergni. Jinak ohlas, že PR čeká na člověka (Hlášení).
+Připomínky píše člověk do PR, signál sem:
 
 | Signál od člověka | Co uděláš |
 | --- | --- |
-| „PR #N má připomínky" | pošli session signál „Připomínky" (`SendMessage`); obsah nečti ani nepřeposílej, session si ho přečte z PR. Po její odpovědi krok 5 |
-| „mergni PR #N", „PR #N schváleno" | mergni sám (níže) |
+| „PR #N má připomínky" | pošli session signál „Připomínky" (`SendMessage`); obsah nečti ani nepřeposílej, session si ho přečte z PR. Po její odpovědi krok 4 |
+| „mergni PR #N", „PR #N schváleno", i jinými slovy | mergni sám (níže) |
+
+Schválení smí jmenovat číslo issue místo PR („34 může být zmergované"): platí, sedí-li
+na právě jedno PR v přehledu, které prošlo branou; jinak se zeptej, které PR myslí.
+Schválení předem („až projde, mergni") uplatni, jakmile brána poprvé projde.
+Schválení, které přišlo po zelené bráně, přežije jen kola s opravou konfliktu
+(kód 5); po kódu 1 nebo 6 jde PR ke schválení znovu. Jmenuje-li schválení jiný cíl
+než integrační větev („pošli na main"), zeptej se — merguješ jen do integrační větve.
 
 Schválení session nepřeposílej: zprávu od jiné session klasifikátor auto mode
 za schválení člověka nebere a merge v ní zamítne.
 
-**Merge.** Napřed zopakuj bránu proti aktuální špičce integrační větve:
+**Merge.** Napřed zopakuj bránu proti aktuální špičce integrační větve. Větev PR vezmi
+z řádku `head=` a SHA z řádků `pr_sha=` a `integration_sha=` poslední zelené brány
+před review (krok 5) — ne z kontroly konfliktu v kroku 7. Nepohnula-li se od ní ani
+jedna větev, skript bránu znovu nespustí a vrátí `reused=true`. Nemáš-li SHA v kontextu,
+`--same-as` vynech:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <větev PR> <integrační větev> -- <ověřovací příkaz oblasti>
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" <head větev PR> <integrační větev> \
+  --same-as <pr_sha> <integration_sha> -- <ověřovací příkaz oblasti>
 ```
 
 | Brána | Co uděláš |
 | --- | --- |
 | kód 0 | mergni |
-| kód 5 nebo 6 | nemerguj; pošli session signál „Brána neprošla", po její odpovědi krok 5. Opravené PR jde ke schválení znovu |
+| kód 5 nebo 6 | nemerguj; pošli session signál „Brána neprošla", po její odpovědi krok 4 |
 | kód 2 nebo 3 | eskaluj |
 
 Mergni receptem „Mergni PR" se strategií ze sekce `Větvení` a se smazáním zdrojové
@@ -290,9 +339,23 @@ Dokud je v dávce místo, spouštěj mezitím další odblokovaná issues (krok 
 
 ### 7. Po merge
 
-Ověř ve forge, že PR je zmergované do integrační větve, a issue zavři (recept „Zavři
-issue") — `Closes #N` mimo výchozí větev nezabírá. Zmergovaná PR odblokují závislá
-issues → krok 3.
+Ověř ve forge, že PR je zmergované do integrační větve, a issue zavři — GitHub:
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-update.sh" -R "<owner/repo>" <issue> --state closed`,
+Gitea: recept „Zavři issue". `Closes #N` mimo výchozí větev nezabírá.
+
+Ve stejném turnu jako merge:
+
+1. Spusť issues, která merge odblokoval, a doplň uvolněné místo v dávce (krok 3).
+2. Ostatní otevřená PR, která prošla branou, zkontroluj jen na konflikt s novou
+   špičkou. Postupně v jednom volání Bash, ne paralelně — souběžné fetche se
+   zamknou:
+
+   ```bash
+   for h in <head větve PR>; do echo "head=$h"; bash "${CLAUDE_PLUGIN_ROOT}/scripts/integration-gate.sh" "$h" <integrační větev>; echo "exit=$?"; done
+   ```
+
+   `exit=5` → pošli session toho PR signál „Brána neprošla" se sekcí `[conflicts]`;
+   po její odpovědi krok 4. `exit=2` nebo `3` → eskaluj.
 
 **Nová vlna.** Po každém merge vypiš issues milestonu znovu a nová zařaď do grafu jako
 v kroku 1, včetně kontroly Poznámky.
@@ -319,13 +382,13 @@ neběží, nic nečeká na člověka a nic není odblokované → eskaluj jako d
 Eskaluj, když:
 
 - chybí konfigurace nebo potřebná sekce; `gh` vrátí kód 7, nebo forge 404 na zápisu;
-- issue nemá `area:*` label nebo je Poznámka; nástroj odmítl spustit session nebo
-  agenta;
-- graf má cyklus nebo odkaz mimo milestone; počet issues nesedí (v kroku 7 až
-  podruhé);
+- issue nemá `area:*` label, je Poznámka nebo má přeložené nadpisy šablony; nástroj
+  odmítl spustit session nebo agenta (odmítnutí v turnu po notifikaci řeší krok 3);
+- graf má cyklus nebo odkaz na otevřené issue mimo milestone; počet issues nesedí
+  (v kroku 7 až podruhé);
 - session ohlásila věcnou překážku, nebo selhala dvakrát stejně;
-- brána neprošla podruhé po sobě; `criteria-tests.sh` nebo `integration-gate.sh`
-  skončil kódem 2 nebo 3;
+- brána neprošla podruhé po sobě (u konfliktu jen proti stejné špičce, krok 5); brána
+  před review skončila kódem 2, 3, 4 nebo 7;
 - brána před merge skončila kódem 2 nebo 3; forge merge odmítl, nebo PR po merge
   podle forge zmergované není;
 - `milestone-branch.sh` nebo `sync-branch.sh` skončil nenulovým kódem;
@@ -333,6 +396,16 @@ Eskaluj, když:
 
 Eskalace shrne stav — co je zmergované, co běží, co čeká na člověka, co blokuje —
 a položí jednu konkrétní otázku. Issues, která na blokovaném nezávisí, běží dál.
+
+Rozejde-li se plán s realitou, navrhni opravu trackeru, ne výjimku z pravidel běhu,
+a proveď ji až na souhlas člověka. PR dál uzavírá jedno issue a běh spouští jen issues
+milestonu.
+
+| Situace | Návrh |
+| --- | --- |
+| závislost na otevřeném issue mimo milestone | přesunout ho do milestonu — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-update.sh" -R "<owner/repo>" <issue> --milestone "<název>"`, Gitea: `issue_write` → `update` s `milestone`; pak krok 1 pro něj |
+| dvě issues se navzájem blokují — třeba ověřovací příkaz oblasti projde až s oběma | sloučit: kritéria a Reference druhého připsat do těla prvního, závislým issues přepsat v `Závisí na` #<druhé> na #<první>, druhé zavřít s komentářem „Sloučeno do #<první>"; session prvního odpověz, ať issue přečte znovu a pokračuje |
+| issue s přeloženými nadpisy šablony | přejmenovat nadpisy v těle issue na doslovné podle `shared/issue-template.md` — GitHub: `issue-update.sh … --body-file -`, Gitea: `issue_write` → `update` s `body` |
 
 ## Formát výstupu
 
@@ -353,6 +426,7 @@ PR nemerguj: merge provede orchestrátor, až ho člověk schválí.
 Každou svou zprávu začni jedním z řádků:
 PR: #<číslo>
 PR: žádné — <věcný důvod>
+PR: rozpracováno — <na co čekáš>
 ```
 
 ### Kontext pro session
@@ -371,7 +445,7 @@ Připomínky: člověk napsal k PR #<n> připomínky. Přečti je z PR a zapracu
 Brána neprošla: <řádky fail=, nebo sekce [conflicts] či [output] doslova>
 ```
 
-### Komentář k PR po bráně
+### Komentář k PR po bráně (Gitea; na GitHubu ho píše `pr-gate.sh`)
 
 ```markdown
 ## Brána prošla
@@ -398,6 +472,7 @@ Spuštěno: #A, #B.
 #A: PR #<n> prošlo bránou — čeká na tebe; schválíš-li ho, napiš „mergni PR #<n>".
 #A: brána neprošla (<důvod>) — vráceno session.
 #A: zmergováno, issue zavřené; odblokováno #C.
+Místo v dávce je volné, #C spustím po tvé další zprávě.
 Eskalace: <co se stalo, co to blokuje> — <otázka>.
 ```
 
@@ -407,6 +482,6 @@ Eskalace: <co se stalo, co to blokuje> — <otázka>.
   napsal sem: do integrační větve sám (krok 6), do výchozí větve jen `open-pr`
   se souhlasem v promptu.
 - **Obsah připomínek teče přes PR.** Ty předáváš jen signál.
-- **Rozhoduje strojový řádek** (`PR:`, `result=`, návratový kód), ne próza.
+- **Rozhoduje forge a strojový řádek** (`PR:`, `result=`, návratový kód), ne próza.
 - **Status není výsledek.** PR, merge i zavřené issue ověř ve forge.
 - **Stav drží tracker, ne tvoje paměť** — proto jde běh přerušit a navázat.

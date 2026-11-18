@@ -55,6 +55,17 @@ if ! out="$(gh pr review "$number" -R "$repo" --comment --body-file "$BODY_FILE"
 fi
 
 url="$(printf '%s\n' "$out" | grep -E '^https?://' | tail -1 || true)"
+# gh pr review odkaz nevypisuje (běh M1, nález F12) — vezme se z posledního
+# review tohoto účtu. Selhání dotazu komentář nevrací zpátky, jen nechá url=
+# prázdné.
+if [ -z "$url" ] && [ "$mode" = "review" ]; then
+  me="$(gh api user --jq .login 2>/dev/null | grep -E '^[A-Za-z0-9-]+$' || true)"
+  if [ -n "$me" ]; then
+    url="$(gh api "repos/$repo/pulls/$number/reviews" --paginate \
+      --jq ".[] | select(.user.login == \"$me\") | .html_url" 2>/dev/null \
+      | grep -E '^https?://' | tail -1 || true)"
+  fi
+fi
 
 echo "number=$number"
 echo "mode=$mode"

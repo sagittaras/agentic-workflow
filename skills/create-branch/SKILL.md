@@ -25,7 +25,7 @@ allowed-tools:
   - Read
   - AskUserQuestion
   - "Bash(bash:*)"
-# Bash je zúžený na spouštění skriptů; git se nikdy nevolá přímo (viz Zásady).
+# Bash je zúžený na spouštění skriptů; git se nikdy nevolá přímo (viz sekce Skripty).
 # Proto každé volání píš ve tvaru `bash <cesta>` — jinak nespadne do povolení.
 # Vynechaná zvažovaná pole: disable-model-invocation — založení lokální větve
 # je vratná operace a automatické vyvolání z jiného flow je žádoucí; Glob/Grep —
@@ -39,46 +39,28 @@ allowed-tools:
 
 # Create Branch
 
-Cílem je pracovní větev založená z **čerstvého** stavu výchozí větve, s názvem,
-ze kterého je na první pohled patrná povaha práce. Větvení z aktuální větve se
-zdá rychlejší, ale zdědí rozpracované commity i zastaralý stav — a to se pozná
-až u merge, kdy je oprava drahá.
-
-Práce s gitem jde přes skripty. Ověří tvar názvu, kolize a dostupnost výchozí
-větve dřív, než cokoli změní; příkaz `git` proto nevolej přímo.
+Cílem je pracovní větev založená z **čerstvého** stavu výchozí větve remotu, s názvem,
+ze kterého je patrná povaha práce.
 
 ## Skripty
 
-Cesty jsou ukotvené k `${CLAUDE_PLUGIN_ROOT}`, protože plugin může běžet nad
-cizím projektem, kde relativní `scripts/…` míří někam jinam. Volej je vždy
-tvarem `bash <cesta>` — bez toho nespadnou do zúžení v `allowed-tools`.
+Git jen přes skripty, volané tvarem `bash "<cesta>"`; `git` přímo nevolej.
 
 | Skript | Co dělá |
 | --- | --- |
 | `${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/preflight.sh` | Stav repozitáře jako `key=value` + seznam větví a změn |
-| `${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh` | Ověří název, fetchne výchozí větev, založí a přepne |
+| `${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh` | Ověří název, fetchne základ, založí a přepne; `--check <název>` jen ověří, `--base <ref>` větví z jiného základu |
 
-Každý skript má v hlavičce popis použití a návratových kódů. Nenulový kód vždy
-vyhodnoť — `branch_exists_locally` znamená jiný postup než `default_branch_unavailable`.
+Návratové kódy popisuje hlavička každého skriptu; nenulový kód vždy vyhodnoť.
 
-`create-branch.sh` umí `--check <název>` — ověří tvar i kolize a nic nezmění.
-Používej ho, než název předložíš uživateli k potvrzení; ušetří to kolo,
-ve kterém by se ukázalo, že větev už existuje.
-
-Umí i `--base <ref>`, který založí větev z jiného základu než z výchozí větve.
-Sáhni po něm jen tehdy, když volající základ **výslovně určil** — typicky
-`implement-issue`, který v běhu milestonu větví nad `milestone/<slug>`, protože
-práce na issue patří nad integrační větev, ne nad výchozí. Sám od sebe základ
-neměň: nevyžádané větvení z aktuální větve je přesně ta chyba, které se tenhle
-skill vyhýbá. Přednost má `origin/<ref>`; lokální větev se použije, jen když na
-remotu není.
+`--base <ref>` použij, jen když volající základ výslovně určil (typicky `implement-issue`
+nad `milestone/<slug>`). Sám základ neměň a z aktuální větve nevětvi.
 
 ## Vstupní kontext
 
 - Zadání od uživatele (může být prázdné): $ARGUMENTS
 
-Zadání může být hotový název větve, nebo jen popis práce, ze kterého název
-odvodíš.
+Zadání je hotový název větve, nebo popis práce, ze kterého název odvodíš.
 
 ## Formát názvu větve
 
@@ -86,97 +68,64 @@ odvodíš.
 <type>/<popis-v-kebab-case>
 ```
 
-- **type** je ze stejného slovníku jako Conventional Commits: `feat`, `fix`,
-  `docs`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`, `style`. Z názvu
-  větve tak rovnou plyne typ prvního commitu.
-- **popis** anglicky, kebab-case, dvě až čtyři slova. Popisuje **práci, ne
-  zadání**: `feat/branch-creation-skill` je čitelné i za rok, `feat/issue-42`
-  ne.
-
-Příklady: `feat/create-branch-skill`, `fix/stale-default-branch-ref`,
-`docs/commit-conventions`.
+- **type** ze slovníku Conventional Commits: `feat`, `fix`, `docs`, `refactor`, `test`,
+  `chore`, `ci`, `build`, `perf`, `style`.
+- **popis** anglicky, kebab-case, dvě až čtyři slova; popisuje práci, ne zadání —
+  `feat/branch-creation-skill`, ne `feat/issue-42`.
 
 ## Postup
 
 ### 1. Zjisti stav
 
-Spusť `bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/preflight.sh"`
-a vyhodnoť výstup:
+Spusť `bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/preflight.sh"`:
 
-- **`error=not_a_git_repository`** (kód 2) → ohlas to a skonči.
-- **`detached=true`** → ohlas to a zastav se. Zakládat větev z odpojené HEAD
-  jde, ale skoro vždy to znamená, že uživatel je uprostřed rebase a chtěl něco
-  jiného.
-- **`default_branch_source=unavailable`** → remote neodpověděl. Bez znalosti
-  výchozí větve skript větev nezaloží; ohlas to a nabídni práci na aktuální
-  větvi.
-- **rozpracované změny** (`staged_count`, `unstaged_count`, `untracked_count`
-  nenulové) → upozorni, že přejdou s uživatelem na novou větev. To bývá záměr,
-  když se přišlo na to, že se pracuje na špatné větvi — ale řekni to nahlas,
-  ať to není překvapení.
+| Výstup | Co uděláš |
+| --- | --- |
+| `error=not_a_git_repository` (kód 2) | ohlas a skonči |
+| `detached=true` | ohlas a zastav se |
+| `default_branch_source=unavailable` | remote neodpověděl — ohlas to a nabídni práci na aktuální větvi |
+| nenulové `staged_count`, `unstaged_count` nebo `untracked_count` | řekni, že rozpracované změny přejdou na novou větev |
 
-Seznam v sekci `[local_branches]` si nech po ruce pro krok 2 — zjevnou kolizi
-názvu odhalíš dřív, než na ni narazí `--check`.
+Sekci `[local_branches]` použij v kroku 2 ke zjevné kolizi názvu.
 
 ### 2. Navrhni název
 
-Odvoď `<type>/<popis>` z toho, co uživatel popsal, nebo z rozpracovaných změn.
-Ověř ho:
+Odvoď `<type>/<popis>` z popisu práce nebo z rozpracovaných změn a ověř ho:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" --check <název>
 ```
 
-Reaguj podle návratového kódu:
+| Kód | Co uděláš |
+| --- | --- |
+| 3 `invalid_branch_name` | oprav tvar podle Formátu názvu větve |
+| 4 `branch_exists_locally` / `branch_exists_on_remote` | zvol jiný popis, který práci odlišuje (ne pořadové číslo), a ověř znovu |
+| 5 `default_branch_unavailable` | ohlas a skonči |
 
-- **3 `invalid_branch_name`** → oprav tvar podle sekce Formát názvu větve.
-- **4 `branch_exists_locally` / `branch_exists_on_remote`** → navrhni jiný název
-  a ověř znovu. Nepřipojuj pořadové číslo; vymysli popis, který práci odlišuje.
-- **5 `default_branch_unavailable`** → jako v kroku 1, ohlas a skonči.
-
-Pak si název **nech potvrdit**. Název větve se špatně mění poté, co se na ni
-pushne, takže jedna otázka teď je levnější než přejmenování později. Dal-li
-uživatel název sám, jen ho ověř a použij; nevymýšlej lepší.
-
-**Není-li uživatel k dispozici** — volání AskUserQuestion selže nebo odpověď
-nedorazí — větev nezakládej a ohlas navržený název. Výjimka: zadal-li uživatel
-název sám, potvrzení není co doplňovat a můžeš pokračovat.
+Dal-li název uživatel nebo volající, jen ho ověř a použij. Jinak si ho nech potvrdit
+nástrojem AskUserQuestion; selže-li volání nebo odpověď nedorazí, větev nezakládej
+a ohlas navržený název.
 
 ### 3. Založ větev
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" <název>
+bash "${CLAUDE_PLUGIN_ROOT}/skills/create-branch/scripts/create-branch.sh" [--base <ref>] <název>
 ```
 
-Skript fetchne základ, založí z něj novou větev bez upstreamu a přepne na ni.
-Vrátí `base=`, `created=true` a `head=<hash>`. Určil-li volající základ,
-připoj `--base <ref>` před název; `base=` v odpovědi pak ověř — je to jediné
-místo, kde se pozná, že se větvilo odjinud, než sis myslel.
+Skript vrátí `base=`, `created=true` a `head=<hash>`. S `--base` ověř `base=`
+v odpovědi.
 
-Skončí-li s `error=base_branch_not_found` (kód 5), zadaný základ neexistuje ani
-na remotu, ani lokálně. Nezakládej větev náhradně z výchozí větve — u milestone
-běhu by tím vznikl PR, který obchází integrační větev.
-
-Skončí-li s `error=checkout_failed` (kód 7), kolidují rozpracované změny
-s rozdílem proti čerstvé výchozí větvi. Větev nevznikla a zůstáváš na původní —
-ohlas to a nabídni buď zapsání rozpracované práce (`make-commit`), nebo její
-odložení stranou.
+| Chyba | Co uděláš |
+| --- | --- |
+| `error=base_branch_not_found` (kód 5) | ohlas; nezakládej náhradně z výchozí větve |
+| `error=checkout_failed` (kód 7) | větev nevznikla, zůstáváš na původní — ohlas a nabídni zapsání práce (`make-commit`) nebo její odložení stranou |
 
 ### 4. Shrň výsledek
 
-Uveď název větve, ze kterého bodu vznikla, a jestli s sebou nesla rozpracované
-změny. Připomeň, že větev zatím nemá upstream — publikuje ji až první commit
-přes `make-commit`, který pushuje sám od sebe.
+Uveď název větve, ze kterého bodu vznikla a jestli nesla rozpracované změny,
+a připomeň, že zatím nemá upstream. Sám ho nezakládej — publikuje ji první commit
+přes `make-commit`.
 
 ## Zásady
 
-- **Git jen přes skripty.** Přímé volání obchází ověření názvu i kolizí.
-- **Vždy z čerstvého základu, nikdy z aktuální větve.** Základem je výchozí
-  větev remotu; jiný jen tehdy, když ho volající výslovně určil (`--base`).
-  Zděděné commity z aktuální větve jsou tichý problém, který se pozná až u merge.
-- **Upstream nezakládej.** Prázdná větev na remotu nemá co nést; publikuje ji
-  první commit, a to je práce `make-commit`. Dvě místa, která zakládají upstream,
-  znamenají dvě různá pravidla pro tutéž věc.
-- **Název si nech potvrdit**, pokud ho uživatel nezadal sám.
-- **Nic nepřepisuj.** Skill neumí přejmenovat ani smazat větev; obojí je zásah
-  do cizí práce, pokud už je větev publikovaná.
+- **Nic nepřepisuj.** Větev nepřejmenovávej ani nemaž.

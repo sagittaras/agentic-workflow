@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# Upraví tělo issue, zavře ho, nebo obojí. Výstup je key=value na stdout.
+# Upraví tělo issue, jeho stav nebo milestone. Výstup je key=value na stdout.
 #
 # Použití:
-#   bash scripts/gh/issue-update.sh -R owner/repo <number> [--body-file F|-] [--state closed|open]
+#   bash scripts/gh/issue-update.sh -R owner/repo <number> [--body-file F|-] \
+#     [--state closed|open] [--milestone <název>]
+#
+# --milestone přesune issue do milestonu daného názvem (gh issue edit číslo
+# milestonu nebere).
 #
 # Tělo se předává souborem, nebo "-" ze stdin (heredoc), a nahrazuje se celé
 # — gh nic nepřipojuje. Chceš-li přidat odstavec, přečti issue přes issue-read.sh, slož nové tělo
@@ -11,7 +15,8 @@
 # Aspoň jeden z přepínačů musí padnout, jinak by volání jen zbytečně
 # potvrdilo současný stav.
 #
-# Výstup: number=, body_updated=, state=, url=.
+# Výstup: number=, body_updated=, milestone= (název podle forge, prázdný bez
+# milestonu), state=, url=.
 #
 # Návratové kódy: 0 = upraveno, 2 = chybný argument, 7 = gh chybí nebo není
 # přihlášené. Nenulový kód od gh propadá ven beze změny.
@@ -23,11 +28,13 @@ repo=""
 number=""
 body_file=""
 state=""
+milestone=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -R|--repo) require_value "$1" "${2:-}"; repo="$2"; shift 2 ;;
     --body-file) require_value "$1" "${2:-}"; body_file="$2"; shift 2 ;;
     --state) require_value "$1" "${2:-}"; state="$2"; shift 2 ;;
+    --milestone) require_value "$1" "${2:-}"; milestone="$2"; shift 2 ;;
     -*) die_usage "unknown_option" "neznámý přepínač $1" ;;
     *)
       if [ -z "$number" ]; then number="$1"; shift
@@ -38,8 +45,8 @@ done
 
 require_repo "$repo"
 require_number "$number"
-if [ -z "$body_file" ] && [ -z "$state" ]; then
-  die_usage "nothing_to_update" "zadej --body-file, --state, nebo obojí"
+if [ -z "$body_file" ] && [ -z "$state" ] && [ -z "$milestone" ]; then
+  die_usage "nothing_to_update" "zadej --body-file, --state nebo --milestone"
 fi
 case "$state" in
   ''|closed|open) : ;;
@@ -56,6 +63,10 @@ if [ -n "$body_file" ]; then
   body_updated=true
 fi
 
+if [ -n "$milestone" ]; then
+  gh issue edit "$number" -R "$repo" --milestone "$milestone" >/dev/null
+fi
+
 case "$state" in
   closed) gh issue close "$number" -R "$repo" >/dev/null ;;
   open)   gh issue reopen "$number" -R "$repo" >/dev/null ;;
@@ -63,5 +74,5 @@ esac
 
 echo "number=$number"
 echo "body_updated=$body_updated"
-gh issue view "$number" -R "$repo" --json state,url \
-  --jq '"state=\(.state)\nurl=\(.url)"'
+gh issue view "$number" -R "$repo" --json state,url,milestone \
+  --jq '"milestone=\(.milestone.title // "")\nstate=\(.state)\nurl=\(.url)"'
