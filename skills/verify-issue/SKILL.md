@@ -17,7 +17,8 @@ when_to_use: >-
   před implementací, na to slouží review-milestone; ani pro obecné code
   review kvality, stylu a architektury, ta tenhle skill neposuzuje; ani pro
   opravu nálezů, tu dělá implement-issue; ani pro povýšení Poznámky na Zadání
-  ukotvené v kódu před implementací, to dělá triage-issue.
+  ukotvené v kódu před implementací, to dělá triage-issue; ani pro rozbor
+  proběhlého běhu milestonu, to dělá review-run.
 argument-hint: "[číslo issue, nebo číslo PR / název větve]"
 # Odchylka od tabulky sloves v konvencích, kde se posuzování existujícího stavu
 # jmenuje review/check: `verify` je vědomé, protože review-* v této sadě posuzují

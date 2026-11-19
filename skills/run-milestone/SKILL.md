@@ -19,7 +19,7 @@ when_to_use: >-
   plan-milestone; pro agentní posouzení plánu na vyžádání review-milestone;
   pro jediné issue implement-issue, ten si spusť přímo; pro nezávislé
   ověření kritérií konkrétního PR verify-issue. Zavření milestonu po merge
-  dělá close-milestone.
+  dělá close-milestone, rozbor proběhlého běhu review-run.
 argument-hint: "[milestone — název, číslo nebo slug]"
 model: opus
 effort: xhigh
