@@ -22,7 +22,8 @@ when_to_use: >-
   proti kritériím slouží verify-issue; pro posouzení sepsaného ADR
   review-adr; ani pro review kódu, PR nebo diffu — tenhle skill čte plán, ne
   změnu v repozitáři. Posouzení a povýšení jednoho issue mimo celý milestone
-  dělá triage-issue. Zavření hotového milestonu dělá close-milestone.
+  dělá triage-issue. Zavření hotového milestonu dělá close-milestone,
+  rozbor proběhlého běhu review-run.
 model: opus
 effort: high
 context: fork

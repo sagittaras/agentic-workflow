@@ -210,6 +210,16 @@ v milestonu na GitHubu. `shared/git-scripts.md` popisuje SHA a `--same-as`
 u `integration-gate.sh`, `--milestone` u `issue-update.sh` a číslo milestonu
 u `pr-list.sh`.
 
+**Rozbor dalších běhů.** Report běhu M1 vznikl ručně v orchestrační session
+a teprve z něj šlo plugin opravovat. Totéž teď dělá nový skill `review-run`:
+skriptem najde transkripty orchestrátoru a podřazených session, spočítá tokeny
+a čas a výtahy session nechá číst subagenty. Každý nález ověří proti textu
+skillu ve verzi, na které běh jel, a co aktuální plugin už opravil, odloží
+stranou. Výsledkem je report stejného tvaru jako u M1, uložený vedle
+repozitáře projektu — vstup pro další kolo oprav, ne zápis do trackeru.
+Spouští ho jen člověk (`disable-model-invocation`), protože rozbor stojí
+miliony tokenů.
+
 ## Mimo rozsah
 
 Principy 1.x a 2.x se netýkají `create-branch`, `make-commit` (git mechanika

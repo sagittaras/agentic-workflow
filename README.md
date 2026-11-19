@@ -17,6 +17,7 @@ se kterými Claude Code pracuje.
 | Přístup k repozitáři | Repozitář je **privátní** — je potřeba nahraný SSH klíč, nebo přihlášené [`gh`](https://cli.github.com/) pro HTTPS |
 | Přístup k trackeru | Jen pro milestone workflow: na GitHubu přihlášené `gh`, na Gitei připojený Gitea MCP server |
 | Desktopová aplikace Claude | Doporučená pro `run-milestone` — spouští issues v podřazených session, do kterých můžeš psát. V CLI běží v náhradním režimu se subagenty |
+| `node` v PATH | Jen pro `review-run` — parsuje transkripty session |
 
 ## Instalace
 
@@ -147,7 +148,8 @@ každé akceptační kritérium test a ověřovací příkazy nad integrační v
 prošly. Připomínky píšeš k PR nebo přímo do session, která ho vystavila;
 schválené PR merguje orchestrátor. Finální merge do výchozí větve patří tobě.
 `review-milestone` a `verify-issue` jsou nástroje na vyžádání, ne povinné
-kroky.
+kroky. Po běhu ho můžeš rozebrat `review-run` — report slabin pluginu je
+vstupem pro jeho další opravy.
 
 | Skill | K čemu |
 | --- | --- |
@@ -160,6 +162,7 @@ kroky.
 | `file-issue` | Založí jeden ad hoc issue mimo plánování milestonu jako Poznámku, v závazném tvaru pluginu a se správnými labely |
 | `review-milestone` | Na vyžádání: nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, velikost issues, překryvy a rozpory; report uloží do trackeru |
 | `verify-issue` | Na vyžádání: ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a testy kritérií mutačně otestuje; report uloží k PR |
+| `review-run` | Jen příkazem `/sagittaras:review-run`: rozebere proběhlý běh `run-milestone` z transkriptů orchestrátoru a podřazených session — tokeny, čas, eskalace, odchylky, nálezy ověřené proti verzi pluginu, na které běh jel; report uloží jako markdown vedle repozitáře. Spouštěj v čerstvé session |
 
 **Projektová dokumentace**
 
