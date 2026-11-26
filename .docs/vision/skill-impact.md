@@ -235,6 +235,8 @@ o podřazené session, platí tahle tabulka.
 | `triage-issue` | Menší úprava | Nenajde-li precedent, vedle komentáře připne label `precedent`; při povýšení na Zadání ho odepne. Na Gitea k tomu potřebuje `label_read`. |
 | `review-milestone` | Menší úprava | Issue s labelem `precedent` neposuzuje jako Zadání — chybějící kódový precedent u něj není nález. |
 | `init-workflow` | Menší úprava | Mezi navrhované labely přidává pevný `precedent`. |
+| `review-run`, `train-agent` | Menší úprava | Kde mluví o tom, kdo issue implementoval a zapracoval připomínky, jmenují vedle podřazené session i subagenta. `review-run` rozebírá obojí stejně. `train-agent` bere za kanonický vstup i smyčku, kterou dotáhl subagent, včetně připomínek, které orchestrátor agentovi přeposlal a v PR nejsou; na dispatchnuté agenty čeká bez parametru `run_in_background`, který nástroj Agent nemá. `review-run` předává subagentům nad výtahy i effort (sonnet × medium), dřív dědili xhigh skillu. |
+| `write-skill`, `write-agent`, `write-rule`, `write-adr`, `write-docs`, `write-ux-spec` | Menší úprava | Ověření z 2.11 vyvrátilo tvrzení, že nástroj Agent effort nemá. Reviewer dostává typ agenta, model i effort ze svého frontmatteru jako parametry nástroje Agent a pokyn „Pracuj s effortem" ze zadání vypadl. Na verdikt skill čeká bez neexistujícího `run_in_background`. |
 
 **Sdílený kontrakt.** `shared/issue-template.md` dostává § Issue zakládající
 precedent — label, kdo ho nasazuje, tvar těla a kdy je issue hotové.
@@ -243,8 +245,8 @@ model a effort agenta bere `run-milestone` z jeho definice.
 `shared/git-scripts.md` přidává `agent-model.sh`, `gh/pr-watch.sh` a přepínače
 `--add-label` a `--remove-label` u `gh/issue-update.sh`, `shared/forge-recipes.md`
 recepty „Připni label k issue" a „Odepni label z issue".
-`review-run` zůstává beze změny: subagenty se zadáním „Naimplementuj issue #N"
-už rozeznává.
+Skript `review-run` subagenty se zadáním „Naimplementuj issue #N" rozeznával
+už dřív; mění se jen text skillu.
 
 ## Mimo rozsah
 

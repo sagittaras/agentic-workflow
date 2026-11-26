@@ -354,15 +354,11 @@ jsi autor a tvůj kontext nese celé interview, takže si přečteš i to, co v 
 není. Nezávislost dělá subagent s čistým kontextem, který o rozhovoru neví nic
 a všechno si musí přečíst ze souborů — přesně na to je `review-adr` napsaný.
 
-1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`) —
-   bez verdiktu nemáš jak pokračovat. Typ agenta zvol **`general-purpose`**, model
-   vezmi z frontmatteru `review-adr` a předej ho parametrem: subagent si ho sám
-   neuplatní. Čtecí profily (`Plan`, `Explore`) nepoužívej — reviewer musí umět
-   zapsat komentář k PR a ty by mu zápis vzaly.
-
-   **Effort parametrem předat nejde** — nástroj Agent ho nemá, tak ho napiš do
-   zadání jako pokyn. Bez něj poběží reviewer s effortem tvojí session, který
-   bývá nižší, než na jakém má pracovat poslední brána.
+1. Nástrojem Agent spusť subagenta a **na jeho verdikt počkej** — bez něj nemáš
+   jak pokračovat. Typ agenta zvol **`general-purpose`**, model i effort vezmi
+   z frontmatteru `review-adr` a předej je parametry (`model`, `effort`): subagent
+   si je sám neuplatní. Čtecí profily (`Plan`, `Explore`) nepoužívej — reviewer
+   musí umět zapsat komentář k PR a ty by mu zápis vzaly.
 
    **Do zadání dosaď rozvinutou absolutní cestu ke kořeni pluginu**, nikde nenech
    proměnnou: subagent čte skill jako soubor, takže `${CLAUDE_PLUGIN_ROOT}` se mu
@@ -476,7 +472,7 @@ posílej ho v téhle struktuře:
 
 ```
 Přečti si soubor `<kořen pluginu>/skills/review-adr/SKILL.md` a proveď přesně
-jeho postup. Pracuj s effortem <hodnota z frontmatteru review-adr>.
+jeho postup.
 
 Zadání pro tvůj běh:
 - Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>

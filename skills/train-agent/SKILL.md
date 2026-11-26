@@ -10,9 +10,10 @@ description: >-
   i konsoliduje — co vstup vyvrací, mizí.
 when_to_use: >-
   Použij po vyřešené review/retry smyčce nad PR — člověk připomínkoval,
-  session připomínky zapracovala — aby poučení nezůstalo jen v komentáři
-  u PR, ale přešlo do paměti agenta, který kód napsal; spustí tě ten, kdo
-  smyčku řídil, nebo uživatel: „natrénuj agenta na připomínkách v PR #N".
+  session nebo subagent připomínky zapracovali — aby poučení nezůstalo jen
+  v PR nebo v konverzaci s orchestrátorem, ale přešlo do paměti agenta, který
+  kód napsal; spustí tě ten, kdo smyčku řídil, nebo uživatel: „natrénuj agenta
+  na připomínkách v PR #N".
   I jako závěrečný krok skillu, který vytvořil dokument v doméně agenta —
   „ať si agent zapíše závěry z art bible" — kromě ADR: ten se do paměti
   nezapisuje, log se čte on-demand, ne jako standing paměť. Nepoužívej pro
@@ -20,7 +21,7 @@ when_to_use: >-
   část repozitáře write-rule; pro projektové instrukce write-claude-md; pro
   sepsání architektonického rozhodnutí write-adr; ani pro paměť vlastní
   session, ta má vlastní mechanismus.
-argument-hint: "[jméno agenta] [PR číslo nebo vložené připomínky z PR a jejich zapracování; jinak cesta, odkaz či text]"
+argument-hint: "[jméno agenta] [PR číslo nebo vložené připomínky z PR či přeposlané orchestrátorem a jejich zapracování; jinak cesta, odkaz či text]"
 model: sonnet
 effort: high
 # Zařazení dle matice: vlastní práce je načíst vstup, odvodit cílové agenty,
@@ -70,13 +71,14 @@ s tímto skillem má přednost on.
 ### 1. Načtení vstupu
 
 Kanonický vstup je **vyřešená review/retry smyčka nad PR**: review dělá člověk
-a připomínky zapracovává session, která kód napsala. Skill sám do trackeru
-nesahá — `allowed-tools` na to záměrně nemá nástroj (viz frontmatter) — takže
-záznam dostaneš **v zadání od toho, kdo tě spustil**, buď jako vložený text,
-nebo jako odkaz. Smyčku sestav ze dvou částí:
+a připomínky zapracovává session nebo subagent, který kód napsal. Skill sám
+do trackeru nesahá — `allowed-tools` na to záměrně nemá nástroj (viz
+frontmatter) — takže záznam dostaneš **v zadání od toho, kdo tě spustil**, buď
+jako vložený text, nebo jako odkaz. Smyčku sestav ze dvou částí:
 
-- **připomínky v PR** — komentáře review člověka i odpovědi na ně; nesou, co
-  bylo špatně;
+- **připomínky člověka** — komentáře review v PR i připomínky, které člověk
+  napsal orchestrátorovi a ten je agentovi přeposlal (v PR nejsou), s odpověďmi
+  na ně; nesou, co bylo špatně;
 - **commity, které je zapracovaly** — zprávy i diff; nesou, jak se to opravilo.
 
 Finální stav PR ukáže výsledek, ne chybu, ze které se má agent poučit —
@@ -160,7 +162,7 @@ po dispatchi už složka vypadá jinak a zbylo by ti jen tvrzení agenta.
 ### 3. Dispatch
 
 Každého cílového agenta spusť **nástrojem Agent s `subagent_type` rovným jeho
-jménu** a `run_in_background: false`.
+jménu** a s krokem 4 počkej, až doběhne.
 
 Nepoužívej nástroj Skill ani jiný způsob načtení jeho definice. Právo zapisovat
 do `.claude/agent-memory/<agent>/` plyne z pole `memory:` v jeho vlastní definici
@@ -234,8 +236,9 @@ tvé role.
 Vstup: <cesta, odkaz, nebo celý obsah, pokud na něj trénovaný agent nedosáhne>
 
 Postupuj takto:
-1. Přečti vstup celý. Jsou-li to připomínky z PR, najdi v nich **obojí**: co
-   připomínka vytkla (konkrétní chyba) a jak ji commit zapracoval.
+1. Přečti vstup celý. Jsou-li to připomínky z review (v PR nebo přeposlané
+   orchestrátorem), najdi v nich **obojí**: co připomínka vytkla (konkrétní
+   chyba) a jak ji commit zapracoval.
 2. Projdi svou stávající paměť ve složce <cesta ke složce paměti> — MEMORY.md
    i tematické soubory, kterých se téma dotýká. Neexistuje-li složka nebo
    MEMORY.md, je tohle tvůj první trénink: založ index podle konvencí.

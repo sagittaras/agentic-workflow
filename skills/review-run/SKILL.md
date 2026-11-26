@@ -2,10 +2,11 @@
 name: review-run
 description: >-
   Rozebere jeden proběhlý běh run-milestone z transkriptů orchestrátoru
-  a jeho podřazených session a ze stavu trackeru. Skriptem najde transkripty,
-  spočítá tokeny a čas po session a zhustí je do výtahů. Výtahy podřazených
-  session čtou paralelně subagenti. Každý nález ověří proti textu skillu nebo
-  skriptu ve verzi, na které běh jel, a odliší, co aktuální plugin už opravil.
+  a podřazených session nebo subagentů, ve kterých běžela issues, a ze stavu
+  trackeru. Skriptem najde transkripty, spočítá tokeny a čas po transkriptech
+  a zhustí je do výtahů. Výtahy práce na issues čtou paralelně subagenti.
+  Každý nález ověří proti textu skillu nebo skriptu ve verzi, na které běh
+  jel, a odliší, co aktuální plugin už opravil.
   Výsledkem je report slabin pluginu s důkazy, uložený jako markdown vedle
   repozitáře projektu. Nic neopravuje a do trackeru nepíše.
 when_to_use: >-
@@ -21,9 +22,14 @@ effort: xhigh
 # Zařazení dle matice: review a hledání chyb → opus × xhigh, bez odchylky.
 # Skill sám čte výtah orchestrátoru a každý nález konfrontuje s textem skillu
 # ve verzi běhu — přehlédnutý nebo nepodložený nález stojí víc než tokeny.
-# Výtahy podřazených session deleguje subagentům na sonnet: jsou ohraničené
-# (jedna session = jedno issue) a vracejí jen kandidáty s důkazem, úsudek
-# o nálezu dělá skill.
+# Výtahy práce na issues (podřazené session podle principu 2.8, subagenti podle
+# 2.11) deleguje subagentům na sonnet × medium: jsou ohraničené (jeden
+# transkript = jedno issue) a vracejí jen kandidáty s důkazem, úsudek o nálezu
+# dělá skill. Medium podle řádku matice „Průzkum a mapování kódu" je vědomě
+# nižší stupeň (rozhodovací strom matice: vol nižší a nech si zpětnou vazbu
+# z běhu); na high zvyš, když výtah orchestrátoru doloží odchylku session,
+# kterou subagent nevrátil. Effort jde parametrem, jinak by subagent zdědil
+# xhigh tohoto skillu.
 argument-hint: "[číslo nebo název milestonu | cesta nebo uuid transkriptu] [cesta k repozitáři projektu]"
 user-invocable: true
 disable-model-invocation: true
@@ -100,6 +106,9 @@ Z výstupu si drž `repo_root=`, `[candidates]`, `orchestrator=`, `started=`,
 `plugin_head=` a sekce `[sessions]` a `[agents]`. Cesty dosazuj do dalších
 příkazů v uvozovkách.
 
+- Issue běželo v podřazené session (`session=local_…`), nebo v subagentovi
+  orchestrátoru (`session=agent:…` u štítku bez `-a<k>`). Obojí rozebírej
+  stejně; dál obojí znamená „session".
 - Řádky `[sessions]` téhož `issue=` patří k jedné práci: session, její vlastní
   subagenti (`<label>-a<k>`) a případný další pokus (`<label>-2`).
 - `session=unknown` → transkript téhož issue bez záznamu o spuštění; rozebírej
@@ -160,9 +169,9 @@ odkáže.
 
 Výtahy `[sessions]` rozděl po čtyřech issue — výtahy téhož `issue=` vždy do
 jedné skupiny — a pro každou skupinu spusť v jedné zprávě subagenta nástrojem
-Agent: `subagent_type: "general-purpose"`, `model: "sonnet"`, synchronně, se
-zadáním podle Formátu výstupu. Z jejich odpovědí ber kandidáty, ne hotové
-nálezy.
+Agent: `subagent_type: "general-purpose"`, `model: "sonnet"`, `effort: "medium"`,
+se zadáním podle Formátu výstupu, a na jejich odpovědi počkej. Z odpovědí ber
+kandidáty, ne hotové nálezy.
 
 ### 5. Nálezy proti pluginu
 
@@ -214,8 +223,9 @@ V konverzaci pak vypiš cestu k reportu a hlavní zjištění ze Shrnutí.
 ### Zadání pro subagenta
 
 ```
-Přečti výtahy podřazených session jednoho běhu run-milestone a vrať kandidáty
-na slabiny pluginu sagittaras. Nic neopravuj a na nic se neptej.
+Přečti výtahy podřazených session nebo subagentů, ve kterých běžela issues
+jednoho běhu run-milestone (dál jen „session"), a vrať kandidáty na slabiny
+pluginu sagittaras. Nic neopravuj a na nic se neptej.
 
 - Výtahy: <cesty k souborům <label>.txt>; výtahy téhož issue (<issue>, <issue>-a1,
   <issue>-2…) jsou jedna práce — session, její subagent a další pokus
@@ -223,12 +233,13 @@ na slabiny pluginu sagittaras. Nic neopravuj a na nic se neptej.
   git -C "<plugin_root>" show <plugin_commit>:skills/implement-issue/SKILL.md
   [při plugin_commit=unknown: <plugin_root>/skills/implement-issue/SKILL.md]
 - Formát výtahu: řádky „HH:MM DRUH: text"; DRUH je PROMPT (zadání session),
-  PEER (zpráva od orchestrátoru — signál brány nebo připomínek), HUMAN, NOTE,
-  SKILL, AI, TOOL, RESULT, RESULT[error], COMPACT.
+  PEER (zpráva od orchestrátoru — signál brány, připomínek, Dokonči nebo
+  Rozhodnutí), HUMAN, NOTE, SKILL, AI, TOOL, RESULT, RESULT[error], COMPACT.
 
 Pro každou session vrať:
 - Výsledek: PR (číslo), počet kol po otevření PR a jejich spouštěč
-  (připomínky, brána, konflikt).
+  (připomínky, brána, konflikt, dokončení rozdělané práce, rozhodnutí
+  po eskalaci).
 - Kandidáti: každý jako „HH:MM · co se stalo · doslovná citace z výtahu ·
   které pravidlo implement-issue nebo který skript se toho týká (nebo „žádné")".
   Hledej eskalace a jejich důvod, chyby nástrojů a skriptů, kroky, kde session

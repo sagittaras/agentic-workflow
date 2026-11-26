@@ -189,16 +189,11 @@ Reviewer bude kontrolovat proti témuž seznamu — co si opravíš tady, nemus�
 
 ### 5. Nezávislé review
 
-1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`) —
-   bez verdiktu nemáš jak pokračovat. Typ agenta a model vezmi z frontmatteru
-   `review-agent` a předej je parametry nástroje: jako subagent si je sám
-   neuplatní, takže co nepředáš, se nepoužije. Zadání sestav podle šablony
-   ve Formátu výstupu.
-
-   **Effort parametrem předat nejde** — nástroj Agent ho nemá, takže ho napiš
-   do zadání jako pokyn. Je to slabší záruka než parametr, ale bez něj poběží
-   reviewer s effortem tvojí session, který bývá nižší než ten, na kterém má
-   poslední brána pracovat.
+1. Nástrojem Agent spusť subagenta a **na jeho verdikt počkej** — bez něj nemáš
+   jak pokračovat. Typ agenta, model i effort vezmi z frontmatteru `review-agent`
+   a předej je parametry nástroje (`subagent_type`, `model`, `effort`): jako
+   subagent si je sám neuplatní, takže co nepředáš, se nepoužije. Zadání sestav
+   podle šablony ve Formátu výstupu.
 
    **Do zadání dosaď rozvinutou absolutní cestu ke kořeni pluginu**, nikde
    nenech proměnnou. Reviewer čte soubory jako subagent a nemá jak si ji
@@ -250,8 +245,7 @@ proto ho posílej v této struktuře:
 
 ```
 Přečti si soubor `<kořen pluginu>/skills/review-agent/SKILL.md`
-a proveď přesně jeho postup. Pracuj s effortem <hodnota z frontmatteru
-review-agent>.
+a proveď přesně jeho postup.
 
 Zadání pro tvůj běh:
 - Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>
