@@ -248,6 +248,19 @@ recepty „Připni label k issue" a „Odepni label z issue".
 Skript `review-run` subagenty se zadáním „Naimplementuj issue #N" rozeznával
 už dřív; mění se jen text skillu.
 
+**Sériové oblasti (dodatek 2.11).** Kód Unity projektu běží po jednom issue
+v hlavním checkoutu otevřeném v Editoru.
+
+| Skill | Stav | Co se mění |
+| --- | --- | --- |
+| `run-milestone` | Menší úprava | Má-li konfigurace podsekci Sériové oblasti, zjistí skriptem `main-checkout.sh`, jestli běží v hlavním checkoutu, a ten si nechá potvrdit — na startu, nebo u prvního sériového issue i z nové vlny. Sériová issues sdílí jedno místo: issue s agentem ho drží od spuštění do merge — eskalace ho neuvolní, až pokyn „vyřaď #N" (signál Vyřaď) —, precedent issue sériové oblasti od ohlášení do merge. Spouští je bez `isolation` (agenta z mapy s `isolation: worktree` nahradí general-purpose) a jen do čistého checkoutu. Ve worktree nabídne ukončit běh hned před krokem 2 a na konci uvolní integrační větev, aby šel navázat z hlavního checkoutu. Čekající sériová issues mají v Hlášení konkrétní pokyn a signál „pusť sériová"; zbudou-li jen ona, eskaluje. Zadání agentovi řekne, že pracuje v checkoutu Editoru a bez jeho nástrojů eskaluje. |
+| `init-workflow` | Menší úprava | Najde-li Unity projekt (`ProjectSettings/ProjectVersion.txt`), navrhne podsekci Sériové oblasti z oblastí, jejichž kód leží pod `Assets/` nebo `Packages/`; existující podsekci ukáže k potvrzení vždy, jinak se na ni neptá. Sériové oblasti dá ověřovací příkaz bez Editoru a `Library`, nebo `—`. |
+| `implement-issue` | Menší úprava | V hlavním checkoutu smí běžet: izolaci tam dává to, že sériové issue běží jediné. Na signál Vyřaď zapíše rozdělanou práci do své větve a přepne checkout na základní větev; `git switch` ze zadání orchestrátoru je výjimka z „Git jen přes delegaci". |
+
+`shared/workflow-config.md` dostává nepovinnou podsekci Sériové oblasti,
+`shared/git-scripts.md` skript `main-checkout.sh` a klíč `isolation=`
+u `agent-model.sh`.
+
 ## Mimo rozsah
 
 Principy 1.x a 2.x se netýkají `create-branch`, `make-commit` (git mechanika

@@ -148,7 +148,9 @@ prošly. Issues implementují subagenti, ve výchozím stavu na sonnet × high �
 jinou dvojici řekneš orchestrátorovi. Připomínky píšeš orchestrátorovi, nebo
 k PR, kde si je na GitHubu všimne sám; schválené PR merguje orchestrátor.
 Issue, které zakládá nový vzor (label `precedent`), orchestrátor nespouští —
-naimplementuješ ho v párové session, kterou si založíš sám. Finální merge do výchozí větve patří tobě.
+naimplementuješ ho v párové session, kterou si založíš sám. Kód Unity projektu
+(podsekce Sériové oblasti v konfiguraci) běží po jednom issue přímo v hlavním
+checkoutu otevřeném v Editoru — `run-milestone` pak spusť v něm, ne ve worktree. Finální merge do výchozí větve patří tobě.
 `review-milestone` a `verify-issue` jsou nástroje na vyžádání, ne povinné
 kroky. Po běhu ho můžeš rozebrat `review-run` — report slabin pluginu je
 vstupem pro jeho další opravy.
