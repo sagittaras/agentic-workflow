@@ -14,6 +14,8 @@
 # (názvy oddělené čárkou; prázdné, když definice výčet nemá a agent dědí
 # všechny nástroje) a can_run_skills=true|false — false, když výčet existuje
 # a chybí v něm Skill nebo Bash, bez nichž agent implement-issue neprovede.
+# isolation= nese hodnotu z definice (typicky `worktree`, prázdné bez ní) —
+# agent s ní běží ve worktree, i když mu ho volající nepředá.
 # `model: inherit` se vypíše jako prázdný model.
 #
 # Návratové kódy: 0 = prohledáno (i když nenalezeno), 2 = chybí jméno.
@@ -67,6 +69,7 @@ for dir in "$root/.claude/agents" "$HOME/.claude/agents"; do
       echo "effort=$(fm "$f" effort)"
       echo "tools=$tools"
       echo "can_run_skills=$can"
+      echo "isolation=$(fm "$f" isolation)"
       exit 0
     fi
   done < <(find "$dir" -type f -name '*.md' | sort)
@@ -77,3 +80,4 @@ echo "model="
 echo "effort="
 echo "tools="
 echo "can_run_skills=true"
+echo "isolation="

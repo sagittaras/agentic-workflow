@@ -11,6 +11,7 @@
 # Kritérium 5: tools= spojí výčet na jednom řádku i YAML seznam; bez výčtu je
 #              prázdné. can_run_skills=false, jen když výčet existuje a chybí
 #              v něm Skill nebo Bash (i ve tvaru Bash(…)).
+# Kritérium 6: isolation= vypíše hodnotu z definice, bez ní prázdné.
 #
 # Návratové kódy: 0 = prošlo, 1 = selhalo.
 
@@ -27,7 +28,7 @@ git -C "$tmp/repo" init -q
 printf -- '---\r\nname: backend-engineer\r\nmodel: opus\r\neffort: xhigh\r\ntools: Read, Edit, Bash(dotnet:*), Skill\r\n---\r\nmodel: haiku\r\n' >"$tmp/repo/.claude/agents/sub/be.md"
 printf -- '---\nname: inh\nmodel: inherit\n---\n' >"$tmp/repo/.claude/agents/i.md"
 printf -- '---\nname: listed\nmodel: sonnet\ntools:\n  - Read\n  - Bash\n  - Skill\n---\n' >"$tmp/repo/.claude/agents/l.md"
-printf -- '---\nname: noskill\nmodel: sonnet\ntools: Read, Grep, Bash\n---\n' >"$tmp/repo/.claude/agents/n.md"
+printf -- '---\nname: noskill\nmodel: sonnet\ntools: Read, Grep, Bash\nisolation: worktree\n---\n' >"$tmp/repo/.claude/agents/n.md"
 printf -- '---\nname: global-only\nmodel: sonnet\neffort: medium\n---\n' >"$tmp/home/.claude/agents/g.md"
 printf -- '---\nname: backend-engineer\nmodel: haiku\n---\n' >"$tmp/home/.claude/agents/be-global.md"
 
@@ -51,6 +52,9 @@ grep -qx 'tools=Read,Bash,Skill' <<<"$out" && grep -qx 'can_run_skills=true' <<<
 
 out="$(run noskill)"
 grep -qx 'can_run_skills=false' <<<"$out" || { echo "fail=criterion_5 case=noskill out=$(flat "$out")"; fail=1; }
+grep -qx 'isolation=worktree' <<<"$out" || { echo "fail=criterion_6 case=set out=$(flat "$out")"; fail=1; }
+out="$(run listed)"
+grep -qx 'isolation=' <<<"$out" || { echo "fail=criterion_6 case=unset out=$(flat "$out")"; fail=1; }
 
 out="$(run nikdo)"; rc=$?
 run >/dev/null 2>&1; rc2=$?

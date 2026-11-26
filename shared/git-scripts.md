@@ -160,9 +160,21 @@ kořene repozitáře, pak v `~/.claude/agents/` — a vypíše jeho model a effo
 - **Výstup:** `found=true|false`, `path=` (jen při nálezu), `model=`, `effort=` —
   prázdné, když je definice neuvádí; `model: inherit` se vypíše jako prázdný —,
   `tools=` (výčet na jednom řádku i YAML seznam, spojený čárkou; prázdný bez
-  výčtu) a `can_run_skills=false`, když výčet existuje a chybí v něm `Skill` nebo
-  `Bash`.
+  výčtu), `can_run_skills=false`, když výčet existuje a chybí v něm `Skill` nebo
+  `Bash`, a `isolation=` z definice (prázdné bez ní).
 - **Kódy:** `0` prohledáno (i bez nálezu) · `2` chybí jméno.
+
+### `main-checkout.sh`
+
+Zjistí, jestli aktuální adresář je hlavní checkout repozitáře, nebo worktree,
+kde hlavní checkout leží a jestli je čistý. `run-milestone` podle toho pouští
+issues sériových oblastí — běží bez worktree v hlavním checkoutu otevřeném
+v Editoru, a jen do čistého stromu.
+
+- **Výstup:** `main_checkout=true|false`, `main_path=` (první záznam
+  `git worktree list`), `main_branch=` (prázdné u odpojené HEAD),
+  `main_dirty=true|false` (necommitnuté nebo nesledované změny).
+- **Kódy:** `0` zjištěno · `2` nejde o git repozitář.
 
 ---
 
