@@ -77,9 +77,10 @@ krok a krok 7.
 
 **Zúžení platí jen v režimu aktualizace.** Zjistíš-li v kroku 1, že konfigurace
 neexistuje, proveď plné nastavení bez ohledu na zadání a řekni to nahlas: nová
-sekce musí mít vyplněné všechny podsekce (kromě nepovinné Agenti) a přeskočené
-kroky nemají čím. Mění-li zúžení **výčet oblastí**, projdi vždy i kroky 4 a 6 —
-oblasti se opakují ve třech podsekcích a rozejít se smí jen jednou.
+sekce musí mít vyplněné všechny podsekce (kromě nepovinných Agenti a Sériové
+oblasti) a přeskočené kroky nemají čím. Mění-li zúžení **výčet oblastí**, projdi
+vždy i kroky 4 a 6 — oblasti se opakují ve třech podsekcích a rozejít se smí jen
+jednou; Sériové oblasti z nich smí obsahovat jen ty, které ve výčtu zůstaly.
 
 **Bez uživatele konfiguraci nezakládej.** Selže-li volání AskUserQuestion nebo
 odpověď nedorazí, shrň, co jsi zjistil a na co potřebuješ odpovědět, a skonči
@@ -200,6 +201,15 @@ Výčet oblastí z bodu 1 **musí do znaku sedět** na oblasti v podsekci Labely
 (krok 6) i v ověřovacích příkazech (krok 4), bez ohledu na to, jestli podsekce
 `Agenti` vznikla. Rozpor znamená issue, které `run-milestone` neumí přiřadit.
 
+**Sériové oblasti.** Nástrojem Glob hledej `**/ProjectSettings/ProjectVersion.txt`
+(Unity projekt). Existuje-li podsekce už v konfiguraci, ukaž ji a nech potvrdit
+i bez nálezu. Jinak bez nálezu podsekci nezakládej a neptej se na ni. Najdeš-li,
+navrhni jako sériové oblasti ty z bodu 1, jejichž kód leží pod `Assets/` nebo
+`Packages/` Unity projektu; oblast, u které umístění nezjistíš, navrhni s dotazem.
+Při návrhu uživateli řekni, že issues těchto oblastí poběží po jednom a bez worktree,
+v hlavním checkoutu otevřeném v Editoru, a nech výčet potvrdit. Podsekce vzniká,
+jen když potvrzený výčet není prázdný.
+
 ### 4. Ověřovací příkazy
 
 Odvoď je z **reálných souborů projektu**, ne z toho, co bývá obvyklé. Prohledej
@@ -211,6 +221,10 @@ přesně, včetně správce balíčků (`pnpm`, ne `npm`, když projekt použív
 Ke každé oblasti z kroku 3 přiřaď jeden příkaz. Má-li projekt jediný příkaz pro
 všechno, zopakuj ho u každé oblasti — tabulku čte `verify-issue` po řádcích
 a chybějící řádek pro něj znamená chybějící podsekci, ne „použij ten druhý".
+
+Sériová oblast dostane příkaz, který běží bez Editoru a bez složky `Library`, nebo
+`—`: brána ho pouští v dočasném worktree, kde Unity nemá import, a Unity v batchmode
+nad hlavním checkoutem narazí na zámek otevřeného Editoru.
 
 **Příkazy nespouštěj.** Build cizího projektu může trvat minuty a sahat na
 závislosti; potvrzení od uživatele je levnější a spolehlivější. Nenajdeš-li
@@ -274,8 +288,9 @@ Selhání, na která reaguj jinak než opakováním:
 Zapiš sekci `## Workflow (sagittaras)` přesně ve tvaru z
 `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md` — **nadpisy a jejich pořadí
 jsou závazné**, protože se podle nich podsekce vyhledávají bez parsování prózy.
-Podsekci **Agenti** vynech úplně, nesplnila-li kritérium z konce kroku 3 —
-nezakládej ji ani prázdnou. Komentářové anotace šablony v hranatých závorkách
+Podsekci **Agenti** vynech úplně, nesplnila-li kritérium z kroku 3 („vzniká, právě
+když…") — nezakládej ji ani prázdnou. **Sériové oblasti** vynech, nevznikl-li
+v kroku 3 potvrzený výčet ani se nepřenáší z existující konfigurace. Komentářové anotace šablony v hranatých závorkách
 ani kurzívou (jako `*(nepovinná — viz níž)*` u vzoru podsekce Agenti) do
 zapsané sekce nepatří — jsou to poznámky pro tebe, ne pro projekt.
 
@@ -291,8 +306,8 @@ zapsané sekce nepatří — jsou to poznámky pro tebe, ne pro projekt.
   `CONTRIBUTING.md`, který projekt nese.
 
 Hranaté závorky ze šablony jsou pokyn, co do místa patří — v hotové sekci
-žádná nesmí zůstat. Výjimkou je `—` ve sloupci `implementuje`, což je platná
-hodnota.
+žádná nesmí zůstat. Výjimkou je `—` ve sloupci `implementuje` a ve sloupci `příkaz`
+u sériové oblasti — obojí je platná hodnota.
 
 ### 8. Shrň a navaž
 
@@ -310,6 +325,7 @@ Konfigurace: CONTRIBUTING.md, sekce „Workflow (sagittaras)" (<založena |
 Forge: <typ> · <host> · <owner/repo> · výchozí větev <branch>
 Oblasti: <area:*, po řádcích — s přiřazeným agentem, je-li podsekce Agenti
   založená; jinak jen výčet oblastí>
+Sériové oblasti: <výčet; vynech, nevznikla-li podsekce>
 Ověřovací příkazy: <oblast → příkaz, po řádcích>
 Jazyk issues: <hodnota>
 Odstraněno: <Zdroje pravdy, role recenzentů — co uživatel potvrdil; vynech, není-li co>

@@ -44,8 +44,8 @@ konfiguraci, a nabídni `/sagittaras:init-workflow`. Milestone běh proti odhadn
 agentů pošle práci špatnému specialistovi a pozná se to až u review.
 
 Když sekce existuje, ale chybí v ní podsekce, kterou potřebuješ, řekni která a nabídni
-doplnění — nedoplňuj ji sám za pochodu. Výjimkou je podsekce **Agenti**, viz níž: její
-absence je platný stav, ne mezera.
+doplnění — nedoplňuj ji sám za pochodu. Výjimkou jsou podsekce **Agenti** a **Sériové
+oblasti**, viz níž: jejich absence je platný stav, ne mezera.
 
 ---
 
@@ -87,6 +87,10 @@ na projektu.
 | area:backend | backend-engineer |
 | area:frontend | frontend-engineer |
 
+### Sériové oblasti
+
+- [area:client, ...]
+
 ### Ověřovací příkazy
 
 | oblast | příkaz |
@@ -109,10 +113,20 @@ na projektu.
 | **Větvení** | `run-milestone`, `implement-issue`, `open-pr`, `close-milestone` | odkud se větví, kam se mergeuje, co smí jen člověk |
 | **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat; pevný label `precedent` do výčtu nepatří, popisuje ho `issue-template.md` |
 | **Agenti** | `run-milestone` | komu poslat issue k implementaci; model a effort agenta bere `run-milestone` z preference člověka, jinak z definice agenta, a chybí-li i tam, `sonnet` × `high` |
+| **Sériové oblasti** | `run-milestone` | oblasti, jejichž kód drží otevřený nástroj nad hlavním checkoutem (typicky Unity Editor): jejich issues běží po jednom a bez worktree, přímo v hlavním checkoutu |
 | **Ověřovací příkazy** | `verify-issue`, `run-milestone`, `plan-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
 | **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | v jakém jazyce psát text issues; strojové nadpisy šablony zůstávají česky v každém jazyce |
 
-**Podsekce Agenti je jediná nepovinná.** `init-workflow` ji do `CONTRIBUTING.md`
+**Podsekce Sériové oblasti je nepovinná** stejně jako Agenti a zakládá se, jen když
+projekt takovou oblast má — typicky kód Unity projektu. Editor drží otevřený jeden
+checkout: worktree je pro něj jiný projekt bez naimportované složky `Library`
+a nástroje nad Editorem (Unity MCP) ho nevidí; a dva agenti nad týmž checkoutem
+by si přepínali větev. Chybí-li podsekce, běží paralelně všechny oblasti.
+Uvedené oblasti sdílí jedno místo: v jednu chvíli běží nanejvýš jedno issue
+kterékoli z nich. Ověřovací příkaz sériové oblasti musí běžet bez Editoru a bez
+složky `Library`, jinak v ní stojí `—`: brána ho pouští v dočasném worktree.
+
+**Podsekce Agenti je nepovinná.** `init-workflow` ji do `CONTRIBUTING.md`
 založí, právě když vznikne aspoň jeden řádek `oblast → agent` — jinak ji nezaloží
 vůbec, ani prázdnou tabulku s pomlčkami: to by tvrdilo rozhodnutí, které nikdo
 neudělal. Chybějící řádek pro oblast issue, hodnota `—` ve sloupci `implementuje`
