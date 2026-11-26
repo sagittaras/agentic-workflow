@@ -8,7 +8,8 @@
 > 26. 11. 2026 přibyl princip 2.11: issues se spouští zase v subagentech, se
 > zvoleným modelem, a práce zakládající precedent jde do párové session. Týž den
 > se ověřilo PR pod vlastní GitHub App s formálním review člověka; dodatek 2.11
-> nese výsledek a návrh, který čeká na schválení směru.
+> nese výsledek a návrh, který čeká na schválení směru. Druhý dodatek 2.11 řeší
+> sériové oblasti: kód Unity projektu běží po jednom issue v hlavním checkoutu.
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
 > sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním

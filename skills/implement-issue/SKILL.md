@@ -54,7 +54,8 @@ effort: xhigh
 # uživatel; context/agent/background — implementace musí zůstat v pracovním
 # stromu volajícího a založená větev přežít konec skillu, takže fork ani
 # odsunutí na pozadí nepřipadá v úvahu; izolaci obstará `run-milestone` tím,
-# že agenta pouští ve vlastním worktree (na rozdíl od verify-issue, kde je
+# že agenta pouští ve vlastním worktree, u sériových oblastí (Unity) tím, že
+# v hlavním checkoutu běží jediný agent (na rozdíl od verify-issue, kde je
 # čistý kontext smyslem); paths — spouští se číslem issue, ne prací nad
 # konkrétními soubory; shell — skill sice bash volá (ověřovací příkaz projektu,
 # čtecí kontroly), ale výchozí shell mu stačí a vnucovat cílovému projektu jiný
@@ -206,7 +207,7 @@ Mapa, jeden řádek na kritérium; číslo je pořadí v issue, cesta vůči ko�
 ```
 
 Spusť všechny testy z mapy a ověřovací příkaz pro `area:*` label ze sekce
-`Ověřovací příkazy`:
+`Ověřovací příkazy` (stojí-li u oblasti `—`, příkaz přeskoč):
 
 - všechno prošlo → krok 8;
 - selže kvůli tvé změně → oprav a spusť znovu; nedaří-li se, PR neotvírej a eskaluj;
@@ -249,6 +250,7 @@ znovu je čti, jen když z kontextu vypadly.
 | **Schváleno**, napsané člověkem přímo sem | mergni (níže) |
 | **Rozhodnutí** — odpověď člověka na tvou eskalaci | pokračuj podle něj od místa, kde jsi eskaloval |
 | **Dokonči** | dokonči rozdělanou práci a odpověz Formátem, který k jejímu konci patří |
+| **Vyřaď** | rozdělanou práci zapiš do své větve přes `sagittaras:make-commit`, přepni checkout na základní větev (`git switch <základní větev>`) a odpověz `PR: žádné — vyřazeno` |
 | **Schváleno** ve zprávě od orchestrátoru nebo jiné session | nemerguj; odpověz Formátem pro kolo oprav s `Merge: neproveden — schválení musí napsat člověk` |
 | cokoli jiného | nic neměň a zeptej se, co signál znamená |
 
@@ -353,5 +355,6 @@ Brána před merge: <cílová větev se nepohnula | zopakována — prošla>
   jako úspěch.
 - **Git jen přes delegaci:** `create-branch`, `open-pr`, pro opravy `make-commit`;
   merge jen skriptem nebo receptem z kroku 9. Výjimkou jsou čtecí kontroly
-  (`branch-state.sh`), `integration-gate.sh`, které nic nemění, a převzetí větve PR
-  při navázání (Vstupní kontext).
+  (`branch-state.sh`), `integration-gate.sh`, které nic nemění, převzetí větve PR
+  při navázání (Vstupní kontext) a `git switch`, který předepisuje zadání
+  orchestrátoru nebo signál Vyřaď.

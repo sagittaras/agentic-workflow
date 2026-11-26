@@ -581,8 +581,36 @@ autory `[bot]` přeskakuje. Neověřené zůstává, jestli instrukci ze skillu
 klasifikátor uvidí i po kompakci dlouhého běhu. Pojistkou je dnešní cesta:
 zamítne-li merge, člověk napíše „mergni PR #n".
 
+**Sériové oblasti — Unity (26. 11. 2026).** Paralelismus přes worktree předpokládá,
+že každý checkout jde sestavit a otestovat sám za sebe. U kódu Unity projektu to
+neplatí: Editor drží otevřený jeden checkout, worktree je pro něj jiný projekt bez
+naimportované složky `Library` (import trvá minuty až desítky minut) a nástroje nad
+Editorem (Unity MCP) ho nevidí. Dva agenti nad týmž checkoutem by si zase přepínali
+větev. Projekt proto smí v konfiguraci vyjmenovat **sériové oblasti**. Jejich issues
+běží po jednom, bez worktree, přímo v hlavním checkoutu otevřeném v Editoru, kde
+agent ověří kompilaci a testy. Ostatní oblasti běží dál paralelně.
+
+- **Oblast v konfiguraci, ne label.** Rozhoduje kód, kterého se issue týká, a ten
+  určuje `area:*` label, který issue už nese. Plánování tak nemá co zapomenout.
+- **Orchestrátor běží v hlavním checkoutu.** Nástroj Agent subagentovi jiný adresář
+  nastavit neumí a skripty pluginu (`create-branch`, `make-commit`, `open-pr`)
+  pracují v aktuálním adresáři. Orchestrátorovi sdílený checkout nevadí:
+  v pracovním stromu checkoutuje jen na startu a v závěru, kdy nic neběží, a brány
+  pouští v dočasných worktree. Běží-li ve worktree, sériová issues nespustí
+  a čekají na člověka.
+- **Místo drží issue až do merge.** Kolo připomínek běží v témž checkoutu; agent,
+  který by mezitím začal další sériové issue, by předchozímu přepnul větev. Unity
+  práce se tak řadí i za review člověka — to je cena za Editor, ne vada běhu.
+  Eskalace místo neuvolní: eskalovaný agent nechává rozdělanou práci necommitnutou
+  v checkoutu a další agent by ji převzal do cizího PR. Uvolní ho až člověk pokynem
+  „vyřaď #N" — agent práci zapíše do své větve a checkout vrátí na integrační.
+  Před každým spuštěním orchestrátor ještě ověří, že je checkout čistý.
+- **Párová session k precedentu ze sériové oblasti drží místo taky.** Potřebuje
+  Editor, tedy týž checkout; jiné sériové issue do jejího merge neběží.
+
 **Důsledek pro workflow:** `run-milestone` spouští subagenty se dvojicí
 z preference člověka, z definice agenta, nebo sonnet × high; issue s labelem
 `precedent` jen ohlásí a po merge jeho PR zavře. `plan-milestone` smí položku bez
 precedentu založit jako takové issue a `triage-issue` mu label připne, když
 precedent nenajde. Připomínky tečou přes orchestrátora nebo přes PR s hlídačem.
+Issues sériových oblastí běží po jednom v hlavním checkoutu.

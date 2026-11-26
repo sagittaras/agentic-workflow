@@ -4,7 +4,9 @@ description: >-
   Provede naplánovaný milestone s člověkem jako recenzentem: sestaví graf
   závislostí z issues, založí integrační větev a odblokovaná issues spouští
   v subagentech (výchozí sonnet × high), kolik jich člověk stačí průběžně
-  přezkoumat; issue zakládající precedent předá člověku k párové session.
+  přezkoumat; issues sériových oblastí (typicky Unity) pouští po jednom
+  v hlavním checkoutu a issue zakládající precedent předá člověku k párové
+  session.
   Každé PR protáhne branou — test ke každému kritériu a ověřovací příkaz nad
   integrační větví — a teprve pak ho předá člověku. Jeho připomínky, psané
   orchestrátorovi nebo do PR, předává agentovi, který PR vystavil; na jeho schválení PR
@@ -70,6 +72,29 @@ effort: high
 #   se session): orchestrátor, který si je zapsal jako kroky seznamu úkolů,
 #   čekal na první, i když pozdější už skončil. Proto výslovný zákaz v kroku 4.
 # - Dávka = kapacita člověka na review, ptá se na ni na startu (navrhuje 3).
+# - Sériové oblasti (26. 11. 2026, typicky Unity): Editor drží otevřený jeden
+#   checkout, worktree je pro něj jiný projekt bez naimportované Library a Unity
+#   MCP ho nevidí. Agent takové oblasti proto pracuje bez worktree v hlavním
+#   checkoutu, a tam musí běžet i orchestrátor — nástroj Agent subagentovi jiný
+#   adresář nastavit neumí a skripty pluginu pracují v aktuálním adresáři.
+#   Orchestrátorovi to nevadí: v pracovním stromu checkoutuje jen v krocích 2 a 8,
+#   brány pouští v dočasných worktree. Místo drží issue až do merge, protože
+#   kolo připomínek běží v témž checkoutu a další agent by mu přepnul větev.
+#   Eskalace ho neuvolní: eskalovaný agent nechává rozdělanou práci
+#   necommitnutou v checkoutu a review ve dvou kolech našlo cesty, jak ji další
+#   agent převezme do cizího PR. Uvolní ho až „vyřaď #N" — agent práci zapíše do
+#   své větve a checkout vrátí na integrační (rozhodnutí uživatele, 26. 11.).
+#   Kontrola main_dirty před spuštěním chrání i před změnami člověka. Vyřazené
+#   issue dostane signál, jen když místo znovu zabere, a před krokem 8 musí být
+#   místo i checkout volné — sync-branch.sh pustí nesledované soubory a open-pr
+#   by je přes make-commit zapsal do integračního PR (review, kolo 3).
+#   Precedent issue sériové oblasti drží místo od ohlášení: jeho párová session
+#   potřebuje Editor, tedy týž checkout. Definice agenta s isolation: worktree
+#   by vynechaný parametr přebila, proto general-purpose. Oblasti se konfigurují,
+#   ne značí labelem: rozhoduje kód, kterého se issue týká, a plánování nemá co
+#   zapomenout (rozhodnutí uživatele). Kontrola checkoutu a potvrzení člověka
+#   platí i pro issue z nové vlny; čekající sériová issues mají v Hlášení pokyn
+#   a na konci eskalaci, jinak by se běh na nich zasekl (review, kolo 1).
 # - Dvě červené brány po sobě u téhož PR → eskalace, jinak by se agent
 #   s orchestrátorem mohl točit donekonečna. Konflikt proti jiné špičce
 #   integrační větve, než byl předchozí, se nepočítá: v běhu M1 (17. 11. 2026)
@@ -171,7 +196,8 @@ dokud nejsou všechna zavřená nebo eskalovaná. Pak krok 8. Krok 9 platí po c
 
 **Konfigurace.** Ze sekce `## Workflow (sagittaras)` v `CONTRIBUTING.md` potřebuješ
 `Forge`, `Větvení` a `Ověřovací příkazy`. Chybí-li soubor, sekce nebo některá z nich,
-řekni která, odkaž na `/sagittaras:init-workflow` a skonči. `Agenti` je nepovinná.
+řekni která, odkaž na `/sagittaras:init-workflow` a skonči. `Agenti` a `Sériové
+oblasti` jsou nepovinné.
 
 **Forge.** Gitea → jedním `ToolSearch` načti nástroje z řádku „Orchestruje celý
 milestone" a k nim `SendMessage`. GitHub → `ToolSearch` jen na `SendMessage`, pak
@@ -206,6 +232,22 @@ větve — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-issue.sh" -R "
 **Dávka.** Zeptej se, kolik issues má běžet souběžně — tolik, kolik PR člověk stačí
 průběžně přezkoumat. Navrhni 3. Hodnota platí, dokud ji člověk nezmění.
 
+**Sériové oblasti.** Má-li konfigurace podsekci `Sériové oblasti`, spusť
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/main-checkout.sh"` a výstup si drž; kód 2 →
+eskaluj. Issue sériové oblasti smíš spustit nebo ohlásit (krok 3), jen když platí
+`main_checkout=true` a člověk potvrdil: „Issues oblastí <výčet> poběží tady
+v <main_path>, bez worktree. Máš ho otevřený v Editoru a mimo párovou session, kterou
+ti k nim případně ohlásím, na něj během běhu nesáhneš?"
+
+| Stav | Co uděláš |
+| --- | --- |
+| `main_checkout=true`, milestone má otevřené sériové issue | zeptej se na potvrzení spolu s dávkou |
+| `main_checkout=true`, sériové issue přijde až s novou vlnou | zeptej se u něj, než ho spustíš |
+| `main_checkout=false`, milestone má otevřené sériové issue | na potvrzení se neptej; spolu s dávkou řekni, že sériová issues odsud nespustíš, a nabídni ukončit běh hned, před krokem 2, a spustit ho z <main_path> |
+| `main_checkout=false`, sériové issue přijde až s novou vlnou | ohlas ho Hlášením |
+
+Nesmíš-li sériové issue spustit, místo v dávce nezabírá.
+
 **Model agentů.** Dvojici model × effort urči pro každého agenta zvlášť; platí první
 zdroj, který hodnotu má:
 
@@ -218,7 +260,9 @@ zdroj, který hodnotu má:
    `found=false` ohlas v Hlášení („definice <jméno> nenalezena") a pokračuj bodem 3;
 3. `sonnet` × `high`.
 
-Prázdnou hodnotu doplň z dalšího bodu. U `haiku` effort nepředávej.
+Prázdnou hodnotu doplň z dalšího bodu. U `haiku` effort nepředávej. Pro agenta z mapy
+spusť `agent-model.sh` vždy: `can_run_skills=` a `isolation=` platí, i když dvojici
+určí preference člověka.
 `can_run_skills=false` (agent nemá `Skill` nebo `Bash`, implement-issue by neprovedl)
 → issues té oblasti spouštěj jako `"general-purpose"` se stejnou dvojicí a ohlas to
 v Hlášení.
@@ -249,21 +293,37 @@ větve — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-for-issue.sh" -R "
 <issue> --base <integrační větev> --state all`, Gitea: recept „Najdi PR patřící k issue".
 Kontroluj to při každé zprávě člověka a při `event=merged` hlídače; zmergované → krok 7.
 
-Ostatní spusť nástrojem `Agent`, každé zvlášť:
+**Issues sériových oblastí** sdílí jedno sériové místo — s labelem `precedent` i bez
+něj. Spusť nebo ohlas takové issue, jen když je místo volné a platí podmínky z kroku 1.
+Těsně před tím spusť znovu `main-checkout.sh`: `main_dirty=true` → nespouštěj, ohlas
+to Hlášením a zkus znovu při další zprávě člověka. Místo drží:
+
+- issue s agentem od spuštění do merge; do dávky se počítá jako ostatní. Eskalace
+  sériové místo neuvolní (místo v dávce ano) — uvolní ho až pokyn člověka „vyřaď #N"
+  (krok 6). Signál agentovi vyřazeného issue (Rozhodnutí, připomínky, Brána neprošla)
+  pošli, jen když je místo volné a `main-checkout.sh` vrátí `main_dirty=false`; issue
+  tím místo znovu zabere. Jinak signál drž a ohlas Hlášením, že počká na volné místo;
+- issue s labelem `precedent` od ohlášení do merge — párová session běží v hlavním
+  checkoutu;
+- při navázání na přerušený běh sériové issue, které má otevřené PR, od kroku 1; je-li
+  takových víc, eskaluj.
+
+Issues bez labelu `precedent`, sériová i ostatní, spusť nástrojem `Agent`, každé zvlášť:
 
 | Parametr | Hodnota |
 | --- | --- |
 | `description` | `Issue #<číslo>` |
 | `subagent_type` | agent z mapy `Agenti` pro oblast issue; chybí-li řádek nebo celá podsekce, `"general-purpose"` |
 | `model`, `effort` | podle Modelu agentů z kroku 1 |
-| `isolation` | `"worktree"` |
+| `isolation` | `"worktree"`; u issue sériové oblasti parametr vynech — agent pracuje v tvém checkoutu. Má-li agent z mapy `isolation=worktree` (`agent-model.sh`), spusť sériové issue jako `"general-purpose"` se stejnou dvojicí a ohlas to v Hlášení |
 | `prompt` | Zadání pro agenta (Formát výstupu) |
 
 Veď si přehled issue → id agenta → PR → stav → model × effort. Totéž issue nespouštěj
 podruhé, dokud jeho agent existuje.
 
 **Otevřené PR bez agenta** (běh navazuje na přerušený): signál z kroků 5–7 mu pošli
-tak, že spustíš nového agenta stejnými parametry se Zadáním pro navázání.
+tak, že spustíš nového agenta stejnými parametry se Zadáním pro navázání; u sériového
+issue jen za podmínek výš.
 
 ### 4. Výsledek agenta
 
@@ -281,6 +341,7 @@ Rozhoduje první řádek tabulky, který sedí:
 | Zpráva a forge | Co uděláš |
 | --- | --- |
 | zpráva má řádek `PR: rozpracováno — …` | pošli agentovi signál „Dokonči" (`SendMessage`); podruhé po sobě eskaluj |
+| zpráva má řádek `PR: žádné — vyřazeno` po signálu Vyřaď | krok 6, řádek „vyřaď #N" |
 | zpráva má řádek `PR: žádné — <důvod>` | eskaluj, neposílej znovu |
 | forge vrátí otevřené PR | krok 5 |
 | PR není | pošli totéž zadání jednou znovu (`SendMessage` na id agenta); podruhé eskaluj |
@@ -291,7 +352,8 @@ Pro PR z kroku 4, i pro každé, které agent po připomínkách aktualizoval:
 
 GitHub — jedno volání; skript přečte těla, hlavu PR vezme z forge, pustí testy
 kritérií i integrační bránu a při úspěchu zapíše odškrtnutá kritéria a komentář
-„Brána prošla". Nemá-li oblast ověřovací příkaz, vynech `--` i příkaz.
+„Brána prošla". Nemá-li oblast ověřovací příkaz (řádek chybí nebo v něm stojí `—`),
+vynech `--` i příkaz — tady i v bráně před merge.
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-gate.sh" -R "<owner/repo>" <číslo PR> \
@@ -327,7 +389,10 @@ Platí-li pro PR schválení (níže), mergni. Jinak ohlas, že PR čeká na čl
 | „PR #N má připomínky" | pošli agentovi signál „Připomínky" (`SendMessage`); obsah nečti, agent si ho přečte z PR. Po jeho odpovědi krok 4 |
 | připomínky k PR #N napsané sem | pošli je agentovi doslova signálem „Připomínky ze zprávy"; po jeho odpovědi krok 4 |
 | odpověď na eskalaci agenta | pošli ji agentovi doslova signálem „Rozhodnutí"; po jeho odpovědi krok 4 |
+| „vyřaď #N" u eskalovaného sériového issue | pošli agentovi signál „Vyřaď"; po jeho odpovědi spusť `main-checkout.sh`: `main_dirty=false` → sériové místo uvolni, issue zůstává eskalované; `main_dirty=true` → místo neuvolni, požádej Hlášením o úklid <main_path> a po další zprávě člověka ověř znovu |
+| „vyřaď #N" u sériového issue s labelem `precedent` | agentovi nic neposílej; `main_dirty=false` → místo uvolni a issue veď jako eskalované; jinak jako řádek výš |
 | „#N hotové", „PR #N zmergované" u issue s labelem `precedent` | ověř merge ve forge (krok 3); zmergované → krok 7, jinak řekni, co ve forge vidíš |
+| „pusť sériová" | ber jako potvrzení z kroku 1; s `main_checkout=false` odpověz, že běh musí navázat z `main_path` |
 | „mergni PR #N", „PR #N schváleno", i jinými slovy | mergni sám (níže) |
 
 Běží-li agent toho PR, signál mu pošli až po jeho výsledku (krok 4). Agent, který
@@ -422,14 +487,25 @@ Hned potom:
    po jeho odpovědi krok 4. `exit=2` nebo `3` → eskaluj.
 
 **Nová vlna.** Po každém merge vypiš issues milestonu znovu a nová zařaď do grafu jako
-v kroku 1, včetně kontroly Poznámky.
+v kroku 1, včetně kontroly Poznámky a podmínek sériových oblastí.
 
 Nesedí-li počet issues s milestonem, přečti znovu po další notifikaci; eskaluj až při
 druhé shodné neshodě.
 
 Všechna issues zavřená nebo eskalovaná → krok 8. Něco zůstává otevřené, ale nic
-neběží, nic nečeká na člověka (ani issue s labelem `precedent`) a nic není odblokované
-→ eskaluj jako deadlock.
+neběží, nic nečeká na člověka (issue s labelem `precedent` na člověka čeká) a nic není
+odblokované → eskaluj jako deadlock. Zbývají-li jen sériová issues, která podle kroku 1
+nesmíš spustit, a issues, která na nich i nepřímo závisí, eskaluj otázkou. Bez
+potvrzení: „Máš <main_path> otevřený v Editoru — mám je pustit?" S `main_checkout=false`
+napřed uvolni integrační větev, ať ji hlavní checkout může checkoutnout (`git switch
+--detach`; nic neběží, strom je čistý), a zeptej se: „Navázat běh z <main_path>, nebo
+je vynechat z integračního PR?" Navázat → skonči. Vynechat, nebo „ne" na první otázku
+→ veď je jako eskalovaná a nezahrnutá a pokračuj krokem 8.
+
+Běžíš-li v hlavním checkoutu a máš-li sériové oblasti, do kroku 8 jdi, jen když sériové
+místo nedrží eskalované issue (jinak eskaluj: „Vyřaď #N, nebo odpověz na eskalaci")
+a `main-checkout.sh` vrátí `main_dirty=false` (jinak eskaluj: „Ukliď <main_path>").
+Rozdělaná práce v checkoutu by jinak skončila v integračním PR.
 
 ### 8. Závěr
 
@@ -457,7 +533,10 @@ Eskaluj, když:
 - brána před merge skončila kódem 2 nebo 3; forge merge odmítl, nebo PR po merge
   podle forge zmergované není; hlídač PR ohlásil PR z přehledu zavřené bez merge,
   nebo skončil kódem 2, 3 nebo 7;
-- `milestone-branch.sh` nebo `sync-branch.sh` skončil nenulovým kódem;
+- `milestone-branch.sh` nebo `sync-branch.sh` skončil nenulovým kódem; `main-checkout.sh`
+  skončil kódem 2;
+- zbývají jen sériová issues, která nesmíš spustit, a co na nich závisí (krok 7);
+  před krokem 8 drží sériové místo eskalované issue, nebo je hlavní checkout špinavý;
 - nic neběží, nic nečeká na člověka a nic není odblokované.
 
 Eskalace shrne stav — co je zmergované, co běží, co čeká na člověka, co blokuje —
@@ -482,6 +561,11 @@ Naimplementuj issue #<číslo> (<název>) v repozitáři <owner/repo> skillem
 sagittaras:implement-issue, se základní větví <integrační větev>. Issue patří
 do milestonu „<název>"; kód přezkoumává člověk a na jeho schválení PR merguje
 orchestrátor run-milestone. Kritéria, Reference a závislosti jsou v těle issue.
+[Sériová oblast: Pracuješ bez worktree, přímo v hlavním checkoutu <main_path>, který
+má otevřený Editor; větev v něm založ a přepínej jen svou. Než po signálu začneš
+pracovat, přepni se na ni (`git switch <tvoje větev>`). Kompilaci a testy kritérií
+ověř v Editoru přes jeho nástroje (Unity MCP); nemáš-li je, eskaluj — bez Editoru
+testy kritérií nespustíš.]
 
 Příkazy spouštěj v popředí. Po otevření PR skonči. Pokračovat budeš na signál:
 - Připomínky — přečti je z PR; nese-li signál text připomínek, zapracuj i ten.
@@ -504,7 +588,8 @@ větvi <head> už existuje: navaž na něj a zpracuj signál.
 
 <signál ze Signálů pro agenta>
 
-[Zbytek jako v Zadání pro agenta, od „Příkazy spouštěj v popředí."]
+[Zbytek jako v Zadání pro agenta, od sériové závorky (u sériového issue), jinak od
+„Příkazy spouštěj v popředí."]
 ```
 
 ### Signály pro agenta
@@ -514,6 +599,7 @@ Připomínky: člověk napsal k PR #<n> připomínky. Přečti je z PR a zapracu
 Připomínky ze zprávy: člověk k PR #<n> napsal: <text doslova>. Zapracuj je i s připomínkami v PR, jsou-li tam.
 Rozhodnutí: na tvou otázku „<řádek Potřebuji rozhodnout: z eskalace doslova>" člověk k issue #<číslo> rozhodl: <text doslova>. Pokračuj podle něj.
 Dokonči: dokonči rozdělanou práci; příkazy spouštěj v popředí a kolo ukonči až s PR nebo s eskalací.
+Vyřaď: člověk issue #<číslo> vyřadil. Rozdělanou práci zapiš do své větve přes make-commit, přepni checkout na <integrační větev> (`git switch <integrační větev>`) a skonči řádkem „PR: žádné — vyřazeno".
 Brána neprošla: <řádky fail=, nebo sekce [conflicts] či [output] doslova>
 ```
 
@@ -540,13 +626,16 @@ Eskalované a nezahrnuté: <#číslo — důvod, nebo „žádné">
 ### Hlášení
 
 ```
-Spuštěno: #A (sonnet × high), #B (backend-engineer, opus × xhigh).
+Spuštěno: #A (sonnet × high), #B (backend-engineer, opus × xhigh), #C (sonnet × high, sériově v hlavním checkoutu).
+#E čeká: sériová issues pustím jen z hlavního checkoutu otevřeného v Editoru. [Běžím ve worktree: až doběhne zbytek, ukonči běh a navaž ho z <main_path>.] [Nepotvrdil jsi to: až budeš mít <main_path> otevřený v Editoru, napiš „pusť sériová".] [V <main_path> jsou necommitnuté změny: ukliď je a napiš mi.]
+#F zakládá precedent v sériové oblasti — párovou session veď v <main_path> (Editor), PR směř do <integrační větev> s „Closes #F" v těle; jiné sériové issue do jeho merge nespustím. Až ho mergneš, napiš mi „#F hotové".
 #A: PR #<n> prošlo bránou — čeká na tebe; připomínky piš sem nebo do PR, schválíš-li ho, napiš „mergni PR #<n>".
    [Gitea: … připomínky piš sem, nebo do PR a pak mi napiš „PR #<n> má připomínky"; …]
 #A: brána neprošla (<důvod>) — vráceno agentovi.
 #A: zmergováno, issue zavřené; odblokováno #C.
 #D zakládá precedent — založ si pro něj párovou session nad <integrační větev> a PR směř do ní s „Closes #D" v těle; až ho mergneš, napiš mi „#D hotové" — issue zavřu a pustím, co na něm závisí.
 Eskalace: <co se stalo, co to blokuje> — <otázka>.
+   [U sériového issue: sériové místo drží dál — odpověz, nebo napiš „vyřaď #<číslo>".]
 ```
 
 ## Zásady

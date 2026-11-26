@@ -15,7 +15,8 @@
 #              změnu a bez hodnoty je odmítne kódem 2 (živé issue se neupravuje).
 # Kritérium 4: shared/git-scripts.md popisuje pr-watch.sh i oba přepínače labelů.
 # Kritérium 5: merge se hlásí podle času, i když PR skript nikdy neviděl
-#              otevřené: --since mezi oběma merge vrátí jen event=merged pr=91.
+#              otevřené: --since mezi oběma merge vrátí event=merged pr=91, ne pr=90,
+#              a next_since nejméně čas merge #91.
 #
 # Návratové kódy: 0 = prošlo, 1 = selhalo.
 
@@ -61,7 +62,9 @@ out="$(bash scripts/gh/pr-watch.sh -R "$repo" --base main --since 2026-11-19T00:
   || { echo "fail=criterion_5 reason=script_failed"; exit 1; }
 grep -qx 'event=merged pr=91 at=2026-11-19T13:52:01Z' <<<"$out" || { echo "fail=criterion_5 reason=merge_missing"; fail=1; }
 if grep -q '^event=merged pr=90 ' <<<"$out"; then echo "fail=criterion_5 reason=old_merge_reported"; fail=1; fi
-grep -qx 'next_since=2026-11-19T13:52:01Z' <<<"$out" || { echo "fail=criterion_5 reason=bad_next_since"; fail=1; }
+# Pozdější merge do main next_since posouvá, starší než merge #91 být nesmí.
+ns="$(sed -n 's/^next_since=//p' <<<"$out")"
+if [[ "$ns" < "2026-11-19T13:52:01Z" ]]; then echo "fail=criterion_5 reason=bad_next_since ns=$ns"; fail=1; fi
 
 if [ "$fail" -eq 0 ]; then
   echo "result=pass"
