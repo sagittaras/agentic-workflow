@@ -5,6 +5,8 @@
 > 2.6–2.9 posunuly cíl od úplné autonomie ke kompromisu (viz níž); princip 3.1
 > otevřel novou skupinu o tvaru skillů samotných. 17. 11. 2026 přibyl princip
 > 2.10: plán milestonu schvaluje člověk, `review-milestone` je nástroj na vyžádání.
+> 26. 11. 2026 přibyl princip 2.11: issues se spouští zase v subagentech, se
+> zvoleným modelem, a práce zakládající precedent jde do párové session.
 > **Kontext:** po týdnu ostrého provozu řetězu `write-adr → plan-milestone →
 > review-milestone → run-milestone` (popsaného v [původním plánu
 > sady](../milestone-workflow/index.md)) se ukázalo, že nad delším autonomním
@@ -18,9 +20,12 @@
 práce v Claude Code. Provoz ukázal, že nejdražší část průchodu issue není
 implementace, ale agentní review — a že se jeho důslednost nedá spolehlivě
 nadirigovat promptem. Vize proto míří ke kompromisu: konkrétní práci vykoná AI,
-výsledný kód přezkoumává člověk, a orchestrátor spouští issues v podřazených
-session, ke kterým člověk píše připomínky podle jejich PR
-([2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent)–[2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)).
+výsledný kód přezkoumává člověk a připomínky píše k PR nebo orchestrátorovi
+([2.6](issues.md#26-review-výsledného-kódu-dělá-člověk-ne-agent)–[2.7](issues.md#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně)).
+Orchestrátor spouští issues v subagentech na modelu, který zadání stačí, a práci
+zakládající nový precedent nechává párové session
+([2.11](issues.md#211-orchestrátor-spouští-issues-v-subagentech-se-zvoleným-modelem-nový-precedent-jde-do-párové-session),
+nahrazuje 2.8).
 Než PR člověk uvidí, musí mít každé kritérium test a orchestrátor potvrdit,
 že testy prochází
 ([2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)).
@@ -78,12 +83,16 @@ autonomně staví:
 - [2.7](issues.md#27-issue-je-velké-nanejvýš-tak-aby-jeho-pr-šlo-přezkoumat-ručně)
   Issue je velké nanejvýš tak, aby jeho PR šlo přezkoumat ručně.
 - [2.8](issues.md#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)
-  Orchestrátor spouští issues v podřazených session, ne v subagentech.
+  ~~Orchestrátor spouští issues v podřazených session, ne v subagentech.~~
+  Nahrazeno 2.11.
 - [2.9](issues.md#29-každé-akceptační-kritérium-kryje-test-session-ho-napíše-orchestrátor-potvrdí)
   Každé akceptační kritérium kryje test; session ho napíše, orchestrátor
   potvrdí.
 - [2.10](issues.md#210-plán-milestonu-schvaluje-člověk-ne-agentní-review)
   Plán milestonu schvaluje člověk, ne agentní review.
+- [2.11](issues.md#211-orchestrátor-spouští-issues-v-subagentech-se-zvoleným-modelem-nový-precedent-jde-do-párové-session)
+  Orchestrátor spouští issues v subagentech se zvoleným modelem; nový precedent
+  jde do párové session.
 
 **[Tvar skillů](skill-design.md)** — co patří do textu, který agent čte při
 každém spuštění skillu:
@@ -97,13 +106,15 @@ každém spuštění skillu:
 - [Principy spolupráce](principles.md) — 1.1–1.8: kostra, vzorová implementace,
   rules, ADR, agenti, navigace dokumentací a znalostní báze `.docs/` s vlastními
   skilly.
-- [Issues a autonomní vývoj](issues.md) — 2.1–2.10: tvar issue, Poznámka
+- [Issues a autonomní vývoj](issues.md) — 2.1–2.11: tvar issue, Poznámka
   a Zadání, vlnové plánování, lidské review místo agentního, velikost issue
-  podle přezkoumatelnosti PR, orchestrace přes podřazené session, testy ke
-  kritériím potvrzené orchestrátorem, plán milestonu schválený člověkem.
+  podle přezkoumatelnosti PR, testy ke kritériím potvrzené orchestrátorem, plán
+  milestonu schválený člověkem, orchestrace přes subagenty se zvoleným modelem
+  a párová session pro nový precedent (dřív podřazené session).
 - [Tvar skillů](skill-design.md) — 3.1: skill jako základní linie postupu,
   příkaz místo popisu, test každé věty a spouštěče úvahy, kterým se vyhnout.
 - [Dopad na existující skilly](skill-impact.md) — který skill se kterým
   principem mění a jak; samostatná tabulka pro 1.7, úpravy mechaniky po nálezech
-  prvního ostrého běhu milestonu, skill `review-run` pro rozbor dalších běhů
-  a výčet skillů, kterých se vize netýká.
+  prvního ostrého běhu milestonu, skill `review-run` pro rozbor dalších běhů,
+  přechod na subagenty a párovou session (2.11) a výčet skillů, kterých se
+  vize netýká.

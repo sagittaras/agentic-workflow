@@ -151,6 +151,21 @@ pracovní kopie zahazuje a zakládá znovu.
 
 ---
 
+### `agent-model.sh <jméno>`
+
+Najde definici agenta podle `name:` ve frontmatteru — rekurzivně v `.claude/agents/`
+kořene repozitáře, pak v `~/.claude/agents/` — a vypíše jeho model a effort.
+`run-milestone` podle toho volí dvojici pro agenta z mapy Agenti.
+
+- **Výstup:** `found=true|false`, `path=` (jen při nálezu), `model=`, `effort=` —
+  prázdné, když je definice neuvádí; `model: inherit` se vypíše jako prázdný —,
+  `tools=` (výčet na jednom řádku i YAML seznam, spojený čárkou; prázdný bez
+  výčtu) a `can_run_skills=false`, když výčet existuje a chybí v něm `Skill` nebo
+  `Bash`.
+- **Kódy:** `0` prohledáno (i bez nálezu) · `2` chybí jméno.
+
+---
+
 ## GitHub operace — `scripts/gh/`
 
 Tenké obálky nad `gh api` / `gh issue` / `gh pr`. Repozitář berou z `-R owner/repo`, které
@@ -167,7 +182,7 @@ přetvaruje do klíčů REST (viz tabulka).
 | `issue-read.sh` | `<number> [--body]` — s `--body` jen tělo jako text |
 | `issue-list.sh` | `[--milestone M] [--state open\|closed\|all]` — `M` je název i číslo |
 | `issue-create.sh` | `--title T --body-file F\|- [--milestone M] [--label L]…` |
-| `issue-update.sh` | `<number> [--body-file F\|-] [--state closed\|open] [--milestone <název>]` |
+| `issue-update.sh` | `<number> [--body-file F\|-] [--state closed\|open] [--milestone <název>] [--add-label L]… [--remove-label L]…` — `--add-label` připne existující label, neexistující gh odmítne; `--remove-label` ho odepne |
 | `issue-comment.sh` | `<number> --body-file F\|-` |
 | `milestone-list.sh` | `[--state open\|closed\|all]` — ploché JSON pole; `open_issues` a `closed_issues` počítají jen issues, bez PR |
 | `milestone-create.sh` | `--title T [--description D]` |
@@ -185,6 +200,7 @@ přetvaruje do klíčů REST (viz tabulka).
 | `pr-comment.sh` | `<number> --body-file F\|-` |
 | `pr-merge.sh` | `<number> [--squash] [--delete-branch]` |
 | `pr-gate.sh` | `<number> --issue N --base B [--no-write] [-- <příkaz…>]` — brána před review jedním voláním, viz níž |
+| `pr-watch.sh` | `--base B [--since T] [--interval S] [--max-minutes M] [--once]` — hlídač připomínek u PR do `B`, spouští se na pozadí, viz níž |
 
 **Tělo se nikdy nepředává argumentem**, ale souborem, nebo ze stdin přes `--body-file -`
 (heredoc s ukončovačem v uvozovkách ve stejném volání). Víceřádkový markdown v argumentu
@@ -214,3 +230,28 @@ prošla"; s `--no-write` jen ohlásí, že by to udělal.
   argument, PR nemíří do `--base` nebo issue bez sekce kritérií · `3` čtení
   z forge, remote nebo worktree selhalo · `4` brána prošla, ale zápis do trackeru
   selhal · `5` konflikt · `6` ověřovací příkaz selhal · `7` chybí `gh`.
+
+### `gh/pr-watch.sh --base B [--since T] [--interval S] [--max-minutes M] [--once]`
+
+Hlídač `run-milestone` pro připomínky psané přímo do PR. Spouští se na pozadí
+(`run_in_background`) a každých `S` sekund (výchozí 60) položí jeden GraphQL
+dotaz na PR do `B`. Skončí, jakmile u otevřeného PR najde novou připomínku, nebo
+když některé PR do `B` někdo mergne či zavře. Čekání volajícího nestojí tokeny —
+ozve se až skončením.
+
+Připomínka je odeslané review (komentáře k řádkům GitHub odesílá jako review)
+nebo obecný komentář, novější než `T`. Nepočítá se komentář začínající
+`## Brána prošla` (píše ho brána) ani autor typu Bot či s loginem na `[bot]`.
+Report ručně spuštěného `verify-issue` se počítá. Člověka od orchestrátoru
+rozlišit nejde, píšou pod týmž účtem `gh`. Merge a zavření se hlásí podle času
+(`mergedAt`, `closedAt` novější než `T`), takže se neztratí ani PR otevřené
+a mergnuté mezi dvěma spuštěními.
+
+- **Výstup:** jeden nebo víc řádků `event=feedback pr= at= kind=review:<STATE>|comment`,
+  `event=merged pr= at=` a `event=closed pr= at=` (zavřené bez merge), nebo jediný
+  `event=idle` (do `B` nevede žádné otevřené PR a nic nového), `event=timeout`
+  (uplynulo `M` minut, výchozí 240), `event=none` (jen s `--once`); vždy na konci
+  `next_since=` — `--since` pro další spuštění, aby se událost neztratila ani
+  neohlásila dvakrát. Bez `--since` začíná od času serveru.
+- **Kódy:** `0` událost, `idle`, `timeout` nebo `none` · `2` chybný argument ·
+  `3` forge pětkrát po sobě neodpověděl · `7` chybí `gh`.

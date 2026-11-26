@@ -220,6 +220,32 @@ repozitáře projektu — vstup pro další kolo oprav, ne zápis do trackeru.
 Spouští ho jen člověk (`disable-model-invocation`), protože rozbor stojí
 miliony tokenů.
 
+## Princip 2.11
+
+Subagenti se zvoleným modelem a párová session pro nový precedent
+([2.11](issues.md#211-orchestrátor-spouští-issues-v-subagentech-se-zvoleným-modelem-nový-precedent-jde-do-párové-session)).
+Kde se řádek `run-milestone` v tabulce 2.6–2.9 nebo v nálezech M1 opírá
+o podřazené session, platí tahle tabulka.
+
+| Skill | Stav | Co se mění |
+| --- | --- | --- |
+| `run-milestone` | Zásadní změna | Issues spouští nástrojem Agent ve worktree, s modelem a effortem parametrem: preference člověka > `model:`/`effort:` z definice agenta z mapy Agenti (`scripts/agent-model.sh`) > sonnet × high. `start_session` a `list_sessions` vypadly, s nimi omezení spouštění v turnu po notifikaci. Issue s labelem `precedent` nespouští, ohlásí ho člověku k párové session, místo v dávce nezabírá; hotové je, když forge ukáže jeho PR zmergované (signál člověka, kontrola u každé jeho zprávy, hlídač). Připomínky napsané orchestrátorovi přepošle agentovi doslova, stejně jako odpověď na eskalaci agenta (signál Rozhodnutí); na GitHubu spouští na pozadí hlídač `gh/pr-watch.sh`, který ho probudí s novou připomínkou v PR nebo s PR mergnutým ve forge. K otevřenému PR bez agenta (navázaný běh) spustí nového se zadáním pro navázání. Orchestrátor klesá na opus × high. |
+| `implement-issue` | Menší úprava | Umí navázat na existující PR: převezme jeho větev a pokračuje krokem 9. Připomínky bere i z textu signálu, odpověď na eskalaci ze signálu Rozhodnutí. Issue s labelem `precedent` neimplementuje. |
+| `plan-milestone` | Menší úprava | Položku bez precedentu na přání člověka založí jako issue s labelem `precedent`; výchozí zůstává backlog. |
+| `triage-issue` | Menší úprava | Nenajde-li precedent, vedle komentáře připne label `precedent`; při povýšení na Zadání ho odepne. Na Gitea k tomu potřebuje `label_read`. |
+| `review-milestone` | Menší úprava | Issue s labelem `precedent` neposuzuje jako Zadání — chybějící kódový precedent u něj není nález. |
+| `init-workflow` | Menší úprava | Mezi navrhované labely přidává pevný `precedent`. |
+
+**Sdílený kontrakt.** `shared/issue-template.md` dostává § Issue zakládající
+precedent — label, kdo ho nasazuje, tvar těla a kdy je issue hotové.
+`shared/workflow-config.md` říká, že `precedent` do výčtu Labely nepatří a že
+model a effort agenta bere `run-milestone` z jeho definice.
+`shared/git-scripts.md` přidává `agent-model.sh`, `gh/pr-watch.sh` a přepínače
+`--add-label` a `--remove-label` u `gh/issue-update.sh`, `shared/forge-recipes.md`
+recepty „Připni label k issue" a „Odepni label z issue".
+`review-run` zůstává beze změny: subagenty se zadáním „Naimplementuj issue #N"
+už rozeznává.
+
 ## Mimo rozsah
 
 Principy 1.x a 2.x se netýkají `create-branch`, `make-commit` (git mechanika

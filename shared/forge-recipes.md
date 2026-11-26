@@ -53,11 +53,13 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-read.sh -R owner/repo 42
 | Uprav tělo issue | `issue_write` → `update`, `issue_number`, `body` | `gh/issue-update.sh <n> --body-file F` |
 | Zavři issue | `issue_write` → `update`, `issue_number`, `state: "closed"` | `gh/issue-update.sh <n> --state closed` |
 | Okomentuj issue | `issue_write` → `add_comment`, `issue_number`, `body` | `gh/issue-comment.sh <n> --body-file F` |
+| Připni label k issue | `label_read` → `list_repo_labels` pro ID, pak `issue_write` → `add_labels`, `issue_number`, `labels: [<ID>]` | `gh/issue-update.sh <n> --add-label L` |
+| Odepni label z issue | `label_read` → `list_repo_labels` pro ID, pak `issue_write` → `remove_label`, `issue_number`, `label_id` | `gh/issue-update.sh <n> --remove-label L` |
 | Vypiš milestony | `milestone_read` → `list`, `state` | `gh/milestone-list.sh --state open` |
 | Založ milestone | `milestone_write` → `create`, `title`, `description` | `gh/milestone-create.sh --title T --description D` |
 | Zavři milestone | `milestone_write` → `update`, `id`, `state: "closed"` | `gh/milestone-update.sh <n> --state closed` |
 | Vypiš labely | `label_read` → `list_repo_labels` | `gh/label-list.sh` |
-| Založ label | `label_write` → `create_repo_label`, `name`, `color` | `gh/label-create.sh --name N --color C` |
+| Založ label | `label_write` → `create_repo_label`, `name`, `color`, případně `description` | `gh/label-create.sh --name N --color C [--description D]` |
 | Založ PR | `pull_request_write` → `create`, `base`, `head`, `title`, `body` | `gh/pr-create.sh --base B --head H --title T --body-file F` |
 | Přečti PR | `pull_request_read` → `get`, `pull_number` | `gh/pr-read.sh <n>` |
 | Přečti připomínky k PR | `pull_request_read` → `get_reviews`, `pull_number`; pak pro každé review `get_review_comments` s `review_id` (komentáře k řádkům); obecné komentáře `issue_read` → `get_comments` s číslem PR | `gh/pr-reviews.sh <n>` |

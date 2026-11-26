@@ -107,8 +107,8 @@ na projektu.
 | --- | --- | --- |
 | **Forge** | všechny | výběr větve v `forge-recipes.md` — Gitea MCP, nebo `gh` skript |
 | **Větvení** | `run-milestone`, `implement-issue`, `open-pr`, `close-milestone` | odkud se větví, kam se mergeuje, co smí jen člověk |
-| **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat |
-| **Agenti** | `run-milestone` | komu poslat issue k implementaci |
+| **Labely** | `plan-milestone`, `file-issue`, `review-milestone` | co nasadit a co validovat; pevný label `precedent` do výčtu nepatří, popisuje ho `issue-template.md` |
+| **Agenti** | `run-milestone` | komu poslat issue k implementaci; model a effort agenta bere `run-milestone` z preference člověka, jinak z definice agenta, a chybí-li i tam, `sonnet` × `high` |
 | **Ověřovací příkazy** | `verify-issue`, `run-milestone`, `plan-milestone` | čím se ověří kritérium a čím se hlídá integrační brána |
 | **Jazyk issues** | `plan-milestone`, `file-issue`, `triage-issue`, `review-milestone` | v jakém jazyce psát text issues; strojové nadpisy šablony zůstávají česky v každém jazyce |
 

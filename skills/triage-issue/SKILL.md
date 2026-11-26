@@ -5,7 +5,8 @@ description: >-
   precedent, který lze rozšířit, a pokud ho najde, přepíše tělo issue do
   tvaru Zadání s hranicemi, kódovým precedentem v Reference a checklistem
   akceptačních kritérií. Nenajde-li precedent, tělo nemění a okomentuje
-  issue, že práce potřebuje napřed spárovanou implementační session. Vydala-li
+  issue, že práce potřebuje napřed spárovanou implementační session, a připne
+  mu label precedent. Vydala-li
   by Poznámka na PR, které nejde ručně přezkoumat, tělo nemění a v komentáři
   navrhne rozdělení na víc Zadání. Je-li
   issue už Zadání ukotvené v kódu nebo je rozpracované, nic nemění. Výstupem
@@ -53,11 +54,17 @@ allowed-tools:
   - "Bash(bash:*)"
   - mcp__gitea__issue_read
   - mcp__gitea__issue_write
+  - mcp__gitea__label_read
 # Bash je zúžený na spouštění skriptů; gh ani git se nikdy nevolá přímo,
 # proto volání piš ve tvaru `bash <cesta>`. Write ani Edit ve výčtu nejsou:
 # přepsané tělo i komentář jdou GitHub skriptům heredocem přes --body-file -,
 # skill do zdrojů projektu nezapisuje, jen do trackeru.
 # Grep/Glob/Read hledají precedent v kódu.
+# label_read hledá na Gitea ID labelu precedent pro kroky 4a a 4b (issue_write
+# bere labely jako ID). Label precedent připíná 4b od vize 2.11 (26. 11. 2026):
+# run-milestone podle něj issue nespustí a předá člověku k párové session.
+# 4a ho odepíná: issue označené dřív, pro které mezitím vznikl precedent, by
+# jinak jako Zadání zůstalo v párové frontě a implement-issue by ho odmítl.
 # Vynechaná zvažovaná pole:
 # disable-model-invocation — skill má být volatelný modelem: během
 # konverzace o issue, které nemá ukotvená kritéria, nebo když se inženýrský
@@ -126,8 +133,9 @@ nebo komentář; nadpisy sekcí a značka `(ověří člověk)` zůstávají dos
 Otevři `${CLAUDE_PLUGIN_ROOT}/shared/forge-recipes.md`, vyber sloupec podle
 sekce `Forge` a **volání neodvozuj z hlavy**. Na Gitea si napřed **jedním**
 voláním `ToolSearch` načti odložené nástroje podle řádku „Jen čte
-a komentuje". Řádek nese i `list_issues`/`milestone_read` navíc — tenhle
-skill volá jen `issue_read` a `issue_write`, zbytek nepoužívá.
+a komentuje" a k nim `mcp__gitea__label_read`. Řádek nese i
+`list_issues`/`milestone_read` navíc — tenhle skill volá jen `issue_read`,
+`issue_write` a v krocích 4a a 4b `label_read`, zbytek nepoužívá.
 
 Přečti issue receptem „Přečti issue". Neexistuje-li, je uzavřené, nebo jde
 o pull request, ne o issue, ohlas to variantou „Předčasný konec" — přepisovat
@@ -141,7 +149,8 @@ kterákoli z těchto situací:
 1. sekce **Akceptační kritéria** obsahuje konkrétní, vyplněné body **a**
    sekce **Reference** cituje aspoň jednu cestu k souboru nebo vzoru v kódu
    repozitáře (ne jen sekci ADR/UX-spec dokumentu) — issue je Zadání ukotvené
-   v kódu už teď;
+   v kódu už teď; neplatí pro issue s labelem `precedent`, to podle téhle
+   podmínky Zadání není nikdy;
 2. v **Akceptačních kritériích** je aspoň jedno **zaškrtnuté** zaškrtávátko
    (`- [x]`) — issue je rozpracované, `verify-issue` už nad ním pracoval,
    a přepis by smazal jeho ověřovací záznam.
@@ -193,9 +202,10 @@ včetně jeho sekce „Reference je precedent v kódu":
   Souhrnu nebo do vlastní sekce za Referencí. Recept „Uprav tělo issue"
   nahrazuje tělo celé, nic nepřipojuje — reprodukční kroky, útržek logu nebo
   odkaz z původní Poznámky by jinak zápisem tiše zmizel.
-- **Název a labely nech beze změny** — tenhle skill přepisuje jen tělo.
-  Neodpovídá-li název tvaru `<type>(<scope>): …` nebo typový label typu
-  v názvu, zmiň to v souhrnu podle Formátu výstupu jako poznámku pro
+- **Název a labely nech beze změny**, kromě labelu `precedent`: nese-li ho
+  issue, odepni ho — Zadání už vzor rozšiřuje a `run-milestone` by ho jinak
+  nespustil. Neodpovídá-li název tvaru `<type>(<scope>): …` nebo typový label
+  typu v názvu, zmiň to v souhrnu podle Formátu výstupu jako poznámku pro
   autora; sám ani jedno neopravuj.
 
 Zapiš přepsané tělo receptem „Uprav tělo issue". Na GitHubu ho předej heredocem
@@ -214,16 +224,22 @@ chybný argument (ověř hodnoty a zkus znovu jednou), jiný nenulový kód
 neopakuj naslepo. Na Gitea reaguj na chybu **404 při zápisu** podle nástrah
 v `forge-recipes.md` — skoro vždy jde o chybějící oprávnění účtu, ne
 o špatný název; jiný repozitář nezkoušej. V žádném z těchto případů
-nepokládej přepis za proběhlý — ohlas to variantou „Zápis selhal". Jdi na
+nepokládej přepis za proběhlý — ohlas to variantou „Zápis selhal" a jdi na
 krok 5.
+
+Prošel-li zápis a nese-li issue label `precedent`, odepni ho samostatným voláním
+receptem „Odepni label z issue" — GitHub:
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-update.sh" -R <owner/repo> <číslo issue> --remove-label precedent`.
+Selže-li, tělo už přepsané je: ve výstupu uveď `neodepnut — <kód a chyba>`.
+Jdi na krok 5.
 
 ### 4b. Precedent neexistuje → okomentuj a nech Poznámkou
 
 Tělo issue **nepřepisuj**. Okomentuj issue receptem „Okomentuj issue":
 pojmenuj krátce, co jsi hledal a nenašel, a řekni, že práce vyžaduje napřed
 spárovanou implementační session (rozhraní a neúplná implementace, doladěná
-interaktivně) — tenhle skill sám architekturu nezakládá. Issue nezavírej,
-název ani labely neměň.
+interaktivně) — tenhle skill sám architekturu nezakládá. Issue nezavírej
+a název neměň.
 
 Na GitHubu předej text komentáře stejně jako v kroku 4a heredocem:
 
@@ -234,7 +250,22 @@ BODY
 ```
 
 Skončí-li zápis komentáře chybou, reaguj stejně jako v kroku 4a a nepokládej
-komentář za zapsaný. Jdi na krok 5.
+komentář za zapsaný. Jinak připni issue label `precedent` receptem „Připni
+label k issue" — GitHub:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-update.sh" -R <owner/repo> <číslo issue> --add-label precedent
+```
+
+Gitea: `label_read` → `list_repo_labels`, pak `issue_write` → `add_labels` s jeho ID.
+
+| Výsledek připnutí | Řádek `Label precedent` ve výstupu |
+| --- | --- |
+| prošlo | `připnut` |
+| label v repozitáři není (Gitea: chybí ve výpisu `list_repo_labels` dostránkovaném do konce; GitHub: `gh` hlásí, že label nenašel) | `chybí v repozitáři — založí ho /sagittaras:init-workflow`; label nezakládej |
+| jiná chyba nebo nenulový kód | `nepřipnut — <kód a chyba>`; komentář už zapsaný je, zbytek kroku platí |
+
+Jdi na krok 5.
 
 ### 4c. PR by nešlo přezkoumat → navrhni rozdělení
 
@@ -271,6 +302,7 @@ Issue #<n>: nedotčeno — <„už je Zadání ukotvené v kódu" | „je rozpra
 Issue #<n>: povýšeno na Zadání.
 Precedent: <cesta k souboru/vzoru>
 Kritérií: <počet>
+Label precedent: <odepnut | issue ho nemělo | neodepnut — kód a chyba>
 Poznámka k názvu/labelům: <„bez rozporu", nebo co neodpovídá>
 ```
 
@@ -279,7 +311,8 @@ Poznámka k názvu/labelům: <„bez rozporu", nebo co neodpovídá>
 ```
 Issue #<n>: zůstává Poznámkou, okomentováno.
 Chybí precedent pro: <stručně, co jsi hledal>
-Doporučení: spárovaná implementační session, pak nové triage.
+Label precedent: <připnut | chybí v repozitáři — založí ho /sagittaras:init-workflow | nepřipnut — kód a chyba>
+Doporučení: spárovaná implementační session (v běhu milestonu ji run-milestone ohlásí); po ní nové triage navazující práce.
 ```
 
 **Navrženo rozdělení (krok 4c):**
@@ -314,7 +347,8 @@ Triage neproběhlo: <důvod — chybějící konfigurace/sekce, chybějící č�
   omezení vedle kódové reference — tak to popisuje i sdílená
   `issue-template.md` a stejně to čte `implement-issue` i `verify-issue`.
 - **Přepisuje jen to, co je opravdu Poznámka** (krok 2), a jen tělo, nikdy
-  název ani labely. Stav zaškrtávátek nemění nikdy — `- [ ]` nepřepisuje
+  název; z labelů sahá jen na `precedent` — připíná ho v kroku 4b, odepíná
+  v kroku 4a. Stav zaškrtávátek nemění nikdy — `- [ ]` nepřepisuje
   na `- [x]` ani naopak.
 - **Běží neinteraktivně vždy.** Nejasnost nebo chybějící vstup znamenají
   hlášení a konec, ne dopyt — skill musí jít volat i bez přítomného člověka.

@@ -5,9 +5,9 @@ description: >-
   backlogu ověří, jestli v repozitáři existuje precedent k rozšíření, a jen
   z takových sepíše Zadání s kritérii ukotvenými v konkrétním souboru či
   vzoru v kódu, ne v próze dokumentu, rozpadlá tak, aby PR každého z nich
-  šlo přezkoumat ručně. Položky bez precedentu se v tomhle
-  běhu nezakládají jako issue — zůstávají v backlogu na příští vlnu, až
-  vznikne vzor, který rozšíří. Po potvrzení uživatelem založí chybějící
+  šlo přezkoumat ručně. Položky bez precedentu nechá v backlogu na příští
+  vlnu, nebo je na přání uživatele založí jako issue s labelem `precedent`
+  k párové session. Po potvrzení uživatelem založí chybějící
   labely, milestone (nebo do něj přidá další vlnu) a issues sekvenčně, aby
   odkazy na závislosti mířily na skutečná čísla.
 when_to_use: >-
@@ -33,6 +33,10 @@ effort: high
 # xhigh: skill sám neimplementuje ani neorchestruje víc fází, jen klasifikuje
 # backlog a sepisuje draft; exekuci vlastní run-milestone. Těžiště je jeden
 # rozmyšlený návrh se dvěma brzdami u uživatele.
+# Položku bez precedentu smí založit jako issue s labelem precedent (vize 2.11,
+# 26. 11. 2026): párová práce tak leží v milestonu a v grafu závislostí,
+# run-milestone ji jen ohlásí člověku. Jen na přání uživatele — výchozí zůstává
+# backlog, aby z plánování nevznikaly issues jako vedlejší produkt.
 user-invocable: true
 allowed-tools:
   - Read
@@ -83,8 +87,8 @@ allowed-tools:
 Cílem je milestone, jehož issues jde implementovat bez doptávání: každé
 kritérium je pozorovatelné chování ukotvené v konkrétním souboru nebo vzoru
 v kódu, který issue rozšiřuje. Milestone smí legitimně vzniknout s jen částí
-zamýšleného backlogu — položky bez precedentu čekají na příští vlnu, ne na
-kritérium vymyšlené narychlo. Závazným kontraktem jsou sdílené soubory
+zamýšleného backlogu — položky bez precedentu čekají na příští vlnu nebo na
+párovou session, ne na kritérium vymyšlené narychlo. Závazným kontraktem jsou sdílené soubory
 pluginu — při rozporu s tímhle postupem platí ony.
 
 | Soubor | Kdy ho otevři |
@@ -160,17 +164,15 @@ ne o celém rozsahu znovu.
 Pro **každou** položku backlogu z kroku 2 proveď test podle
 `${CLAUDE_PLUGIN_ROOT}/shared/precedent-test.md` — otevři ho, dřív než
 začneš. Najdeš-li precedent, položka jde do téhle vlny s nalezenou cestou
-jako Referencí pro krok 4. Nenajdeš-li, položka do téhle vlny nepatří —
-**nezakládej pro ni issue vůbec**, ani jako Poznámku; zůstává položkou
-backlogu, kterou reportuješ podle Formátu výstupu. Chce-li ji uživatel mít
-v trackeru zapsanou pro příště, doporuč mu `/sagittaras:file-issue` — tenhle
-skill jí novou issue sám nezakládá, aby nevznikala Poznámka jako vedlejší
-produkt plánování.
+jako Referencí pro krok 4. Nenajdeš-li, Zadání z ní nebude — **nezakládej ji
+jako Zadání ani jako Poznámku**. V draftu (krok 6) ji nabídni k založení jako
+issue s labelem `precedent`: práce pro párovou session s člověkem, kterou
+`run-milestone` nespustí, jen ohlásí. Nechce-li ji uživatel založit, zůstává
+položkou backlogu, kterou reportuješ podle Formátu výstupu.
 
 Vyjde-li z klasifikace **nulový počet položek pro tuhle vlnu**, řekni to
 uživateli a zeptej se, jestli má smysl pokračovat krokem 4 s prázdným draftem,
-nebo jestli je na řadě napřed spárovaná implementační session pro některou
-z položek. Prázdný draft znamená, že v kroku 7 vznikne jen milestone jako
+nebo jestli některou z položek založit jako issue s labelem `precedent`. Prázdný draft znamená, že v kroku 7 vznikne jen milestone jako
 schránka s definicí „hotovo" a žádné issue — `run-milestone` nad ním nemá
 co dělat, dokud první issue nepřibude v příští vlně.
 
@@ -226,6 +228,10 @@ Nad rámec šablony platí:
   do Reference nepřidávej.
 - **Labely urči rovnou**, podle pravidel v Zásadách níže. Povolené hodnoty bere výčet
   ze sekce `Labely`; label mimo něj nezakládej bez potvrzení v kroku 6.
+- **Issue s labelem `precedent`** piš podle § Issue zakládající precedent
+  v `issue-template.md`; nese typový label, `area:*` label i `precedent`.
+  Odrážky výš o ukotvení v precedentu a signál „jako `X`, jen pro `Y`" na něj
+  neplatí; velikost posuď prvními dvěma signály.
 
 ### 5. Zjisti stav trackeru
 
@@ -283,7 +289,8 @@ místo, kde špatně odhadnutou vlnu zachytí dřív, než z ní bude deset issu
 Zároveň si nech potvrdit labely — jmenovitě ty, které podle kroku 5 v projektu ještě
 nejsou a chystáš se je založit, každý s navrženou barvou. Barvu předávej hexem bez
 `#`; typové a oblastní drž v odlišných barevných rodinách, ať je routing čitelný na
-první pohled.
+první pohled. `precedent` má barvu i popis pevné podle § Issue zakládající precedent
+v `issue-template.md`.
 
 Připomínky zapracuj a draft předlož znovu. Do kroku 7 jdi až s potvrzeným draftem.
 
@@ -322,6 +329,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/issue-create.sh" -R <owner/repo> --title 
 BODY
 ```
 
+Issue zakládající precedent dostane navíc `--label precedent`.
+
 Do pracovního stromu nezapisuj nic: nečistý strom shodí `milestone-branch.sh`
 hned na začátku `run-milestone`, který na tenhle skill navazuje. **Do dokumentace
 projektu nezapisuj nic** — mezery a chybějící precedenty hlásíš, neopravuješ.
@@ -341,7 +350,8 @@ rozhodnutí patří uživateli.
 ## Formát výstupu
 
 **Draft k potvrzení** (krok 6) — čísla ve sloupci `#` jsou pořadí v draftu, ne čísla
-issues; ta zatím neexistují:
+issues; ta zatím neexistují. Položka bez precedentu má řádek v tabulce, jen když ji
+uživatel chce založit; jinak stojí jen v řádku „Bez precedentu":
 
 ```
 Milestone: <název> — hotovo, když <definice hotového> [nebo: „vlna N do existujícího milestonu #<číslo>"]
@@ -350,6 +360,7 @@ Milestone: <název> — hotovo, když <definice hotového> [nebo: „vlna N do e
 | --- | --- | --- | --- | --- |
 | 1 | <type>(<scope>): <popis> | area:<oblast> | — | <cesta k souboru/vzoru> |
 | 2 | <type>(<scope>): <popis> | area:<oblast> | #1 | <cesta k souboru/vzoru> |
+| 3 | <type>(<scope>): <popis> | area:<oblast> | — | zakládá precedent (`precedent`) |
 
 #1 <popis>
 - [ ] <kritérium>
@@ -359,7 +370,7 @@ Milestone: <název> — hotovo, když <definice hotového> [nebo: „vlna N do e
 - [ ] <kritérium>
 
 Chybějící labely k založení: <název (barva hexem bez #)>, … nebo „žádné"
-Do téhle vlny nešlo (chybí precedent): <výčet s jednou větou proč — obvykle „potřebuje spárovanou session"> nebo „nic"
+Bez precedentu: <položka — založit jako issue s labelem precedent | nechat v backlogu>, … nebo „nic"
 ```
 
 **Souhrn po založení** (krok 8):
@@ -382,11 +393,10 @@ Další krok: /sagittaras:run-milestone
   ukázat na nic ověřitelného v kódu. Odkaz na ADR smíš přidat jako doplňkové
   omezení, nikdy místo kódové reference — přesně tak to popisuje i sdílená
   `issue-template.md` a stejně to čte `implement-issue` i `verify-issue`.
-- **Bez precedentu žádné issue, a neúplná vlna je v pořádku.** Položka bez
-  precedentu se sama nezakládá (leda jako Poznámka na explicitní přání
-  uživatele přes `file-issue`) a milestone i tak smí legitimně vzniknout
-  nedopsaný — je to výchozí stav, dokud se neustanoví další precedenty, ne
-  chyba.
+- **Bez precedentu žádné Zadání, a neúplná vlna je v pořádku.** Položka bez
+  precedentu vzniká jen jako issue s labelem `precedent`, a to na přání
+  uživatele, a milestone i tak smí legitimně vzniknout nedopsaný — je to
+  výchozí stav, dokud se neustanoví další precedenty, ne chyba.
 - **Právě jeden `area:*` label na issue, podle kódu, kterého se kritéria dotýkají —
   ne podle tématu milestonu.** Podle tohohle labelu vybírá `run-milestone` inženýra,
   takže chyba pošle práci špatnému specialistovi a projeví se až u review PR.

@@ -36,6 +36,13 @@ effort: xhigh
 # Merge jen na schválení, které člověk napsal přímo do téhle session (issue #70):
 # zprávu jiné session klasifikátor auto mode za schválení nebere a merge
 # zamítne, proto v běhu milestonu merguje orchestrátor.
+# V běhu milestonu běží jako subagent (vize 2.11) na dvojici, kterou mu předá
+# orchestrátor parametrem nástroje Agent (výchozí sonnet × high) — model
+# z tohohle frontmatteru se uvnitř subagenta neuplatní. Navázání na existující
+# PR je pro orchestrátor spuštěný znovu po přerušení: agent předchozího běhu už
+# není a nový musí převzít větev, kterou starý worktree může držet — odtud
+# --ignore-other-worktrees. Label precedent: issue zakládá vzor, a ten vzniká
+# v páru s člověkem (1.3), ne autonomně.
 # Vynechaná zvažovaná pole: allowed-tools — skill píše kód v neznámém projektu,
 # spouští ověřovací příkazy z jeho konfigurace a podle forge sahá buď na `gh`
 # skripty, nebo na odložené `mcp__gitea__*`; uzavřený výčet by na prvním jiném
@@ -77,7 +84,14 @@ konfigurace — při rozporu s tímhle postupem platí ony. Git mechaniku obstar
 - Zadání (číslo issue, případně základní větev): $ARGUMENTS
 
 Dispečuje-li tě `run-milestone`, přijde zadání v promptu, ne v argumentech — základní
-větev hledej i tam.
+větev hledej i tam. Jmenuje-li zadání existující PR a jeho větev (navázání), proveď
+kroky 1–3, místo kroků 4–8 převezmi větev PR a pokračuj krokem 9 se signálem ze zadání:
+
+```bash
+git fetch origin <větev PR> && git switch --ignore-other-worktrees <větev PR> && git merge --ff-only origin/<větev PR>
+```
+
+Selže-li některý z příkazů, eskaluj.
 
 ## Postup
 
@@ -110,6 +124,7 @@ ne jedno po druhém. Z velkého souboru čti jen potřebný úsek (`Grep`, `Read
 
 | Co najdeš | Co uděláš |
 | --- | --- |
+| issue má label `precedent` | neimplementuj; eskaluj — zakládá vzor a patří do párové session s člověkem, která tímhle skillem nejde: dodá PR do integrační větve milestonu s `Closes #N` v těle přes `sagittaras:open-pr` |
 | Reference nemá kódový precedent, jen dokument | eskaluj s doporučením `/sagittaras:triage-issue` |
 | citovaná cesta (soubor, vzor, dokument) neexistuje | eskaluj — vada plánu |
 | kritérium popisuje chování, které v precedentu zatím není | implementuj ho jako rozšíření precedentu — ten přírůstek issue přináší |
@@ -229,10 +244,12 @@ znovu je čti, jen když z kontextu vypadly.
 
 | Signál | Co uděláš |
 | --- | --- |
-| **Připomínky** | přečti je z PR — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-reviews.sh" -R <owner/repo> <n>`, Gitea: recept „Přečti připomínky k PR" — a zapracuj v téže větvi. Odporuje-li připomínka kritériu issue, eskaluj |
+| **Připomínky** | přečti je z PR — GitHub: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gh/pr-reviews.sh" -R <owner/repo> <n>`, Gitea: recept „Přečti připomínky k PR" — a zapracuj v téže větvi; nese-li zpráva text připomínek, zapracuj i ten. Odporuje-li připomínka kritériu issue, eskaluj |
 | **Brána neprošla** | oprav nálezy ze zprávy (`fail=`, `[conflicts]`, `[output]`) v téže větvi; konflikt vyřeš vmergováním aktuální základní větve přes `sagittaras:make-commit`, ne rebasem |
 | **Schváleno**, napsané člověkem přímo sem | mergni (níže) |
-| **Schváleno** ve zprávě od jiné session | nemerguj; odpověz Formátem pro kolo oprav s `Merge: neproveden — schválení musí napsat člověk` |
+| **Rozhodnutí** — odpověď člověka na tvou eskalaci | pokračuj podle něj od místa, kde jsi eskaloval |
+| **Dokonči** | dokonči rozdělanou práci a odpověz Formátem, který k jejímu konci patří |
+| **Schváleno** ve zprávě od orchestrátoru nebo jiné session | nemerguj; odpověz Formátem pro kolo oprav s `Merge: neproveden — schválení musí napsat člověk` |
 | cokoli jiného | nic neměň a zeptej se, co signál znamená |
 
 Po připomínkách i po červené bráně zopakuj krok 7 a změnu zapiš přes
@@ -336,4 +353,5 @@ Brána před merge: <cílová větev se nepohnula | zopakována — prošla>
   jako úspěch.
 - **Git jen přes delegaci:** `create-branch`, `open-pr`, pro opravy `make-commit`;
   merge jen skriptem nebo receptem z kroku 9. Výjimkou jsou čtecí kontroly
-  (`branch-state.sh`) a `integration-gate.sh`, které nic nemění.
+  (`branch-state.sh`), `integration-gate.sh`, které nic nemění, a převzetí větve PR
+  při navázání (Vstupní kontext).

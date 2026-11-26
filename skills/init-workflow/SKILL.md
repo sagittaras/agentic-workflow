@@ -241,9 +241,11 @@ aktuálního adresáře, což v izolovaném worktree ukazuje jinam.
    k něčemu, co v projektu roky funguje.
 2. Sestav cílový výčet: **typové** labely podle Conventional Commits (`feat`,
    `fix`, `docs`, `refactor`, `test`, `chore` jako výchozí návrh) a **oblastní**
-   `area:*` z kroku 3. Typový label se musí shodovat s `<type>` v názvu issue —
-   proč, vysvětluje `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md`; otevři ho,
-   jen když návrh typové sady s uživatelem rozporuješ.
+   `area:*` z kroku 3, k nim pevný label `precedent` s barvou a popisem podle
+   § Issue zakládající precedent ve `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md`
+   (tam si je přečti). `precedent` založ jen v trackeru, do podsekce Labely ho
+   nezapisuj. Typový label se musí shodovat s `<type>` v názvu issue — proč,
+   vysvětluje tatáž šablona.
 3. **Navrhni jen chybějící** labely a nech je potvrdit nástrojem
    AskUserQuestion. Barvu předávej hexem bez `#`; typové a oblastní drž
    v odlišných barevných rodinách, ať je routing čitelný na první pohled.
