@@ -145,12 +145,11 @@ třetí pokus, eskaluj podle kroku 7.
 
 ### 6. Nezávislé review
 
-1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`)
-   se zadáním podle šablony ve Formátu výstupu. Typ agenta a model vezmi
-   z frontmatteru `${CLAUDE_PLUGIN_ROOT}/skills/review-docs/SKILL.md` a předej
-   je parametry nástroje; effort parametrem předat nejde, napiš ho do zadání.
-   Všechny cesty v zadání dosaď rozvinuté a absolutní — subagent si proměnnou
-   nerozvine.
+1. Nástrojem Agent spusť subagenta se zadáním podle šablony ve Formátu výstupu
+   a **na jeho verdikt počkej**. Typ agenta, model i effort vezmi z frontmatteru
+   `${CLAUDE_PLUGIN_ROOT}/skills/review-docs/SKILL.md` a předej je parametry
+   nástroje (`subagent_type`, `model`, `effort`). Všechny cesty v zadání dosaď
+   rozvinuté a absolutní — subagent si proměnnou nerozvine.
 2. **Vráceno k dopracování** → oprav blokující nálezy, doporučení zvaž, spusť
    znovu krok 5 a pak další kolo s **novým** subagentem.
 3. **Schváleno** → vydej report.
@@ -204,7 +203,7 @@ Navigace začíná tady a vede stromem indexů.]
 
 ```
 Přečti si soubor `<kořen pluginu>/skills/review-docs/SKILL.md` a proveď přesně
-jeho postup. Pracuj s effortem <effort z frontmatteru review-docs>.
+jeho postup.
 
 Zadání pro tvůj běh:
 - Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>

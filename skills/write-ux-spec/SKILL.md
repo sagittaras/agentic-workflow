@@ -242,11 +242,10 @@ Bez schválení se review nespouští.
 
 ### 8. Nezávislé review
 
-1. Nástrojem Agent spusť subagenta **synchronně** (`run_in_background: false`) — bez
-   verdiktu nemáš jak pokračovat. Typ agenta a model vezmi z frontmatteru
-   `review-ux-spec` a předej je parametry nástroje: jako subagent si je sám neuplatní.
-   Effort parametrem předat nejde, napiš ho do zadání jako pokyn. Zadání sestav podle
-   šablony ve Formátu výstupu.
+1. Nástrojem Agent spusť subagenta a **na jeho verdikt počkej** — bez něj nemáš jak
+   pokračovat. Typ agenta, model i effort vezmi z frontmatteru `review-ux-spec`
+   a předej je parametry nástroje (`subagent_type`, `model`, `effort`): jako subagent
+   si je sám neuplatní. Zadání sestav podle šablony ve Formátu výstupu.
 
    **Do zadání dosaď rozvinuté absolutní cesty**, nikde nenech proměnnou — reviewer
    běží jako subagent a `${CLAUDE_PLUGIN_ROOT}` se mu nerozvine. Bez cesty ke kořeni
@@ -292,8 +291,7 @@ spustí uživatel — tenhle skill je nespouští:
 
 ```
 Přečti si soubor `<kořen pluginu>/skills/review-ux-spec/SKILL.md`
-a proveď přesně jeho postup. Pracuj s effortem <hodnota z frontmatteru
-review-ux-spec>.
+a proveď přesně jeho postup.
 
 Zadání pro tvůj běh:
 - Kořen pluginu: <absolutní cesta, rozvinutá — ne proměnná>
