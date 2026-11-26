@@ -57,6 +57,14 @@ disallowed-tools:
 # disallowed-tools je při uzavřeném allowed-tools redundantní záměrně: běžíš-li
 # jako subagent, allowed-tools se nemusí uplatnit, a zákaz doptávání musí platit
 # vždy — skill běží bez uživatele.
+# Kritérium se značkou „(ověří člověk)" skill nezkoumá a verdikt kvůli němu
+# neblokuje (rozhodnutí uživatele, 26. 11. 2026): šablona issue ho vyhrazuje
+# lidskému review a brána run-milestone ho počítá stejně. Dřív padalo do
+# Neověřitelné, takže issue s UI kritériem verify-issue nepustil nikdy. Pass
+# přesto vyžaduje prošlý ověřovací příkaz, jinak by issue se samými značkami
+# prošlo i s červeným buildem. Značku čte volně jako criteria-tests.sh (důvod
+# za ní i jinou interpunkcí); jestli ji kritérium nese oprávněně, posuzuje
+# šablona issue a review plánu, ne tenhle skill.
 # Vynechaná zvažovaná pole: Write/Edit/NotebookEdit v allowed-tools — skill
 # zásadně neopravuje (viz Zásady) a i dočasnou mutaci v kroku 5 dělá gitem
 # (mutation-check.sh), ne editorem; report jde heredocem přes stdin, což je
@@ -305,8 +313,12 @@ Nikdy z toho nedělej `Nesplněno` — opravit prostředí není v moci
 `implement-issue` a retry by jen zopakoval totéž. Totéž platí pro každý běh
 příkazu v mutačním testu níže.
 
-Pak projdi checklist **řádek po řádku** a ke každému si vyžádej vlastní důkaz
-podle jeho povahy:
+Pak projdi checklist **řádek po řádku**. Kritérium se značkou `(ověří člověk)`, i s
+důvodem za ní (`(ověří člověk — …)`, `(ověří člověk: …)`), nezkoumej: dostane výsledek
+**Ověří člověk** a v Doporučeních položku `[člověk] Kritérium <n> — <znění bez
+značky>.`, kde `<n>` je jeho pořadí v checklistu issue. Značka platí i tam, kde by
+kritérium jinak vyšlo `Neověřitelné` (krok 3, nejednoznačnost, sériová oblast); nález
+`[issue]` z kroku 3 v Doporučeních zůstává. Ke každému ostatnímu si vyžádej vlastní důkaz podle jeho povahy:
 
 | Kritérium jmenuje… | Důkaz |
 | --- | --- |
@@ -382,15 +394,15 @@ nebo není ověřitelné vůbec, zapiš `Neověřitelné` a napiš, které dva v
 připadají v úvahu. Nedomýšlej, co asi mělo znamenat — domyšlený výklad ověří
 něco jiného, než co zadání říkalo, a chyba pak vypadá jako splněné kritérium.
 
-Každému kritériu přiřaď právě jeden výsledek: **Splněno**, **Nesplněno**, nebo
-**Neověřitelné**.
+Každému kritériu přiřaď právě jeden výsledek: **Splněno**, **Nesplněno**,
+**Neověřitelné**, nebo — jen kritérium se značkou — **Ověří člověk**.
 
 ### 6. Stanov verdikt
 
 | Verdikt | Blokuje merge | Kdy |
 | --- | --- | --- |
-| **Pass** | `ne` | všechna kritéria `Splněno` |
-| **Needs work** | `ano` | ověřování proběhlo, ale aspoň jedno kritérium je `Nesplněno` nebo `Neověřitelné` |
+| **Pass** | `ne` | každé kritérium je `Splněno` nebo `Ověří člověk` a ověřovací příkaz prošel (u sériové oblasti s `—` přeskočen) |
+| **Needs work** | `ano` | ověřování proběhlo, ale aspoň jedno kritérium je `Nesplněno` nebo `Neověřitelné`, nebo ověřovací příkaz selhal na kódu (selhání prostředí je `Blocked`, krok 5) |
 | **Blocked** | `ano` | ověřování nešlo provést jako celek — chybí konfigurace nebo její sekce, issue nemá `area:*` label nebo jeho oblast nemá v Ověřovacích příkazech řádek, nebo v něm stojí `—` a oblast není v Sériových oblastech, nedohledal jsi protějšek, větev PR nelze získat, ověřovací příkaz nejde v prostředí spustit |
 
 Kombinace `Pass` + `ano` ani `Needs work` + `ne` neexistuje. Chceš-li některou
@@ -413,7 +425,8 @@ bys jinak přepsal, co mezitím přibylo). Pak v něm změň **jen zaškrtávát
   **odškrtni ho** — tracker nesmí tvrdit splnění, které jsi vyvrátil;
 - kritérium `Neověřitelné` → políčko nech, jak je: sám ho nezaškrtáváš,
   a zaškrtnutí od orchestrátoru („kryto testem, který prošel") tvoje
-  neověřitelnost nevyvrací.
+  neověřitelnost nevyvrací;
+- kritérium `Ověří člověk` → políčko nech, jak je.
 
 Zaškrtnuté políčko samo o sobě nález není — podle `shared/issue-template.md`
 odškrtává orchestrátor kritéria, jejichž test potvrdil.
@@ -481,9 +494,15 @@ kritérium: výsledek tučně, doslovné znění kritéria, pomlčka a proč (je
 i více větami) — příkaz a jeho výsledek, cesta:řádek, nebo proč ověřit nelze.
 
 Splněná kritéria se v reportu nevypisují — jejich stav nese odškrtnutí v těle
-issue (krok 7), report ho neopakuje. Jsou-li splněna všechna → „Všechna
-kritéria splněna." Skončil-li běh verdiktem `Blocked` dřív, než jsi měl co
-ověřovat, sekci vynech úplně; důvod nese řádek „Příčina blokace" výše.>
+issue (krok 7), report ho neopakuje. Kritéria `Ověří člověk` stojí jen
+v Doporučeních. Nemáš-li žádné kritérium `Nesplněno` ani `Neověřitelné`, napiš:
+
+- žádné kritérium nemá značku `(ověří člověk)` → „Všechna kritéria splněna.";
+- některá ji mají a ostatní jsou splněná → „Všechna kritéria bez značky splněna.";
+- značku má každé → „Strojově nebylo co ověřit — všechna kritéria ověří člověk."
+
+Skončil-li běh verdiktem `Blocked` dřív, než jsi měl co ověřovat, sekci vynech
+úplně; důvod nese řádek „Příčina blokace" výše.>
 
 ### Ověřovací příkazy
 
@@ -514,15 +533,17 @@ Vynech, není-li žádná taková výhrada.>
 <Jen to, co z tohohle běhu ověřování vzešlo, s adresátem u každé položky:
 `[implement-issue]` nesplněné kritérium, nebo neověřitelné kritérium, jehož
 příčina je v kódu či testu, ne v zadání (kritérium po kritériu, co konkrétně
-opravit); `[issue]` vada samotného zadání — nejasná formulace, neexistující
+opravit), i ověřovací příkaz, který selhal na kódu (krok 5; položka na příkaz, co
+selhalo); `[issue]` vada samotného zadání — nejasná formulace, neexistující
 citovaná cesta, Reference bez kódového precedentu (obojí krok 3, s doporučením
 `triage-issue`), chybějící `area:*` label (krok 3), kritérium, které je samo
 špatně stanovené (krok 6), i neověřitelné
 kritérium, jehož příčina je v samotném zadání; `[konfigurace]` chybějící sekce
 nebo řádek v konfiguraci cílového projektu, typicky oblast bez ověřovacího
 příkazu; `[kontrakt]` mezera ve sdíleném kontraktu pluginu, na kterou jsi
-narazil; `[člověk]` u sériové oblasti ruční mutace nebo build či testy
-v Editoru, jedna položka na kritérium v tvaru z kroku 5.
+narazil; `[člověk]` kritérium se značkou `(ověří člověk)` a u sériové oblasti
+ruční mutace nebo build či testy v Editoru, jedna položka na kritérium v tvaru
+z kroku 5.
 Nic mimo to — žádná obecná poznámka ke kvalitě, stylu nebo architektuře
 PR, i kdyby byla pravdivá. Není-li co doporučit → „Bez nálezů.">
 
