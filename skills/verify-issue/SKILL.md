@@ -60,7 +60,17 @@ disallowed-tools:
 # Vynechaná zvažovaná pole: Write/Edit/NotebookEdit v allowed-tools — skill
 # zásadně neopravuje (viz Zásady) a i dočasnou mutaci v kroku 5 dělá gitem
 # (mutation-check.sh), ne editorem; report jde heredocem přes stdin, což je
-# payload pro forge, ne zásah do repozitáře. agent — profil žádného z dostupných agentů nesedí
+# payload pro forge, ne zásah do repozitáře.
+# Nástroje Editoru (Unity MCP) — Editor drží otevřený hlavní checkout, ne
+# worktree PR, a přepnout mu větev by rozbilo práci, která v něm běží;
+# sériovou oblast (oblast z podsekce Sériové oblasti) proto skill ověřuje staticky
+# a mutaci předává člověku. Šablona ruční mutace zrcadlí mutation-check.sh:
+# bod 3 hlídá chybu kompilace po revertu (test nové funkce volá API z PR, Editor
+# pak spadne na kompilaci nebo pustí test nad starými assembly), bod 5 test,
+# který padá i nad PR (obdoba verdict=inconclusive). Analýzu dosahu testu
+# (názvy, .asmdef, guid ve scénách) review tří kol nedotáhlo bez falešných
+# Nesplněno, proto Nesplněno jen bez testu v diffu (26. 11. 2026).
+# agent — profil žádného z dostupných agentů nesedí
 # (skill potřebuje spouštět příkazy a zapisovat do trackeru), a plánovací
 # systémový prompt by běh táhl k navrhování opravy, což je přesně to, co tenhle
 # skill dělat nesmí; omezení práv nese allowed-tools. background — člověk,
@@ -97,7 +107,8 @@ ověřovat — řekni to a skonči.
 
 Přečti sekci `## Workflow (sagittaras)` v `CONTRIBUTING.md` v kořeni projektu.
 Potřebuješ z ní podsekce **Forge** (typ, `owner/repo`), **Ověřovací příkazy**
-(čím se kritérium doopravdy ověří) a **Větvení** (výchozí a integrační větev).
+(čím se kritérium doopravdy ověří) a **Větvení** (výchozí a integrační větev);
+podsekci **Sériové oblasti**, je-li tam — chybí-li, žádná oblast sériová není.
 
 Nevíš-li, kde v konfiguraci co hledat, nebo některá podsekce chybí, otevři
 `${CLAUDE_PLUGIN_ROOT}/shared/workflow-config.md`. Chybí-li `CONTRIBUTING.md`,
@@ -217,6 +228,13 @@ Ověřovací příkazy, **příkaz si nevymýšlej**: skonči `Blocked` a chybě
 uveď v Doporučeních jako nález na issue nebo na konfiguraci. Ověření spuštěné
 odhadnutým příkazem tvrdí víc, než ví.
 
+Je-li oblast issue v podsekci Sériové oblasti, je to **sériová oblast**
+(typicky kód Unity projektu): kompilaci a testy ověřuje Editor nad hlavním
+checkoutem, ne příkaz ve worktree, takže v kroku 5 postupuj i podle odstavce
+Sériová oblast. `—` v jejím řádku je platná hodnota, ne `Blocked`; `—` u oblasti,
+která v Sériových oblastech není, je chybějící příkaz: `Blocked` a nález
+`[konfigurace]`.
+
 ### 4. Vezmi si větev PR do vlastní pracovní kopie
 
 Ověřuj nad kódem, ne nad výpisem diffu v trackeru. Založ si na to **oddělený
@@ -275,7 +293,8 @@ Tohle je jádro práce. **Zaškrtnuté políčko není důkaz** — ani to od or
 znamená jen „kryto testem, který prošel", ne že test kritérium kryje dobře.
 
 Nejdřív spusť ověřovací příkaz pro `area:*` issue, i když ho žádné kritérium
-nejmenuje. Neprojde-li build nebo testovací sada, není doopravdy ověřené žádné
+nejmenuje (u `—` ne — viz odstavec Sériová oblast na konci kroku).
+Neprojde-li build nebo testovací sada, není doopravdy ověřené žádné
 kritérium o chování — a výsledek zapiš, ať kritéria dopadnou jakkoli.
 
 **Rozliš selhání kódu od selhání prostředí.** Ukazuje-li výstup na prostředí
@@ -328,6 +347,36 @@ a pracovní kopii po sobě obnoví a ověří.
 | kód 4 | Worktree nebyl čistý už před mutací — něco ho ušpinilo dřív; založ ho znovu (viz řádek níže). |
 | kód 6 (`restored=false`) | Worktree zahoď (`pr-worktree.sh --remove`), založ znovu a **znovu obnov závislosti podle kroku 4**. Neobnovený strom by tiše znehodnotil všechna další ověření. |
 
+**Sériová oblast.** Stojí-li u ní `—`, ověřovací příkaz nespouštěj. Kritéria
+o existenci v kódu, o precedentu a o dokumentu ověř podle tabulky výš.
+Kritérium, které jmenuje příkaz, build, lint nebo testy, jež ověřovací příkaz
+oblasti nespustí (u `—` žádné), je **Neověřitelné** s důvodem „sériová
+oblast — ověří člověk v Editoru" a v Doporučeních dostane položku
+`[člověk] Kritérium <n> — v Editoru nad origin/<pr-head> spusť <co kritérium
+jmenuje>.` Za `<n>` dosaď pořadí kritéria v checklistu issue a jeho zkrácené
+znění.
+
+Regresní test, který ověřovací příkaz oblasti nespouští (u `—` žádný),
+mutačně netestuj: běží jen v Editoru, který ve worktree PR nemá import.
+Dosah testu na změněný kód čtením nevylučuj — scény a prefaby odkazují skripty
+guidem přes další assety a falešné `Nesplněno` by poslalo přepisovat dobrý test:
+
+- test, který kritérium žádá, v diffu PR není → **Nesplněno**;
+- jinak → **Neověřitelné** s důvodem „sériová oblast — mutaci ověří člověk
+  v Editoru" a v Doporučeních položka v tomhle tvaru, s `<soubory>` vybranými
+  jako `--file` výš, i s jejich `.meta`, a s `<test>` jako plným názvem testu
+  z diffu PR (namespace.třída.metoda), jak ho najde Test Runner:
+
+```
+[člověk] Kritérium <n> — ruční mutace v Editoru:
+1. V kořeni checkoutu otevřeného v Editoru (tam spouštěj i další příkazy) přejdi s čistým stromem na hlavu PR: `git fetch origin` a `git switch --detach origin/<pr-head>`.
+2. Vrať změnu: `git restore --source $(git merge-base origin/<pr-base> HEAD) -- <soubory>`.
+3. Až Editor změnu zkompiluje (Assets › Refresh), spusť `<test>` — musí spadnout. Hlásí-li Editor chybu kompilace, nic to nedokazuje: obnov strom (bod 4) a vrať jen soubory s tělem chování; jsou-li API i tělo v jednom souboru, nahraď v něm ručně jen tělo měněné metody (třeba `return default;`).
+4. Obnov strom: `git checkout HEAD -- .` a `git clean -fd`; `git status` musí být čistý.
+5. Po rekompilaci spusť `<test>` znovu — musí projít. Neprojde-li, mutace nic nedokazuje.
+6. Vrať checkout na předchozí větev: `git switch -`.
+```
+
 **Nejednoznačné kritérium je samo o sobě nálezem.** Jde-li přečíst dvěma způsoby
 nebo není ověřitelné vůbec, zapiš `Neověřitelné` a napiš, které dva výklady
 připadají v úvahu. Nedomýšlej, co asi mělo znamenat — domyšlený výklad ověří
@@ -342,7 +391,7 @@ Každému kritériu přiřaď právě jeden výsledek: **Splněno**, **Nesplněn
 | --- | --- | --- |
 | **Pass** | `ne` | všechna kritéria `Splněno` |
 | **Needs work** | `ano` | ověřování proběhlo, ale aspoň jedno kritérium je `Nesplněno` nebo `Neověřitelné` |
-| **Blocked** | `ano` | ověřování nešlo provést jako celek — chybí konfigurace nebo její sekce, issue nemá `area:*` label nebo jeho oblast nemá ověřovací příkaz, nedohledal jsi protějšek, větev PR nelze získat, ověřovací příkaz nejde v prostředí spustit |
+| **Blocked** | `ano` | ověřování nešlo provést jako celek — chybí konfigurace nebo její sekce, issue nemá `area:*` label nebo jeho oblast nemá v Ověřovacích příkazech řádek, nebo v něm stojí `—` a oblast není v Sériových oblastech, nedohledal jsi protějšek, větev PR nelze získat, ověřovací příkaz nejde v prostředí spustit |
 
 Kombinace `Pass` + `ano` ani `Needs work` + `ne` neexistuje. Chceš-li některou
 napsat, je špatně **verdikt**, ne ten řádek: nesplněné kritérium, které podle tebe
@@ -438,10 +487,11 @@ ověřovat, sekci vynech úplně; důvod nese řádek „Příčina blokace" vý
 
 ### Ověřovací příkazy
 
-<Neselhal-li žádný spuštěný příkaz → „Všechny ověřovací příkazy prošly."
-Selhal-li některý, odrážka na příkaz: příkaz jako inline kód, pomlčka, čím
-selhal. Neběžel-li žádný příkaz (blokace dřív, než jsi k němu došel) →
-„Nespuštěno.">
+<Je-li oblast v Sériových oblastech a stojí u ní `—`, napiš jen „Přeskočeno — sériová oblast, ověřuje se
+v Editoru." a zbytek tohoto pokynu přeskoč. Běžel-li aspoň jeden příkaz
+a žádný neselhal → „Všechny ověřovací příkazy prošly." Selhal-li některý,
+odrážka na příkaz: příkaz jako inline kód, pomlčka, čím selhal. Neběžel-li
+žádný příkaz (blokace dřív, než jsi k němu došel) → „Nespuštěno.">
 
 ### Mutační testy
 
@@ -471,7 +521,9 @@ citovaná cesta, Reference bez kódového precedentu (obojí krok 3, s doporuče
 kritérium, jehož příčina je v samotném zadání; `[konfigurace]` chybějící sekce
 nebo řádek v konfiguraci cílového projektu, typicky oblast bez ověřovacího
 příkazu; `[kontrakt]` mezera ve sdíleném kontraktu pluginu, na kterou jsi
-narazil. Nic mimo to — žádná obecná poznámka ke kvalitě, stylu nebo architektuře
+narazil; `[člověk]` u sériové oblasti ruční mutace nebo build či testy
+v Editoru, jedna položka na kritérium v tvaru z kroku 5.
+Nic mimo to — žádná obecná poznámka ke kvalitě, stylu nebo architektuře
 PR, i kdyby byla pravdivá. Není-li co doporučit → „Bez nálezů.">
 
 Blokuje merge: <ano | ne>
