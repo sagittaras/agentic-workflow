@@ -29,9 +29,9 @@ a [1.8](vision/principles.md#18-znalostní-báze-docs-je-graf-stránek-a-plugin-
 
 - [Vize spolupráce člověka s AI](vision/index.md) — principy, podle kterých se
   plugin přestavuje po ostrém provozu: kód jako kotva, issues ukotvené
-  v precedentu, AI implementuje a člověk přezkoumává, issues v podřazených
-  session, navigace dokumentací, štíhlé skilly s příkazy místo popisu; a mapa
-  dopadu na skilly.
+  v precedentu, AI implementuje a člověk přezkoumává, issues v subagentech
+  a nový precedent v párové session, navigace dokumentací, štíhlé skilly
+  s příkazy místo popisu; a mapa dopadu na skilly.
 - [Milestone workflow](milestone-workflow/index.md) — původní plán sady skillů
   pro milestone: životní cyklus, kontrakt v trackeru, forge vrstva, skripty
   a konfigurace jednotlivých skillů. Části kontraktu nahrazuje vize; co přesně,

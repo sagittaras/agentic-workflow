@@ -1,11 +1,13 @@
 # Issues a autonomní vývoj
 
-Principy 2.1–2.10: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
+Principy 2.1–2.11: co issue stanovuje, dvě roviny issue (Poznámka a Zadání), proč
 je povýšení Poznámky samostatný krok a proč se plánuje po vlnách; dál kdo
 přezkoumává výsledný kód (člověk, ne agent — 2.6 nahrazuje agentní review z 2.5),
 jak velké smí issue být, aby šlo jeho PR přezkoumat, jak orchestrátor issues
 spouští, jaké pevné kritérium musí PR splnit, než ho člověk uvidí, a kdo
-schvaluje plán milestonu (člověk, ne `review-milestone` — 2.10). Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
+schvaluje plán milestonu (člověk, ne `review-milestone` — 2.10). 2.11 vrací
+spouštění issues k subagentům se zvoleným modelem a práci zakládající precedent
+posílá do párové session. Stavějí na [principech spolupráce](principles.md) — kde text cituje 1.x,
 míří tam.
 
 ## 2.1 Co issue stanovuje
@@ -283,6 +285,12 @@ musí recenzent v jednom PR udržet v hlavě.
 
 ## 2.8 Orchestrátor spouští issues v podřazených session, ne v subagentech
 
+> **Nahrazeno** principem [2.11](#211-orchestrátor-spouští-issues-v-subagentech-se-zvoleným-modelem-nový-precedent-jde-do-párové-session)
+> (26. 11. 2026): podřazené session nejde nadirigovat model, effort ani agenta,
+> takže se issues spouští zase v subagentech. Předávání obsahu přes PR, merge
+> orchestrátorem a dávka podle kapacity člověka platí dál. Zbytek zůstává jako
+> záznam, proč se session zkoušely a co se od nich čekalo.
+
 `run-milestone` přestává dispečovat issues subagentům, kteří doběhnou
 a zmizí. Každé odblokované issue spustí v podřazené session Claude Code —
 s vlastním worktree, větví a PR. Člověk otevře PR, připomínky napíše k němu
@@ -466,3 +474,74 @@ Ukáže-li provoz, že ho nikdo nespouští, smaže se.
 schvaluje draft vlny, každé PR a nakonec integrační PR do výchozí větve;
 `review-milestone` i `verify-issue` jsou nástroje mimo řetěz, které si spustí,
 když chce.
+
+## 2.11 Orchestrátor spouští issues v subagentech se zvoleným modelem; nový precedent jde do párové session
+
+Nahrazuje [2.8](#28-orchestrátor-spouští-issues-v-podřazených-session-ne-v-subagentech)
+(26. 11. 2026). `run-milestone` se vrací k subagentům: každé odblokované issue
+spustí nástrojem Agent ve vlastním worktree, s modelem a effortem předanými
+parametrem — ve výchozím stavu sonnet × high. Issue, které zakládá nový precedent
+(label `precedent`), automaticky neorchestruje: ohlásí ho člověku a ten si pro něj
+založí párovou session.
+
+**Why:**
+- **Podřazenou session nejde nadirigovat.** `start_session` neumí zvolit model,
+  effort ani agenta. Session běžela na modelu orchestrátoru — proto orchestrátor
+  zůstával na opus × xhigh, i když by sám vystačil s méně — a agenta z mapy si
+  musela delegovat sama, s další vrstvou kontextu. Nástroj Agent bere model
+  i effort parametrem. Model z frontmatteru skillu, který subagent vyvolá, ho
+  nepřepíše: v transkriptech běhů z 20. 8. 2026 zůstali subagenti na sonnetu
+  i po vyvolání `implement-issue` (opus × xhigh).
+- **Zadání nepotřebuje tolik autonomního uvažování.** Issue podle
+  [2.1](#21-co-issue-stanovuje) říká, jak se práce realizuje, a ukazuje na
+  precedent v kódu. Implementace je rozšíření vzoru, ne návrh — na to stačí
+  sonnet × high za zlomek ceny. Jinou dvojici řekne člověk orchestrátorovi;
+  agent z mapy, který má dvojici ve své definici, dostane tu — volila ji matice
+  `write-agent` vědomě.
+- **Nový precedent je jiná práce.** První instance vzoru vzniká v páru
+  ([1.3](principles.md#13-první-klíčová-funkcionalita-vzniká-v-páru-ne-autonomně)).
+  Autonomní běh na levném modelu je pro ni přesně špatně, a v párové session si
+  člověk zvolí model i effort podle velikosti problému sám. Issue s labelem drží
+  párovou práci v grafu milestonu: co na ní závisí, čeká, a po merge orchestrátor
+  pokračuje.
+- **Spouštění kdykoli.** `start_session` aplikace odmítá v turnu, který nezačal
+  zprávou člověka — v běhu M1 proto orchestrátor nemohl doplnit dávku po
+  notifikaci ([mapa dopadu](skill-impact.md#nálezy-z-provozu-běh-m1)). Agenta
+  spustí z kteréhokoli turnu.
+
+**Co se ztrácí a čím se to nahrazuje:**
+- **Psaní přímo do session.** V M1 šlo všech 22 kol review rovnou do session
+  a signál přes orchestrátora se nepoužil ani jednou — člověk píše tam, kde
+  práce leží. Do subagenta v desktopu psát nejde. Připomínky proto píše
+  orchestrátorovi, který je agentovi přepošle doslova — za cenu kontextu
+  orchestrátoru, který 2.8 chtěla šetřit —, nebo do PR. Na GitHubu PR hlídá skript
+  na pozadí (`gh/pr-watch.sh`): jeden GraphQL dotaz za minutu, žádné tokeny,
+  orchestrátor se probudí až s novou připomínkou nebo s PR mergnutým ve forge.
+- **Issue jako samostatně řiditelná session.** Agent je vidět v panelu úloh
+  a jde zastavit; řídí se přes orchestrátora.
+- **Kontext pro připomínky zůstává.** Orchestrátor na agenta navazuje přes
+  `SendMessage` s celou jeho historií — to, kvůli čemu 2.8 sáhla po session, umí
+  subagent taky. Agenta předchozího, přerušeného běhu oslovit nejde; k jeho PR
+  orchestrátor spustí nového, který převezme větev.
+
+**Co z 2.8 platí dál:** orchestrátor obsah připomínek z PR nečte, agent si je
+přečte sám; schválení se nepřeposílá a merguje orchestrátor
+([2.6](#26-review-výsledného-kódu-dělá-člověk-ne-agent)); dávku určuje kapacita
+člověka na review; agenti končí v libovolném pořadí a orchestrátor na žádného
+konkrétního nečeká. Orchestrátor sám klesá na opus × high — xhigh držel jen
+kvůli stropu, který `start_session` kladl na podřazené session.
+
+**Otevřená otázka — PR pod aplikací.** PR zakládá orchestrátor pod účtem člověka
+a GitHub autorovi neumožní schválit vlastní PR, takže formální Approve nejde
+a schválení se píše orchestrátorovi. PR pod GitHub App by formální review
+umožnilo. Oficiální aplikace Claude dává identitu `claude[bot]` jen v GitHub
+Actions; lokální běh by potřeboval vlastní aplikaci s installation tokenem.
+Neověřené zůstává, jestli by merge na schválení přečtené z forge prošel
+klasifikátorem auto mode — ten vidí jen konverzaci, a proto dnes merguje ten,
+komu člověk schválení napsal.
+
+**Důsledek pro workflow:** `run-milestone` spouští subagenty se dvojicí
+z preference člověka, z definice agenta, nebo sonnet × high; issue s labelem
+`precedent` jen ohlásí a po merge jeho PR zavře. `plan-milestone` smí položku bez
+precedentu založit jako takové issue a `triage-issue` mu label připne, když
+precedent nenajde. Připomínky tečou přes orchestrátora nebo přes PR s hlídačem.

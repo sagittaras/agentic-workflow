@@ -16,8 +16,7 @@ se kterými Claude Code pracuje.
 | `bash` v PATH | Skilly volají doprovodné `.sh` skripty. Na Windows stačí **Git for Windows** (Git Bash) |
 | Přístup k repozitáři | Repozitář je **privátní** — je potřeba nahraný SSH klíč, nebo přihlášené [`gh`](https://cli.github.com/) pro HTTPS |
 | Přístup k trackeru | Jen pro milestone workflow: na GitHubu přihlášené `gh`, na Gitei připojený Gitea MCP server |
-| Desktopová aplikace Claude | Doporučená pro `run-milestone` — spouští issues v podřazených session, do kterých můžeš psát. V CLI běží v náhradním režimu se subagenty |
-| `node` v PATH | Jen pro `review-run` — parsuje transkripty session |
+| `node` v PATH | Jen pro `review-run` — parsuje transkripty orchestrátoru a jeho subagentů |
 
 ## Instalace
 
@@ -145,8 +144,11 @@ Konkrétní práci dělá AI, výsledný kód přezkoumává člověk. Obvyklý 
 `plan-milestone` → `run-milestone` → `close-milestone`: plán schvaluješ
 potvrzením draftu a spuštěním běhu, každé PR dostaneš k review až poté, co má
 každé akceptační kritérium test a ověřovací příkazy nad integrační větví
-prošly. Připomínky píšeš k PR nebo přímo do session, která ho vystavila;
-schválené PR merguje orchestrátor. Finální merge do výchozí větve patří tobě.
+prošly. Issues implementují subagenti, ve výchozím stavu na sonnet × high —
+jinou dvojici řekneš orchestrátorovi. Připomínky píšeš orchestrátorovi, nebo
+k PR, kde si je na GitHubu všimne sám; schválené PR merguje orchestrátor.
+Issue, které zakládá nový vzor (label `precedent`), orchestrátor nespouští —
+naimplementuješ ho v párové session, kterou si založíš sám. Finální merge do výchozí větve patří tobě.
 `review-milestone` a `verify-issue` jsou nástroje na vyžádání, ne povinné
 kroky. Po běhu ho můžeš rozebrat `review-run` — report slabin pluginu je
 vstupem pro jeho další opravy.
@@ -154,15 +156,15 @@ vstupem pro jeho další opravy.
 | Skill | K čemu |
 | --- | --- |
 | `init-workflow` | Jednorázově nastaví projekt pro milestone workflow do sekce „Workflow (sagittaras)" v `CONTRIBUTING.md` — forge, větvení, labely, ověřovací příkazy, případně mapu `area:*` → agent |
-| `plan-milestone` | Naplánuje milestone po vlnách — issues zakládá jen pro položky s precedentem v kódu a rozpadá je tak, aby PR každého šlo přezkoumat ručně; ostatní nechá v backlogu |
+| `plan-milestone` | Naplánuje milestone po vlnách — Zadání zakládá jen pro položky s precedentem v kódu a rozpadá je tak, aby PR každého šlo přezkoumat ručně; ostatní nechá v backlogu, nebo je na přání založí jako issue s labelem `precedent` k párové session |
 | `triage-issue` | Povýší jeden issue bez ukotvených kritérií (Poznámku) na Zadání s precedentem nalezeným v kódu; bez precedentu nebo u příliš velkého issue jen vysvětlí v komentáři proč |
-| `run-milestone` | Provede milestone s člověkem jako recenzentem — odblokovaná issues spouští v podřazených session, PR protáhne branou (test ke každému kritériu, ověřovací příkazy) a na schválení člověka je mergne do integrační větve; na konci otevře jedno PR do výchozí větve |
+| `run-milestone` | Provede milestone s člověkem jako recenzentem — odblokovaná issues spouští v subagentech (výchozí sonnet × high), issues zakládající precedent předá tobě k párové session, PR protáhne branou (test ke každému kritériu, ověřovací příkazy) a na schválení člověka je mergne do integrační větve; na konci otevře jedno PR do výchozí větve |
 | `implement-issue` | Naimplementuje jedno issue přesně v rozsahu jeho akceptačních kritérií, každé testovatelné pokryje testem a otevře PR s mapou kritérium → test; zapracuje připomínky z review a spuštěný samostatně PR na schválení mergne |
 | `close-milestone` | Zavře milestone, u kterého ověřil, že všechna issues jsou zavřená a integrační PR opravdu zmergované |
 | `file-issue` | Založí jeden ad hoc issue mimo plánování milestonu jako Poznámku, v závazném tvaru pluginu a se správnými labely |
 | `review-milestone` | Na vyžádání: nezávislé review naplánovaného milestonu — kódové ukotvení kritérií, graf závislostí, velikost issues, překryvy a rozpory; report uloží do trackeru |
 | `verify-issue` | Na vyžádání: ověří, že PR splňuje kritéria svého issue — spustí ověřovací příkazy a testy kritérií mutačně otestuje; report uloží k PR |
-| `review-run` | Jen příkazem `/sagittaras:review-run`: rozebere proběhlý běh `run-milestone` z transkriptů orchestrátoru a podřazených session — tokeny, čas, eskalace, odchylky, nálezy ověřené proti verzi pluginu, na které běh jel; report uloží jako markdown vedle repozitáře. Spouštěj v čerstvé session |
+| `review-run` | Jen příkazem `/sagittaras:review-run`: rozebere proběhlý běh `run-milestone` z transkriptů orchestrátoru a jeho subagentů — tokeny, čas, eskalace, odchylky, nálezy ověřené proti verzi pluginu, na které běh jel; report uloží jako markdown vedle repozitáře. Spouštěj v čerstvé session |
 
 **Projektová dokumentace**
 
@@ -209,7 +211,7 @@ session. Změny se do ostré instalace dostanou až pushem a aktualizací výše
 Proč skilly vypadají, jak vypadají, a podle jakých principů se mění, popisuje
 dokumentace vývoje — vstupem je [.docs/index.md](.docs/index.md), odkud se
 pokračuje stromem indexů. Směr, kterým se plugin aktuálně přestavuje (člověk
-přezkoumává kód, issues běží v podřazených session, testy ke kritériím), shrnuje
+přezkoumává kód, issues běží v subagentech a nový vzor v párové session, testy ke kritériím), shrnuje
 [vize](.docs/vision/index.md).
 
 Plugin se vyvíjí vlastním milestone workflow — konfiguraci nese
