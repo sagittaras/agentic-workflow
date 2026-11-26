@@ -195,6 +195,12 @@ může jít o záznam brány. Okruh c (graf
 závislostí) tohle rozlišení nemá — `run-milestone` staví graf ze všech těl
 bez ohledu na stav, takže se hlásí vždy, i na zavřeném issue.
 
+**Issue s labelem `precedent`** zakládá vzor v párové session, není to Zadání:
+okruh a měř proti § Issue zakládající precedent v `issue-template.md`, okruh b
+a krok 3 na něj nepoužívej a chybějící kódový precedent nehlas. V okruhu e na něj
+nepoužívej signál „jako `X`, jen pro `Y`" a v okruhu f nehlas `precedent` jako
+label mimo výčet `Labely` — je pevný.
+
 **a) Struktura.** Otevři `${CLAUDE_PLUGIN_ROOT}/shared/issue-template.md`
 a **měř proti němu, ne proti tomuhle výčtu** — včetně jeho sekce „Reference
 je precedent v kódu", o kterou se opírá okruh 4b. Zkontroluj:
@@ -263,7 +269,8 @@ zastaví orchestrátor).
 **d) Překryvy a vnitřní rozpory.** Dvě issues si nesmí nárokovat totéž — dva
 agenti by sáhli na stejný kód ve dvou worktree a rozešli by se. Milestone smí
 legitimně pokrývat jen část zamýšleného rozsahu — vlnové plánování zakládá
-issues po vlnách a položky bez precedentu v kódu se schválně nezakládají.
+issues po vlnách a položky bez precedentu v kódu se zakládají nanejvýš jako
+issue s labelem `precedent`.
 **Chybějící issue proti tomu, co popis
 milestonu slibuje jako celek, proto sama o sobě není díra** — je legitimní
 stav, ne nález. Nález je jen skutečný **rozpor mezi existujícími issues**:

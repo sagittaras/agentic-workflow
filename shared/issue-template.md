@@ -81,7 +81,8 @@ cestou vůči kořeni repozitáře, stejně jako kód.
 
 **Reference bez kódového precedentu je vada zadání**, ne varianta tvaru: takový
 issue se neimplementuje a patří do `triage-issue` (a nenajde-li precedent ani ten,
-zůstává Poznámkou do příští vlny).
+zůstává Poznámkou do příští vlny). Výjimkou je issue s labelem `precedent`, viz
+§ Issue zakládající precedent.
 
 **Chování, které v precedentu ještě není, není rozpor** — přesně ten přírůstek
 issue přináší. Rozpor je až jiné rozhraní nebo struktura, na kterou nejde navázat.
@@ -116,3 +117,28 @@ za pomlčku: `(ověří člověk — důvod)`.
 **Zaškrtávátka zakládej prázdná.** Odškrtává je orchestrátor (`run-milestone`)
 u kritéria, jehož test potvrdil, a ručně spuštěný `verify-issue` podle toho, co sám
 ověřil — ne autor a ne implementující agent.
+
+---
+
+## Issue zakládající precedent
+
+Práce, pro kterou v kódu precedent k rozšíření není (`precedent-test.md` vyšel ne),
+nemůže být Zadání. Chce-li ji člověk mít v milestonu, vzniká jako issue s pevným
+labelem **`precedent`**: zakládá vzor, a ten vzniká v párové session s člověkem,
+ne autonomně. `run-milestone` takové issue nespustí, jen ho člověku ohlásí;
+`implement-issue` ho odmítne.
+
+- **Label:** název `precedent`, barva `5319e7`, popis „Zakládá vzor — implementuje
+  se v párové session, ne orchestrátorem". Je pevný v každém projektu a do výčtu
+  `Labely` konfigurace nepatří. Zakládá ho `init-workflow`, chybí-li při
+  zakládání issue, `plan-milestone`.
+- **Nasazuje ho** `plan-milestone` na přání člověka a `triage-issue`, když precedent
+  nenajde; `triage-issue` ho zase sundá, když issue povýší na Zadání. Vedle něj
+  nese issue typový a `area:*` label jako každé jiné.
+- **Tělo:** stejné nadpisy jako Zadání. `Souhrn` nese i hranice; `Reference`
+  smí citovat jen dokument nebo kód, který s prací souvisí, protože precedent
+  k rozšíření není; `Akceptační kritéria` smí být prázdná nebo psaná záměrem —
+  bránu `run-milestone` tohle issue neprochází. `Závisí na` platí beze změny.
+- **Hotové** je, když je PR s `Closes #N` v těle zmergované do integrační větve
+  milestonu; issue pak zavře `run-milestone`. Na nový vzor navazuje další vlna
+  `plan-milestone`.
