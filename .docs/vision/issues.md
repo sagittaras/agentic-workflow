@@ -531,14 +531,55 @@ přečte sám; schválení se nepřeposílá a merguje orchestrátor
 konkrétního nečeká. Orchestrátor sám klesá na opus × high — xhigh držel jen
 kvůli stropu, který `start_session` kladl na podřazené session.
 
-**Otevřená otázka — PR pod aplikací.** PR zakládá orchestrátor pod účtem člověka
-a GitHub autorovi neumožní schválit vlastní PR, takže formální Approve nejde
-a schválení se píše orchestrátorovi. PR pod GitHub App by formální review
-umožnilo. Oficiální aplikace Claude dává identitu `claude[bot]` jen v GitHub
-Actions; lokální běh by potřeboval vlastní aplikaci s installation tokenem.
-Neověřené zůstává, jestli by merge na schválení přečtené z forge prošel
-klasifikátorem auto mode — ten vidí jen konverzaci, a proto dnes merguje ten,
-komu člověk schválení napsal.
+**PR pod aplikací — ověřeno 26. 11. 2026, směr čeká na schválení.** PR zakládá
+agent pod účtem člověka a GitHub autorovi neumožní schválit vlastní PR, takže
+formální Approve nejde a schválení se píše orchestrátorovi. Ověření na testovacím
+repozitáři `sagittaras/agentic-sandbox` (Claude Code 2.1.306; klasifikátor
+zkoušený v čerstvých headless session v auto mode s výchozími pravidly) říká:
+
+- **`claude[bot]` jen v GitHub Actions.** `anthropics/claude-code-action` získá
+  token aplikace Claude výměnou OIDC tokenu z Actions u Anthropicu
+  (`src/github/token.ts`). Mimo runner OIDC token není, lokální běh potřebuje
+  vlastní aplikaci.
+- **Vlastní aplikace funguje.** Aplikace s právy Contents, Pull requests a Issues
+  (čtení i zápis) je nainstalovaná jen na repozitáři. `scripts/gh/as-app.sh`
+  vyrobí z app id a klíče JWT (openssl v Git Bash), vymění ho za installation token
+  a pustí příkaz s `GH_TOKEN`. Stávající `pr-create.sh` pod ním založil PR
+  s autorem `<aplikace>[bot]` a člověk na něm dal formální Approve i Request
+  changes. Push větve pod účtem člověka na autorovi PR nic nemění. Token skript
+  nevypisuje, protože vypsaný token klasifikátor blokuje (Credential
+  Materialization).
+- **Schválení z forge klasifikátor nevidí, rozhoduje instrukce ve zprávě
+  člověka.** Klasifikátor vidí zprávy uživatele a volání nástrojů, výstupy nástrojů
+  nevidí. Merge PR se stavem APPROVED pustil, když merge nařizoval skill vyvolaný
+  člověkem, a to i v turnu, který spustila notifikace hlídače na pozadí. Tentýž
+  merge zamítl, když stejná instrukce ležela jen v systémovém promptu a člověk
+  napsal „Zpracuj PR #3". Schválení ve forge samo nic neváží. Váží text skillu ve
+  zprávě, kterou člověk běh spustil — stejně jako dnes „mergni PR #n".
+- **Auto-merge forge je slabší náhrada.** Výchozí pravidlo Merge Without Review
+  vyjímá `gh pr merge --auto` na repozitáři s povinným review, protože bránu drží
+  server. Klasifikátor ale `--auto` pustil i na větvi bez rulesetu a GitHub tam PR
+  mergnul hned, bez review — ochranu větve neověřuje. Navíc se ztrácí brána před
+  merge: GitHub mergne v okamžiku schválení a `integration-gate.sh --same-as`
+  nikdo nespustí. Volbu „branch up to date" bez povinné kontroly GitHub nevynucuje:
+  PR o dva merge pozadu se mergnulo dvě sekundy po schválení. Bránu by udržela jen
+  povinná kontrola stavu — z CI, nebo zapsaná orchestrátorem. Tu druhou nejspíš
+  zamítne výchozí pravidlo Self-Approval („marks the agent's own PR's required
+  checks as passed"); neověřeno.
+
+**Návrh:** PR zakládá agent pod vlastní aplikací projektu (`as-app.sh`), člověk
+dává formální review a orchestrátor merguje dál sám. Hlídač mu ohlásí
+`review:APPROVED`, orchestrátor zopakuje bránu před merge a mergne. Instrukci
+„na schválení ve forge mergni" nese tělo `run-milestone`, takže ji klasifikátor
+vidí ve zprávě, kterou člověk běh spustil. Ruleset ani auto-merge forge nejsou
+potřeba. Cena: jednorázově aplikace v organizaci a privátní klíč na každém stroji
+(kdo má klíč, píše jménem aplikace do všech repozitářů s instalací); v pluginu
+`as-app.sh` u skriptů, které zakládají PR a píšou do něj, identita v konfiguraci
+workflow a krok 6 `run-milestone`, kde `review:APPROVED` přestane znamenat
+připomínky. Komentáře agentů pod botem navíc odliší člověka v hlídači, který
+autory `[bot]` přeskakuje. Neověřené zůstává, jestli instrukci ze skillu
+klasifikátor uvidí i po kompakci dlouhého běhu. Pojistkou je dnešní cesta:
+zamítne-li merge, člověk napíše „mergni PR #n".
 
 **Důsledek pro workflow:** `run-milestone` spouští subagenty se dvojicí
 z preference člověka, z definice agenta, nebo sonnet × high; issue s labelem
